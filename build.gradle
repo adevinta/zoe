@@ -1,0 +1,44 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+    }
+
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:4.0.4"
+    }
+}
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version "1.3.60" apply false
+    id 'com.github.johnrengelman.shadow' version "4.0.4" apply false
+    id 'com.google.cloud.tools.jib' version '2.0.0' apply false
+}
+
+allprojects {
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven { url "https://packages.confluent.io/maven/" }
+    }
+}
+
+subprojects {
+    apply plugin: 'org.jetbrains.kotlin.jvm'
+    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'maven-publish'
+
+    group 'com.adevinta.oss'
+    version 'final'
+
+    sourceCompatibility = 11
+
+    dependencies {
+        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    }
+}
+
+wrapper {
+    gradleVersion = '6.1.1'
+}

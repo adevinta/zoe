@@ -1,0 +1,73 @@
+{
+  "apiVersion": "v1",
+  "kind": "Pod",
+  "metadata": {
+    "name": "zoe",
+    "labels": {}
+  },
+  "spec": {
+    "volumes": [
+      {
+        "name": "output-volume",
+        "emptyDir": {}
+      }
+    ],
+    "initContainers": [
+      {
+        "name": "create-output-file",
+        "image": "alpine:3.9.5",
+        "command": [
+          "touch",
+          "/output/response.txt"
+        ],
+        "volumeMounts": [
+          {
+            "mountPath": "/output",
+            "name": "output-volume"
+          }
+        ]
+      }
+    ],
+    "containers": [
+      {
+        "name": "zoe",
+        "image": "wlezzar/zoe:latest",
+        "args": [],
+        "resources": {
+          "limits": {
+            "cpu": 1,
+            "memory": "512M"
+          }
+        },
+        "volumeMounts": [
+          {
+            "mountPath": "/output",
+            "name": "output-volume"
+          }
+        ]
+      },
+      {
+        "name": "tailer",
+        "image": "alpine:3.9.5",
+        "args": [
+          "sh",
+          "-c",
+          "while [ -f /output/response.txt ]; do sleep 2; done"
+        ],
+        "resources": {
+          "limits": {
+            "cpu": 0.1,
+            "memory": "24M"
+          }
+        },
+        "volumeMounts": [
+          {
+            "mountPath": "/output",
+            "name": "output-volume"
+          }
+        ]
+      }
+    ],
+    "restartPolicy": "Never"
+  }
+}

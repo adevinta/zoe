@@ -1,0 +1,67 @@
+plugins {
+    id 'application'
+    id 'org.beryx.runtime' version '1.8.0'
+}
+
+application {
+    mainClassName = 'com.adevinta.oss.zoe.cli.MainKt'
+    executableDir = "zoe-cli"
+    applicationDefaultJvmArgs = ['-client']
+    applicationName = "zoe"
+}
+
+runtime {
+    addOptions('--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages', '--strip-native-commands')
+}
+
+dependencies {
+    compile project(":zoe-service")
+
+    implementation(
+            'com.amazonaws:aws-java-sdk-lambda:1.11.580',
+            'com.amazonaws:aws-java-sdk-iam:1.11.580',
+            'com.amazonaws:aws-java-sdk-cloudformation:1.11.580',
+    )
+
+    implementation(
+            'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.7',
+            'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7',
+            "org.jetbrains.kotlin:kotlin-reflect"
+    )
+
+    implementation(
+            "org.koin:koin-core:2.0.1",
+            'com.jakewharton.picnic:picnic:0.2.0',
+            'com.github.ajalt:clikt:2.0.0',
+            'com.github.ajalt:mordant:1.2.1',
+            'org.slf4j:slf4j-log4j12:1.7.26',
+            'log4j:log4j:1.2.17',
+    )
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    testImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.8"
+    testRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.8"
+}
+
+// setup the test task
+test {
+    useJUnitPlatform {
+        includeEngines 'spek2'
+    }
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+sourceSets {
+    main.kotlin.srcDirs = ['src']
+    main.resources.srcDirs = ['resources']
+    test.kotlin.srcDirs = ['test']
+    test.resources.srcDirs = ['testresources']
+}

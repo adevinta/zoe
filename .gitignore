@@ -1,0 +1,17 @@
+.classpath
+.project
+.settings
+.gradle
+.idea
+.serverless
+build
+out
+draft.md
+.ipynb_checkpoints
+config.yml
+
+zoe-cli/bin
+zoe-core/bin
+zoe-service/bin
+
+packages
