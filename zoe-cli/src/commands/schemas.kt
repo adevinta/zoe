@@ -157,9 +157,8 @@ class DeploySchema : CliktCommand(
 
             when (type) {
                 SchemaType.Avsc -> AvscSchema(content)
-                SchemaType.Avdl -> AvdlSchema(content, name ?: userError(
-                    "--name is required when using '$type'"
-                )
+                SchemaType.Avdl -> AvdlSchema(
+                    content, name ?: userError("--name is required when using '$type'")
                 )
             }
         }

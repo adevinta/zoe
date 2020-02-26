@@ -17,10 +17,10 @@ import com.adevinta.oss.zoe.cli.utils.cfClient
 import com.adevinta.oss.zoe.cli.utils.iamClient
 import com.adevinta.oss.zoe.cli.utils.retryUntilNotNull
 import com.adevinta.oss.zoe.cli.utils.zipEntries
-import com.adevinta.oss.zoe.core.Entrypoint
+import com.adevinta.oss.zoe.core.Handler
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
-import com.adevinta.oss.zoe.service.executors.LambdaZoeExecutor
+import com.adevinta.oss.zoe.service.runners.LambdaZoeRunner
 import com.adevinta.oss.zoe.service.utils.lambdaClient
 import com.adevinta.oss.zoe.service.utils.userError
 import com.amazonaws.services.cloudformation.AmazonCloudFormation
@@ -64,7 +64,7 @@ class DescribeLambda : CliktCommand(name = "describe", help = "Describe the curr
                 awsRegion
             )
         }
-        val name = LambdaZoeExecutor.LambdaFunctionName
+        val name = LambdaZoeRunner.LambdaFunctionName
         val response =
             lambda
                 .getFunctionIfExists(name)
@@ -96,7 +96,7 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
                 val iam = iamClient(credentials.resolve(), awsRegion)
                 val lambda =
                     lambdaClient(credentials.resolve(), awsRegion)
-                val cloudformation =
+                val cf =
                     cfClient(credentials.resolve(), awsRegion)
             }
         }
@@ -107,7 +107,7 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
             loadFileFromResources("lambda.infra.cf.json")
                 ?: userError("Zoe infra cloud formation template not found !")
 
-        val infra = aws.cloudformation.createOrUpdateStack(LambdaInfraStackName, template, ZoeTags, dryRun = dryRun)
+        val infra = aws.cf.createOrUpdateStack(LambdaInfraStackName, template, ZoeTags, dryRun = dryRun)
 
         val roleArn = when {
             dryRun -> "not-available-on-dry-run"
@@ -120,14 +120,12 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
         }
 
         val deployConfig =
-            environment.executors.config.lambda.deploy ?: userError(
-                "you must specify a deploy config !"
-            )
+            environment.executors.config.lambda.deploy ?: userError("you must specify a deploy config !")
 
         val lambda = aws.lambda.createOrUpdateLambda(
-            name = LambdaZoeExecutor.LambdaFunctionName,
+            name = LambdaZoeRunner.LambdaFunctionName,
             concurrency = deployConfig.concurrency,
-            entrypoint = Entrypoint::class.java.name,
+            entrypoint = Handler::class.java.name,
             tags = ZoeTags,
             memory = deployConfig.memory,
             timeout = deployConfig.timeout,
@@ -174,7 +172,7 @@ class DestroyLambda : CliktCommand(name = "destroy", help = "destroy lambda infr
     }
 
     override fun run() {
-        aws.lambda.getFunctionIfExists(LambdaZoeExecutor.LambdaFunctionName)?.run {
+        aws.lambda.getFunctionIfExists(LambdaZoeRunner.LambdaFunctionName)?.run {
             val name = configuration.functionName
             logger.info("deleting function : $name")
             aws.lambda.deleteFunction(DeleteFunctionRequest().withFunctionName(name))
@@ -234,21 +232,12 @@ internal fun AWSLambda.createOrUpdateLambda(
         CreateFunctionRequest()
             .withFunctionName(name)
             .withCode(FunctionCode().withZipFile(ByteBuffer.wrap(buildLambdaZipPackage(jar)).asReadOnlyBuffer()))
-            .withMemorySize(memory ?: (inherited?.configuration?.memorySize) ?: userError(
-                "memory not provided !"
-            )
-            )
-            .withTimeout(timeout ?: (inherited?.configuration?.timeout) ?: userError(
-                "timeout not provided !"
-            )
-            )
+            .withMemorySize(memory ?: (inherited?.configuration?.memorySize) ?: userError("memory not provided !"))
+            .withTimeout(timeout ?: (inherited?.configuration?.timeout) ?: userError("timeout not provided !"))
             .withRuntime(Runtime.Java8)
             .withHandler(entrypoint)
             .withPublish(true)
-            .withRole(inherited?.configuration?.role ?: roleArn ?: userError(
-                "role arn must be provided !"
-            )
-            )
+            .withRole(inherited?.configuration?.role ?: roleArn ?: userError("role arn must be provided !"))
             .withTags(tags)
             .withVpcConfig(
                 VpcConfig()
@@ -313,7 +302,7 @@ internal fun AmazonCloudFormation.createOrUpdateStack(
                 .withParameters(
                     Parameter()
                         .withParameterKey("ZoeFunctionName")
-                        .withParameterValue(LambdaZoeExecutor.LambdaFunctionName)
+                        .withParameterValue(LambdaZoeRunner.LambdaFunctionName)
                 )
         )
 

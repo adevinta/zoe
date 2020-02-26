@@ -13,10 +13,10 @@ import com.adevinta.oss.zoe.cli.utils.singleCloseable
 import com.adevinta.oss.zoe.service.ZoeService
 import com.adevinta.oss.zoe.service.config.InMemoryConfigStore
 import com.adevinta.oss.zoe.service.config.RegisteredExpression
-import com.adevinta.oss.zoe.service.executors.KubernetesExecutor
-import com.adevinta.oss.zoe.service.executors.LambdaZoeExecutor
-import com.adevinta.oss.zoe.service.executors.LocalZoeExecutor
-import com.adevinta.oss.zoe.service.executors.ZoeExecutor
+import com.adevinta.oss.zoe.service.runners.KubernetesRunner
+import com.adevinta.oss.zoe.service.runners.LambdaZoeRunner
+import com.adevinta.oss.zoe.service.runners.LocalZoeRunner
+import com.adevinta.oss.zoe.service.runners.ZoeRunner
 import com.adevinta.oss.zoe.service.secrets.*
 import com.adevinta.oss.zoe.service.storage.KeyValueStore
 import com.adevinta.oss.zoe.service.storage.LocalFsKeyValueStore
@@ -28,9 +28,6 @@ import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.mordant.TermColors
 import com.github.ajalt.mordant.TerminalCapabilities
-import io.fabric8.kubernetes.client.Config
-import io.fabric8.kubernetes.client.DefaultKubernetesClient
-import io.fabric8.kubernetes.client.NamespacedKubernetesClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import org.apache.log4j.Level
@@ -137,7 +134,7 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
 fun mainModule(context: CliContext) = module {
     single<CliContext> { context }
 
-    single {
+    single<EnvConfig> {
         ConfigUrlProviderChain(
             listOf(
                 EnvVarsConfigUrlProvider,
@@ -150,8 +147,8 @@ fun mainModule(context: CliContext) = module {
 
     singleCloseable<KeyValueStore> {
         LocalFsKeyValueStore(
-            "${context.home}/storage/${context.env}",
-            get(named("io"))
+            namespace = "${context.home}/storage/${context.env}",
+            executor = get(named("io"))
         )
     }
 
@@ -183,17 +180,7 @@ fun mainModule(context: CliContext) = module {
             ?.withLogging()
     }
 
-    singleCloseable<NamespacedKubernetesClient> {
-        val config = get<EnvConfig>().executors.config.kubernetes
-
-        val client =
-            if (config.context != null) DefaultKubernetesClient(Config.autoConfigure(config.context))
-            else DefaultKubernetesClient()
-
-        client.inNamespace(config.namespace)
-    }
-
-    singleCloseable<ZoeExecutor> {
+    singleCloseable<ZoeRunner> {
         val pool = get<ExecutorService>(named("io"))
 
         val executorsSectionWithSecrets =
@@ -201,7 +188,7 @@ fun mainModule(context: CliContext) = module {
 
         when (context.executor ?: executorsSectionWithSecrets.default) {
             ExecutorName.Lambda -> with(executorsSectionWithSecrets.config.lambda) {
-                LambdaZoeExecutor(
+                LambdaZoeRunner(
                     name = ExecutorName.Lambda.code,
                     executor = pool,
                     awsCredentials = credentials.resolve(),
@@ -209,23 +196,24 @@ fun mainModule(context: CliContext) = module {
                 )
             }
 
-            ExecutorName.Local -> LocalZoeExecutor(
+            ExecutorName.Local -> LocalZoeRunner(
                 name = ExecutorName.Local.code,
                 executor = pool
             )
 
             ExecutorName.Kubernetes -> {
                 val kubeConfig = executorsSectionWithSecrets.config.kubernetes
-                KubernetesExecutor(
+                KubernetesRunner(
                     name = ExecutorName.Kubernetes.code,
-                    client = get(),
-                    configuration = KubernetesExecutor.Config(
+                    configuration = KubernetesRunner.Config(
                         zoeImage = "wlezzar/zoe-core:1.1", // TODO : make this not hard coded
                         cpu = kubeConfig.cpu,
                         memory = kubeConfig.memory,
                         deletePodsAfterCompletion = kubeConfig.deletePodAfterCompletion,
                         timeoutMs = kubeConfig.timeoutMs
-                    )
+                    ),
+                    namespace = kubeConfig.namespace,
+                    context = kubeConfig.context
                 )
             }
         }
@@ -235,7 +223,7 @@ fun mainModule(context: CliContext) = module {
         val config = get<EnvConfig>()
         ZoeService(
             configStore = InMemoryConfigStore(
-                clusters = config.clusters,
+                clusters = config.clusters.mapValues { it.value.toDomain() },
                 filters = config.expressions.mapValues {
                     RegisteredExpression(
                         it.key,
@@ -243,7 +231,7 @@ fun mainModule(context: CliContext) = module {
                     )
                 }
             ),
-            executor = get(),
+            runner = get(),
             storage = get(),
             secrets = get()
         )

@@ -79,9 +79,7 @@ class TopicsDescribe : CliktCommand(name = "describe", help = "describe a topic"
 
     override fun run() = runBlocking {
         val cluster = ctx.requireCluster()
-        val response = service.describeTopic(cluster, topic) ?: userError(
-            "topic not found : ${topic.value}"
-        )
+        val response = service.describeTopic(cluster, topic) ?: userError("topic not found : ${topic.value}")
         ctx.term.output.format(response.toJsonNode()) { echo(it) }
     }
 

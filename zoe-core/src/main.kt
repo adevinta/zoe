@@ -21,7 +21,7 @@ import java.io.OutputStream
 import kotlin.system.exitProcess
 
 /**
- * Entrypoint when executing as a standalone program or in a remote container
+ * Main entrypoint when executing as a standalone program or in a remote container
  *
  * We may give 2 arguments :
  * 1. the payload (mandatory)
@@ -34,38 +34,38 @@ fun main(args: Array<String>) {
     val input = args[0].byteInputStream(Charsets.UTF_8)
     val output = if (args.size > 1) File(args[1]).outputStream() else System.out
 
-    output.use { out ->
-        input.use { inp ->
-            try {
-                Entrypoint().handleRequest(inp, out, context = null)
-                exitProcess(0)
-            } catch (error: Throwable) {
-                val response =
-                    FailureResponse
-                        .fromThrowable(error)
-                        .toJsonString()
-                        .toByteArray(Charsets.UTF_8)
-                out.write(response)
-                exitProcess(1)
+    val exitCode =
+        output.use { out ->
+            input.use { inp ->
+                Handler()
+                    .runCatching { handleRequest(inp, out, context = null) }
+                    .onFailure { err ->
+                        out.write(
+                            FailureResponse
+                                .fromThrowable(err)
+                                .toJsonString()
+                                .toByteArray(Charsets.UTF_8)
+                        )
+                    }
+                    .fold(onSuccess = { 0 }, onFailure = { 1 })
             }
         }
-    }
+
+    exitProcess(exitCode)
 }
 
 /**
- * Entrypoint when deploying zoe as a lambda
+ * Main handler for zoe requests. It implements a {@link RequestStreamHandler} to make this class directly usable as
+ * lambda functions entrypoint.
  */
-class Entrypoint : RequestStreamHandler {
+class Handler : RequestStreamHandler {
     override fun handleRequest(input: InputStream, output: OutputStream, context: Context?) {
         val parsed: JsonNode = json.readTree(input.readBytes())
 
-        val function =
-            parsed["function"]?.asText() ?: throw IllegalArgumentException("missing 'function' field")
-        val payload =
-            parsed["payload"]?.toString() ?: throw IllegalArgumentException("missing 'payload' field")
+        val function = parsed["function"]?.asText() ?: error("missing 'function' field")
+        val payload = parsed["payload"]?.toString() ?: error("missing 'payload' field")
 
         FunctionsRegistry.call(function, payload.byteInputStream(Charsets.UTF_8), output)
-
     }
 }
 
@@ -119,3 +119,5 @@ fun FailureResponse.Companion.fromThrowable(throwable: Throwable): FailureRespon
     cause = throwable.cause?.let(FailureResponse.Companion::fromThrowable),
     stackTrace = throwable.stackTrace.map { it.toString() }
 )
+
+fun error(msg: String): Nothing = throw IllegalArgumentException(msg)

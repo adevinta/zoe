@@ -6,20 +6,22 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package com.adevinta.oss.zoe.service.executors
+package com.adevinta.oss.zoe.service.runners
 
 import java.io.Closeable
 import java.util.concurrent.CompletableFuture
 
-interface ZoeExecutor : Closeable {
+/**
+ * ZoeRunner is the client is responsible to call zoe core functions by their names and passing a payload to them.
+ */
+interface ZoeRunner : Closeable {
     val name: String
-    fun launch(function: String, config: String): CompletableFuture<String>
-    override fun close() {}
+    fun launch(function: String, payload: String): CompletableFuture<String>
 }
 
-class ZoeExecutorException(
+class ZoeRunnerException(
     message: String?,
     cause: Throwable?,
-    val executorName: String,
+    val runnerName: String,
     val remoteStacktrace: List<String>?
-) : Exception("executor '$executorName' failed ${message?.let { ": $it" } ?: ""}", cause)
+) : Exception("executor '$runnerName' failed ${message?.let { ": $it" } ?: ""}", cause)

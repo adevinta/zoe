@@ -15,30 +15,31 @@ import java.util.concurrent.CompletableFuture
 val s3: AmazonS3 by lazy { AmazonS3ClientBuilder.defaultClient() }
 
 interface ConfigStore {
-    fun cluster(name: String): CompletableFuture<ClusterConfig?>
+    fun cluster(name: String): CompletableFuture<Cluster?>
     fun expression(name: String): CompletableFuture<RegisteredExpression?>
 }
 
 class InMemoryConfigStore(
-    private val clusters: Map<String, ClusterConfig>,
+    private val clusters: Map<String, Cluster>,
     private val filters: Map<String, RegisteredExpression>
 ) : ConfigStore {
 
-    override fun cluster(name: String): CompletableFuture<ClusterConfig?> =
+    override fun cluster(name: String): CompletableFuture<Cluster?> =
         CompletableFuture.completedFuture(clusters[name])
 
     override fun expression(name: String): CompletableFuture<RegisteredExpression?> =
         CompletableFuture.completedFuture(filters[name])
 }
 
-data class ClusterConfig(
+data class Cluster(
     val registry: String?,
-    val topics: Map<TopicAlias, TopicConfig> = mapOf(),
+    val topics: Map<TopicAlias, Topic> = mapOf(),
     val props: Map<String, String>,
-    val groups: Map<GroupAlias, String> = mapOf()
+    val groups: Map<GroupAlias, ConsumerGroup> = mapOf()
 )
 
-data class TopicConfig(val name: String, val subject: String? = null)
+data class Topic(val name: String, val subject: String?)
+data class ConsumerGroup(val name: String)
 
 typealias TopicAlias = String
 typealias GroupAlias = String

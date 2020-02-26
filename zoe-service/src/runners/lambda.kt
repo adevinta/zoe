@@ -6,7 +6,7 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package com.adevinta.oss.zoe.service.executors
+package com.adevinta.oss.zoe.service.runners
 
 import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonNode
@@ -19,11 +19,11 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.function.Supplier
 
-class LambdaZoeExecutor(
+class LambdaZoeRunner(
     override val name: String,
     private val executor: ExecutorService,
     private val client: AWSLambda
-) : ZoeExecutor {
+) : ZoeRunner {
 
     companion object {
         const val LambdaFunctionName = "zoe-final-launch"
@@ -40,7 +40,7 @@ class LambdaZoeExecutor(
         client = lambdaClient(awsCredentials, awsRegion)
     )
 
-    override fun launch(function: String, config: String): CompletableFuture<String> = CompletableFuture.supplyAsync(
+    override fun launch(function: String, payload: String): CompletableFuture<String> = CompletableFuture.supplyAsync(
         Supplier {
             val response = client.invoke(
                 InvokeRequest().apply {
@@ -49,7 +49,7 @@ class LambdaZoeExecutor(
                     setPayload(
                         mapOf(
                             "function" to function,
-                            "payload" to config.toJsonNode()
+                            "payload" to payload.toJsonNode()
                         ).toJsonString()
                     )
                 }
@@ -66,6 +66,8 @@ class LambdaZoeExecutor(
         executor
     )
 
+    override fun close() {}
+
     private data class LambdaExecutionError(
         val errorMessage: String,
         val errorType: String,
@@ -73,11 +75,11 @@ class LambdaZoeExecutor(
         val cause: LambdaExecutionError?
     )
 
-    private fun LambdaExecutionError.toZoeExecutorException(): ZoeExecutorException =
-        ZoeExecutorException(
+    private fun LambdaExecutionError.toZoeExecutorException(): ZoeRunnerException =
+        ZoeRunnerException(
             message = "$errorMessage (type: $errorType)",
             cause = cause?.toZoeExecutorException(),
-            executorName = name,
+            runnerName = name,
             remoteStacktrace = stackTrace
         )
 

@@ -6,29 +6,23 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package com.adevinta.oss.zoe.service.executors
+package com.adevinta.oss.zoe.service.runners
 
 import com.adevinta.oss.zoe.core.FunctionsRegistry
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.function.Supplier
 
-class LocalZoeExecutor(override val name: String, private val executor: ExecutorService) :
-    ZoeExecutor {
-    override fun launch(function: String, config: String): CompletableFuture<String> =
+class LocalZoeRunner(override val name: String, private val executor: ExecutorService) : ZoeRunner {
+    override fun launch(function: String, payload: String): CompletableFuture<String> =
         CompletableFuture.supplyAsync(
             Supplier {
-                try {
-                    FunctionsRegistry.call(function, config)
-                } catch (err: Throwable) {
-                    throw ZoeExecutorException(
-                        null,
-                        err,
-                        name,
-                        null
-                    )
-                }
+                FunctionsRegistry
+                    .runCatching { call(function, payload) }
+                    .getOrElse { throw ZoeRunnerException(null, it, name, null) }
             },
             executor
         )
+
+    override fun close() {}
 }

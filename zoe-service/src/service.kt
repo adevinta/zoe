@@ -13,11 +13,8 @@ import com.adevinta.oss.zoe.core.functions.SubjectNameStrategy.TopicNameStrategy
 import com.adevinta.oss.zoe.core.functions.SubjectNameStrategy.TopicRecordNameStrategy
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.now
-import com.adevinta.oss.zoe.service.config.CalledExpression
-import com.adevinta.oss.zoe.service.config.ClusterConfig
-import com.adevinta.oss.zoe.service.config.ConfigStore
-import com.adevinta.oss.zoe.service.config.call
-import com.adevinta.oss.zoe.service.executors.*
+import com.adevinta.oss.zoe.service.config.*
+import com.adevinta.oss.zoe.service.runners.*
 import com.adevinta.oss.zoe.service.secrets.SecretsProvider
 import com.adevinta.oss.zoe.service.secrets.resolveSecrets
 import com.adevinta.oss.zoe.service.storage.KeyValueStore
@@ -36,48 +33,12 @@ import java.time.Duration
 @FlowPreview
 class ZoeService(
     private val configStore: ConfigStore,
-    private val executor: ZoeExecutor,
+    private val runner: ZoeRunner,
     private val storage: KeyValueStore,
     private val secrets: SecretsProvider?
 ) {
 
     private val internalTopics = setOf("__confluent.support.metrics")
-
-    /**
-     * Check zoe version with remote
-     */
-    suspend fun checkVersion(useCache: Boolean): ExecutorVersionData {
-        val versionsCheckStorage = storage.withNamespace("versions")
-
-        if (useCache) {
-            val lastCheck = versionsCheckStorage.getAsJson<ExecutorVersionData>(executor.name)
-            if (lastCheck?.remoteVersion != null && now() - lastCheck.timestamp <= Duration.ofHours(3).toMillis()) {
-                return lastCheck
-            }
-        }
-
-        val versionCheckRequest = VersionCheckRequest(clientVersion = VersionNumber)
-        val versionCheckResponse =
-            kotlin
-                .runCatching { executor.version(versionCheckRequest) }
-                .onFailure { error ->
-                    logger.error("unable to fetch version from remote...")
-                    logger.debug("error when trying to fetch version from remote", error)
-                }
-                .getOrNull()
-
-
-        val result = ExecutorVersionData(
-            clientVersion = versionCheckRequest.clientVersion,
-            remoteVersion = versionCheckResponse?.remoteVersion,
-            mismatch = versionCheckResponse?.compatible != true,
-            timestamp = System.currentTimeMillis()
-        )
-
-        versionsCheckStorage.putAsJson(executor.name, result)
-
-        return result
-    }
 
     /**
      * Produce a list of messages to the topic
@@ -94,14 +55,8 @@ class ZoeService(
         dryRun: Boolean
     ): ProduceResponse {
         val clusterConfig = getCluster(cluster)
-        val (topicName, topicSubject) = when (val retrievedTopic = clusterConfig.topics[topic.value]) {
-            null -> (topic.value to subject)
-            else -> (retrievedTopic.name to (subject ?: retrievedTopic.subject))
-        }
-
-        val completedProps = secrets.resolveSecrets(clusterConfig.props).toMutableMap().apply {
-            if (clusterConfig.registry != null) putIfAbsent("schema.registry.url", clusterConfig.registry)
-        }
+        val (topicName, topicSubject) = clusterConfig.getTopicConfig(topic, subjectOverride = subject)
+        val props = clusterConfig.getCompletedProps()
 
         val dejsonifierConfig = dejsonifier ?: when {
             topicSubject != null -> DejsonifierConfig.Avro(
@@ -111,7 +66,7 @@ class ZoeService(
             else -> DejsonifierConfig.Raw
         }
 
-        return executor.produce(
+        return runner.produce(
             ProduceConfig(
                 topic = topicName,
                 dejsonifier = dejsonifierConfig,
@@ -120,7 +75,7 @@ class ZoeService(
                 timestampPath = timestampPath,
                 data = messages,
                 dryRun = dryRun,
-                props = completedProps
+                props = props
             )
         )
     }
@@ -142,10 +97,8 @@ class ZoeService(
     ): Flow<RecordOrProgress> = flow {
 
         val clusterConfig = getCluster(cluster)
-        val topicName = clusterConfig.topics[topic.value]?.name ?: topic.value
-        val completedProps = secrets.resolveSecrets(clusterConfig.props).toMutableMap().apply {
-            if (clusterConfig.registry != null) putIfAbsent("schema.registry.url", clusterConfig.registry)
-        }
+        val topicName = clusterConfig.getTopicConfig(topic, subjectOverride = null).name
+        val completedProps = clusterConfig.getCompletedProps()
         val resolvedFilters = filters.map { resolveExpression(it) }
         val resolvedQuery = query?.let { resolveExpression(it) }
 
@@ -175,7 +128,7 @@ class ZoeService(
     suspend fun listSchemas(cluster: String): ListSchemasResponse {
         val clusterConfig = getCluster(cluster)
         requireNotNull(clusterConfig.registry) { "registry must not be null in config to use the listSchemas function" }
-        return executor.schemas(ListSchemasConfig(clusterConfig.registry))
+        return runner.schemas(ListSchemasConfig(clusterConfig.registry))
     }
 
     /**
@@ -187,7 +140,7 @@ class ZoeService(
         strategy: SubjectNameStrategy,
         dryRun: Boolean
     ): DeploySchemaResponse = with(getCluster(cluster)) {
-        executor.deploySchema(
+        runner.deploySchema(
             DeploySchemaConfig(
                 registry = registry ?: userError("'registry' must not be null in config to deploy schemas"),
                 strategy = when (strategy) {
@@ -206,7 +159,7 @@ class ZoeService(
      */
     suspend fun listTopics(cluster: String, userTopicsOnly: Boolean): ListTopicsResponse {
         val clusterConfig = getCluster(cluster)
-        val response = executor.topics(AdminConfig(secrets.resolveSecrets(clusterConfig.props)))
+        val response = runner.topics(AdminConfig(clusterConfig.getCompletedProps()))
         return when {
             !userTopicsOnly -> response
             else -> response.copy(topics = response.topics.filter { !it.internal && it.topic !in internalTopics })
@@ -220,22 +173,65 @@ class ZoeService(
         val clusterConfig = getCluster(cluster)
 
         return listTopics(cluster, userTopicsOnly = false).let { response ->
-            val topicToSearch: String = clusterConfig.topics[topic.value]?.name ?: topic.value
+            val topicToSearch: String = clusterConfig.getTopicConfig(topic, subjectOverride = null).name
             response.topics.find { it.topic == topicToSearch }
         }
     }
 
+    /**
+     * List consumer groups
+     */
     suspend fun listGroups(cluster: String, groups: List<GroupAliasOrRealName>): ListGroupsResponse {
         val clusterConfig = getCluster(cluster)
-        val groupsToSearch = groups.map { clusterConfig.groups[it.value] ?: it.value }
-        return executor.groups(GroupsConfig(secrets.resolveSecrets(clusterConfig.props), groupsToSearch))
+        val groupsToSearch = groups.map { clusterConfig.getConsumerGroup(it) }
+        return runner.groups(GroupsConfig(clusterConfig.getCompletedProps(), groupsToSearch))
     }
 
+    /**
+     * List consumer groups offsets
+     */
     suspend fun groupOffsets(cluster: String, group: GroupAliasOrRealName): GroupOffsetsResponse {
         val clusterConfig = getCluster(cluster)
-        val groupToSearch = clusterConfig.groups[group.value] ?: group.value
-        return executor.offsets(GroupConfig(secrets.resolveSecrets(clusterConfig.props), groupToSearch))
+        val groupToSearch = clusterConfig.getConsumerGroup(group)
+        return runner.offsets(GroupConfig(clusterConfig.getCompletedProps(), groupToSearch))
     }
+
+    /**
+     * Check zoe version with remote. Useful when used against a lambda runner.
+     */
+    suspend fun checkVersion(useCache: Boolean): ExecutorVersionData {
+        val versionsCheckStorage = storage.withNamespace("versions")
+
+        if (useCache) {
+            val lastCheck = versionsCheckStorage.getAsJson<ExecutorVersionData>(runner.name)
+            if (lastCheck?.remoteVersion != null && now() - lastCheck.timestamp <= Duration.ofHours(3).toMillis()) {
+                return lastCheck
+            }
+        }
+
+        val versionCheckRequest = VersionCheckRequest(clientVersion = VersionNumber)
+        val versionCheckResponse =
+            kotlin
+                .runCatching { runner.version(versionCheckRequest) }
+                .onFailure { error ->
+                    logger.error("unable to fetch version from remote...")
+                    logger.debug("error when trying to fetch version from remote", error)
+                }
+                .getOrNull()
+
+
+        val result = ExecutorVersionData(
+            clientVersion = versionCheckRequest.clientVersion,
+            remoteVersion = versionCheckResponse?.remoteVersion,
+            mismatch = versionCheckResponse?.compatible != true,
+            timestamp = System.currentTimeMillis()
+        )
+
+        versionsCheckStorage.putAsJson(runner.name, result)
+
+        return result
+    }
+
 
     private suspend fun resolveExpression(expression: String): String =
         if (CalledExpression.isCandidate(expression)) {
@@ -250,8 +246,23 @@ class ZoeService(
             expression
         }
 
-    private suspend fun getCluster(name: String): ClusterConfig =
+    private suspend fun getCluster(name: String): Cluster =
         requireNotNull(configStore.cluster(name).await()) { "cluster config not found : $name" }
+
+    private fun Cluster.getCompletedProps(): Map<String, String> =
+        props
+            .let(secrets::resolveSecrets)
+            .toMutableMap()
+            .apply { if (registry != null) putIfAbsent("schema.registry.url", registry) }
+
+    private fun Cluster.getTopicConfig(aliasOrRealName: TopicAliasOrRealName, subjectOverride: String?) =
+        when (val retrievedTopic = topics[aliasOrRealName.value]) {
+            null -> Topic(aliasOrRealName.value, subjectOverride)
+            else -> Topic(retrievedTopic.name, (subjectOverride ?: retrievedTopic.subject))
+        }
+
+    private fun Cluster.getConsumerGroup(aliasOrRealName: GroupAliasOrRealName): String =
+        groups[aliasOrRealName.value]?.name ?: aliasOrRealName.value
 
     private fun readUntilEnd(
         props: Map<String, String>,
@@ -283,7 +294,7 @@ class ZoeService(
                 jsonifier = formatter
             )
 
-            val (records, progress) = executor.poll(config)
+            val (records, progress) = runner.poll(config)
 
             resumeFrom = updatedResumePositions(progress, currentResumeFrom = resumeFrom, stopCondition = stopCondition)
             globalProgress = updatedGlobalProgress(progress, currentGlobalProgress = globalProgress)
@@ -320,7 +331,6 @@ class ZoeService(
         }
     }
 
-
     private fun updatedResumePositions(
         progress: Iterable<PartitionProgress>,
         currentResumeFrom: Map<Int, ResumeFrom>,
@@ -353,7 +363,7 @@ class ZoeService(
     }
 
     private suspend fun fetchPartitions(topic: String, props: Map<String, String>): Iterable<Int> =
-        executor
+        runner
             .topics(AdminConfig(props))
             .let { resp -> resp.topics.find { it.topic == topic }?.partitions }
             ?: throw IllegalArgumentException("Topic not found : $topic")

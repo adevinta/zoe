@@ -6,24 +6,36 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package com.adevinta.oss.zoe.service.executors
+package com.adevinta.oss.zoe.service.runners
 
 import com.adevinta.oss.zoe.core.utils.*
 import com.adevinta.oss.zoe.service.utils.userError
 import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.api.model.Quantity
-import io.fabric8.kubernetes.client.KubernetesClientException
-import io.fabric8.kubernetes.client.NamespacedKubernetesClient
-import io.fabric8.kubernetes.client.Watcher
+import io.fabric8.kubernetes.client.*
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-class KubernetesExecutor(
+class KubernetesRunner(
     override val name: String,
-    val client: NamespacedKubernetesClient,
-    val configuration: Config
-) : ZoeExecutor {
+    private val client: NamespacedKubernetesClient,
+    private val closeClientAtShutdown: Boolean,
+    private val configuration: Config
+) : ZoeRunner {
+
+    constructor(name: String, configuration: Config, namespace: String, context: String?) : this(
+        name = name,
+        client = kotlin.run {
+            val client =
+                if (context != null) DefaultKubernetesClient(io.fabric8.kubernetes.client.Config.autoConfigure(context))
+                else DefaultKubernetesClient()
+
+            client.inNamespace(namespace)
+        },
+        closeClientAtShutdown = true,
+        configuration = configuration
+    )
 
     data class Config(
         val deletePodsAfterCompletion: Boolean,
@@ -38,14 +50,14 @@ class KubernetesExecutor(
         "owner" to "zoe"
     )
 
-    override fun launch(function: String, config: String): CompletableFuture<String> {
+    override fun launch(function: String, payload: String): CompletableFuture<String> {
         val pod = generatePodObject(
             image = configuration.zoeImage,
             args = listOf(
                 json.writeValueAsString(
                     mapOf(
                         "function" to function,
-                        "payload" to config.toJsonNode()
+                        "payload" to payload.toJsonNode()
                     )
                 ),
                 responseFile
@@ -68,10 +80,14 @@ class KubernetesExecutor(
 
     }
 
+    override fun close() {
+        if (closeClientAtShutdown) {
+            client.close()
+        }
+    }
+
     private fun generatePodObject(image: String, args: List<String>): Pod {
-        val pod = loadFileFromResources("pod.template.json")?.parseJson<Pod>() ?: userError(
-            "pod template not found !"
-        )
+        val pod = loadFileFromResources("pod.template.json")?.parseJson<Pod>() ?: userError("pod template not found !")
         return pod.apply {
             metadata.name = "zoe-${UUID.randomUUID()}"
             metadata.labels = labels
@@ -99,10 +115,10 @@ class KubernetesExecutor(
                     override fun onClose(cause: KubernetesClientException?) {
                         if (!future.isDone) {
                             future.completeExceptionally(
-                                ZoeExecutorException(
+                                ZoeRunnerException(
                                     "pod watcher closed unexpectedly...",
                                     cause = cause,
-                                    executorName = name,
+                                    runnerName = name,
                                     remoteStacktrace = null
                                 )
                             )
@@ -116,10 +132,10 @@ class KubernetesExecutor(
                         when {
                             zoeState == null ->
                                 future.completeExceptionally(
-                                    ZoeExecutorException(
+                                    ZoeRunnerException(
                                         "State for container 'zoe' not found. Pod :${resource?.toJsonString()}",
                                         cause = null,
-                                        executorName = name,
+                                        runnerName = name,
                                         remoteStacktrace = null
                                     )
                                 )

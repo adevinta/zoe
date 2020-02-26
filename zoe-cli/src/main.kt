@@ -21,15 +21,14 @@ import kotlin.system.exitProcess
 @ExperimentalCoroutinesApi
 fun main(args: Array<String>): Unit = useResource(resource = startKoin { }, onClose = KoinApplication::close) {
 
-    val command =
-        ZoeCommandLine().subcommands(
-            topicsCommand(),
-            schemasCommand(),
-            groupsCommands(),
-            configCommands(),
-            lambdaCommands(),
-            versionCommands()
-        )
+    val command = ZoeCommandLine().subcommands(
+        topicsCommand(),
+        schemasCommand(),
+        groupsCommands(),
+        configCommands(),
+        lambdaCommands(),
+        versionCommands()
+    )
 
     val code =
         command

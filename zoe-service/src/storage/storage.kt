@@ -16,6 +16,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
+import java.util.function.Supplier
 import kotlin.streams.asSequence
 
 interface KeyValueStore : Closeable {
@@ -26,10 +27,10 @@ interface KeyValueStore : Closeable {
     override fun close() {}
 }
 
-class LocalFsKeyValueStore(private var namespace: String, private val es: ExecutorService) :
-    KeyValueStore {
+class LocalFsKeyValueStore(private var namespace: String, private val executor: ExecutorService) : KeyValueStore {
 
-    private suspend fun <T> submit(block: () -> T): T = CompletableFuture.supplyAsync(block).await()
+    private suspend fun <T> submit(block: () -> T): T =
+        CompletableFuture.supplyAsync(Supplier { block() }, executor).await()
 
     override suspend fun get(key: String): ByteArray? = submit {
         val path = Path.of("$namespace/$key")
@@ -57,12 +58,16 @@ class LocalFsKeyValueStore(private var namespace: String, private val es: Execut
     }
 }
 
-class AwsFsKeyValueStore(private val bucket: String, private var prefix: String) :
-    KeyValueStore {
+class AwsFsKeyValueStore(
+    private val bucket: String,
+    private var prefix: String,
+    private val executor: ExecutorService
+) : KeyValueStore {
 
     private val cache: MutableMap<String, ByteArray?> = HashMap()
 
-    private suspend fun <T> submit(block: () -> T): T = CompletableFuture.supplyAsync(block).await()
+    private suspend fun <T> submit(block: () -> T): T =
+        CompletableFuture.supplyAsync(Supplier { block() }, executor).await()
 
     override suspend fun put(key: String, value: ByteArray): Unit = submit {
         cache.remove("$prefix/$key")
@@ -80,7 +85,6 @@ class AwsFsKeyValueStore(private val bucket: String, private var prefix: String)
         }
     }
 
-
     override suspend fun listKeys(): Iterable<String> = submit {
         val root = "$prefix/"
         s3.listObjectsV2(bucket, root).objectSummaries.map { it.key.replaceFirst(root, "") }
@@ -89,6 +93,5 @@ class AwsFsKeyValueStore(private val bucket: String, private var prefix: String)
     override fun inNamespace(namespace: String) {
         this.prefix = "${this.prefix}/$namespace"
     }
-
 
 }

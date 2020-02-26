@@ -10,8 +10,9 @@ package com.adevinta.oss.zoe.cli.config
 
 import com.adevinta.oss.zoe.cli.utils.toPrettyPrintedTable
 import com.adevinta.oss.zoe.core.utils.toJsonNode
-import com.adevinta.oss.zoe.core.utils.toJsonString
-import com.adevinta.oss.zoe.service.config.ClusterConfig
+import com.adevinta.oss.zoe.service.config.Cluster
+import com.adevinta.oss.zoe.service.config.ConsumerGroup
+import com.adevinta.oss.zoe.service.config.Topic
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicAWSCredentials
@@ -32,6 +33,15 @@ data class EnvConfig(
     val expressions: Map<String, String> = emptyMap(),
     val clusters: Map<String, ClusterConfig> = emptyMap()
 )
+
+data class ClusterConfig(
+    val registry: String?,
+    val topics: Map<String, TopicConfig> = mapOf(),
+    val props: Map<String, String>,
+    val groups: Map<String, String> = mapOf()
+)
+
+data class TopicConfig(val name: String, val subject: String? = null)
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
@@ -115,6 +125,14 @@ fun AwsCredentialsConfig.resolve(): AWSCredentialsProvider = when (this) {
     is AwsCredentialsConfig.Static -> AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, awsSecretAccessKey))
 }
 
+fun TopicConfig.toDomain(): Topic = Topic(name = name, subject = subject)
+fun ClusterConfig.toDomain(): Cluster = Cluster(
+    registry = registry,
+    topics = topics.mapValues { it.value.toDomain() },
+    props = props,
+    groups = groups.mapValues { ConsumerGroup(name = it.value) }
+)
+
 enum class ExecutorName(@JsonValue val code: String) {
     Lambda("lambda"), Local("local"), Kubernetes("kubernetes")
 }
@@ -123,13 +141,13 @@ enum class Format {
     Json, Raw, Table;
 
     fun format(content: JsonNode, foreach: (String) -> Unit) = when (this) {
-        Raw -> foreach(content.toJsonString())
-        Json -> foreach(content.toJsonString())
+        Raw -> foreach(content.toString())
+        Json -> foreach(content.toString())
         Table -> foreach(content.toPrettyPrintedTable())
     }
 
     suspend fun format(records: Flow<JsonNode>, foreach: (String) -> Unit) = when (this) {
-        Raw -> records.collect { foreach(it.toJsonString()) }
+        Raw -> records.collect { foreach(it.toString()) }
         else -> {
             val collected = records.toList().toJsonNode()
             format(collected, foreach)

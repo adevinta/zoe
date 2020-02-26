@@ -58,9 +58,7 @@ class DescribeGroupCommand : CliktCommand(name = "describe"), KoinComponent {
     override fun run() = runBlocking {
         val cluster = ctx.requireCluster()
         val group =
-            service.listGroups(cluster, listOf(group)).groups.firstOrNull() ?: userError(
-                "group not found : $group"
-            )
+            service.listGroups(cluster, listOf(group)).groups.firstOrNull() ?: userError("group not found : $group")
 
         ctx.term.output.format(group.toJsonNode().apply { (this as ObjectNode).remove("members") }) { echo(it) }
     }
@@ -77,9 +75,7 @@ class GroupMembersCommand : CliktCommand(name = "members"), KoinComponent {
     override fun run() = runBlocking {
         val cluster = ctx.requireCluster()
         val group =
-            service.listGroups(cluster, listOf(group)).groups.firstOrNull() ?: userError(
-                "group not found : $group"
-            )
+            service.listGroups(cluster, listOf(group)).groups.firstOrNull() ?: userError("group not found : $group")
 
         ctx.term.output.format(group.members.toJsonNode()) { echo(it) }
     }

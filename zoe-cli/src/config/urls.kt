@@ -20,8 +20,6 @@ import java.io.File
 import java.net.URL
 
 fun ConfigUrlProvider.createConfig(env: String): EnvConfig {
-    // TODO : use / create a dedicated config framework with support to different config fetching mechanisms
-
     val commonConfig: ObjectNode =
         find("common")?.let(::loadConfigFromUrl)?.requireObjectNode() ?: json.createObjectNode()
 
@@ -33,14 +31,12 @@ fun ConfigUrlProvider.createConfig(env: String): EnvConfig {
             ?.let(json::readTree)?.requireObjectNode() ?: json.createObjectNode()
 
     val envConfig: ObjectNode =
-        find(env)?.let(::loadConfigFromUrl)?.requireObjectNode() ?: userError(
-            "config url not found for env '$env'"
-        )
+        find(env)?.let(::loadConfigFromUrl)?.requireObjectNode() ?: userError("config url not found for env '$env'")
 
     val completeConfig = commonConfig.apply {
-        setAll<ObjectNode>(envConfig)
-        setAll<ObjectNode>(overrideConfig)
-        setAll<ObjectNode>(envOverrideConfig)
+        setAll(envConfig)
+        setAll(overrideConfig)
+        setAll(envOverrideConfig)
     }
 
     return completeConfig.parseJson()

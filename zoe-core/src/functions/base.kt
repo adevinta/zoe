@@ -14,13 +14,11 @@ import com.adevinta.oss.zoe.core.utils.json
 import java.io.InputStream
 import java.io.OutputStream
 
+/**
+ * Main interface to implement a callable function in the zoe core.
+ */
 interface ZoeFunction {
     fun name(): String
-
-    /**
-     * Executes the function by consuming the payload from the input stream and providing the response into the given
-     * output stream.
-     */
     fun execute(payload: InputStream, output: OutputStream)
 }
 

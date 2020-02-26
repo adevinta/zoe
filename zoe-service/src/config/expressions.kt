@@ -28,16 +28,15 @@ data class CalledExpression(val name: String, val args: Map<String, String>) {
                     name,
                     emptyMap()
                 )
-                !argsPattern.containsMatchIn(args) -> userError(
-                    "cannot match arguments '$args' for function '$name'"
-                )
+                !argsPattern.containsMatchIn(args) -> userError("cannot match arguments '$args' for function '$name'")
                 else -> CalledExpression(
                     name = name,
                     args = argsPattern
                         .findAll(args)
                         .map { it.destructured }
                         .map { (argName, argValue) -> argName.trim() to argValue.trim('"') }
-                        .toMap())
+                        .toMap()
+                )
             }
         }
 
