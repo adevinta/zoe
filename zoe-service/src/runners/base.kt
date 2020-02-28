@@ -24,4 +24,4 @@ class ZoeRunnerException(
     cause: Throwable?,
     val runnerName: String,
     val remoteStacktrace: List<String>?
-) : Exception("executor '$runnerName' failed ${message?.let { ": $it" } ?: ""}", cause)
+) : Exception("runner '$runnerName' failed ${message?.let { ": $it" } ?: ""}", cause)

@@ -90,7 +90,7 @@ class ConfigInit : CliktCommand(name = "init", help = "Initialize zoe config"), 
                     logger.info("config file '${target.absolutePath}' already exists ! (--overwrite to recreate)")
                 } else {
                     val config = EnvConfig(
-                        executors = ExecutorsSection(default = ExecutorName.Local),
+                        runners = RunnersSection(default = RunnerName.Local),
                         clusters = mapOf(
                             "local" to ClusterConfig(
                                 registry = "http://localhost:8081",

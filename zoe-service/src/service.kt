@@ -199,11 +199,11 @@ class ZoeService(
     /**
      * Check zoe version with remote. Useful when used against a lambda runner.
      */
-    suspend fun checkVersion(useCache: Boolean): ExecutorVersionData {
+    suspend fun checkVersion(useCache: Boolean): RunnerVersionData {
         val versionsCheckStorage = storage.withNamespace("versions")
 
         if (useCache) {
-            val lastCheck = versionsCheckStorage.getAsJson<ExecutorVersionData>(runner.name)
+            val lastCheck = versionsCheckStorage.getAsJson<RunnerVersionData>(runner.name)
             if (lastCheck?.remoteVersion != null && now() - lastCheck.timestamp <= Duration.ofHours(3).toMillis()) {
                 return lastCheck
             }
@@ -220,7 +220,7 @@ class ZoeService(
                 .getOrNull()
 
 
-        val result = ExecutorVersionData(
+        val result = RunnerVersionData(
             clientVersion = versionCheckRequest.clientVersion,
             remoteVersion = versionCheckResponse?.remoteVersion,
             mismatch = versionCheckResponse?.compatible != true,
@@ -401,7 +401,7 @@ fun subscription(from: ConsumeFrom, partitions: List<Int>?): Subscription = when
     is ConsumeFrom.OffsetStepBack -> Subscription.OffsetStepBack(from.count, partitions?.toSet())
 }
 
-data class ExecutorVersionData(
+data class RunnerVersionData(
     val clientVersion: String,
     val remoteVersion: String?,
     val mismatch: Boolean,

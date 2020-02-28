@@ -55,13 +55,13 @@ class LambdaZoeRunner(
                 }
             )
 
-            val payload = String(response.payload.array(), Charsets.UTF_8)
+            val parsed = String(response.payload.array(), Charsets.UTF_8)
 
             if (response.functionError != null) {
-                throw payload.parseJson<LambdaExecutionError>().toZoeExecutorException()
+                throw parsed.parseJson<LambdaExecutionError>().toZoeRunnerException()
             }
 
-            payload
+            parsed
         },
         executor
     )
@@ -75,10 +75,10 @@ class LambdaZoeRunner(
         val cause: LambdaExecutionError?
     )
 
-    private fun LambdaExecutionError.toZoeExecutorException(): ZoeRunnerException =
+    private fun LambdaExecutionError.toZoeRunnerException(): ZoeRunnerException =
         ZoeRunnerException(
             message = "$errorMessage (type: $errorType)",
-            cause = cause?.toZoeExecutorException(),
+            cause = cause?.toZoeRunnerException(),
             runnerName = name,
             remoteStacktrace = stackTrace
         )

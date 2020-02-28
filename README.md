@@ -4,7 +4,7 @@ Zoe is a command line tool to interact with kafka in an easy and intuitive way. 
 
 [![demo](https://asciinema.org/a/vSDNcUUaMMBkWxCSDD8u3s0No.svg)](https://asciinema.org/a/vSDNcUUaMMBkWxCSDD8u3s0No?speed=2.5&rows=35)
 
-Zoe really shines when it comes to interacting with cloud hosted kafka clusters (kubernetes, AWS, etc.) due to its ability to offload consumption and execution to kubernetes pods or lambda functions (more executors will be supported in the future).
+Zoe really shines when it comes to interacting with cloud hosted kafka clusters (kubernetes, AWS, etc.) due to its ability to offload consumption and execution to kubernetes pods or lambda functions (more runners will be supported in the future).
 
 ## Key features
 

@@ -58,7 +58,7 @@ class DescribeLambda : CliktCommand(name = "describe", help = "Describe the curr
     private val ctx by inject<CliContext>()
 
     override fun run() {
-        val lambda = with(environment.executors.config.lambda) {
+        val lambda = with(environment.runners.config.lambda) {
             lambdaClient(
                 credentials.resolve(),
                 awsRegion
@@ -91,7 +91,7 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
     private val dryRun: Boolean by option("--dry-run", help = "Dry run mode").flag(default = false)
 
     private val aws by lazy {
-        with(environment.executors.config.lambda) {
+        with(environment.runners.config.lambda) {
             object {
                 val iam = iamClient(credentials.resolve(), awsRegion)
                 val lambda =
@@ -120,7 +120,7 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
         }
 
         val deployConfig =
-            environment.executors.config.lambda.deploy ?: userError("you must specify a deploy config !")
+            environment.runners.config.lambda.deploy ?: userError("you must specify a deploy config !")
 
         val lambda = aws.lambda.createOrUpdateLambda(
             name = LambdaZoeRunner.LambdaFunctionName,
@@ -161,7 +161,7 @@ class DestroyLambda : CliktCommand(name = "destroy", help = "destroy lambda infr
     private val environment by inject<EnvConfig>()
 
     private val aws by lazy {
-        with(environment.executors.config.lambda) {
+        with(environment.runners.config.lambda) {
             object {
                 val lambda =
                     lambdaClient(credentials.resolve(), awsRegion)

@@ -47,11 +47,11 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
     private val home by lazy { "${System.getenv("HOME") ?: userError("HOME not found")}/.zoe" }
     private val env: String by option("--env", "-e", help = "Environment to use", envvar = "ZOE_ENV").default("default")
     private val cluster: String? by option("--cluster", "-c", help = "Target cluster", envvar = "ZOE_CLUSTER")
-    private val executor: ExecutorName?
-            by option("--executor", "-x", help = "Executor to use").choice(
-                ExecutorName.Lambda.code to ExecutorName.Lambda,
-                ExecutorName.Local.code to ExecutorName.Local,
-                ExecutorName.Kubernetes.code to ExecutorName.Kubernetes
+    private val runner: RunnerName?
+            by option("--runner", "-r", help = "Runner to use").choice(
+                RunnerName.Lambda.code to RunnerName.Lambda,
+                RunnerName.Local.code to RunnerName.Local,
+                RunnerName.Kubernetes.code to RunnerName.Kubernetes
             )
 
     private val outputFormat: Format
@@ -92,7 +92,7 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
             mainModule(
                 CliContext(
                     home = home,
-                    executor = executor,
+                    runner = runner,
                     cluster = cluster,
                     configDir = configDir,
                     env = env,
@@ -183,28 +183,28 @@ fun mainModule(context: CliContext) = module {
     singleCloseable<ZoeRunner> {
         val pool = get<ExecutorService>(named("io"))
 
-        val executorsSectionWithSecrets =
-            get<SecretsProvider?>().resolveSecretsInJsonSerializable(get<EnvConfig>().executors)
+        val runnersSectionWithSecrets =
+            get<SecretsProvider?>().resolveSecretsInJsonSerializable(get<EnvConfig>().runners)
 
-        when (context.executor ?: executorsSectionWithSecrets.default) {
-            ExecutorName.Lambda -> with(executorsSectionWithSecrets.config.lambda) {
+        when (context.runner ?: runnersSectionWithSecrets.default) {
+            RunnerName.Lambda -> with(runnersSectionWithSecrets.config.lambda) {
                 LambdaZoeRunner(
-                    name = ExecutorName.Lambda.code,
+                    name = RunnerName.Lambda.code,
                     executor = pool,
                     awsCredentials = credentials.resolve(),
                     awsRegion = awsRegion
                 )
             }
 
-            ExecutorName.Local -> LocalZoeRunner(
-                name = ExecutorName.Local.code,
+            RunnerName.Local -> LocalZoeRunner(
+                name = RunnerName.Local.code,
                 executor = pool
             )
 
-            ExecutorName.Kubernetes -> {
-                val kubeConfig = executorsSectionWithSecrets.config.kubernetes
+            RunnerName.Kubernetes -> {
+                val kubeConfig = runnersSectionWithSecrets.config.kubernetes
                 KubernetesRunner(
-                    name = ExecutorName.Kubernetes.code,
+                    name = RunnerName.Kubernetes.code,
                     configuration = KubernetesRunner.Config(
                         zoeImage = "wlezzar/zoe-core:1.1", // TODO : make this not hard coded
                         cpu = kubeConfig.cpu,
@@ -246,7 +246,7 @@ data class CliContext(
     val configDir: File,
     val env: String,
     val cluster: String?,
-    val executor: ExecutorName?
+    val runner: RunnerName?
 )
 
 fun CliContext.requireCluster(): String = cluster ?: userError("you must select a cluster !")

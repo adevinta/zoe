@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 
 data class EnvConfig(
-    val executors: ExecutorsSection,
+    val runners: RunnersSection,
     val storage: StorageConfig?,
     val secrets: SecretsProviderConfig?,
     val expressions: Map<String, String> = emptyMap(),
@@ -68,18 +68,18 @@ sealed class SecretsProviderConfig {
     data class EnvVars(val prepend: String?, val append: String?) : SecretsProviderConfig()
 }
 
-data class ExecutorsSection(
-    val default: ExecutorName = ExecutorName.Lambda,
-    val config: ExecutorsConfig = ExecutorsConfig()
+data class RunnersSection(
+    val default: RunnerName = RunnerName.Lambda,
+    val config: RunnersConfig = RunnersConfig()
 )
 
-data class ExecutorsConfig(
-    val lambda: LambdaExecutorConfig = LambdaExecutorConfig(),
-    val kubernetes: KubernetesExecutorConfig = KubernetesExecutorConfig(),
-    val local: LocalExecutorConfig = LocalExecutorConfig()
+data class RunnersConfig(
+    val lambda: LambdaRunnerConfig = LambdaRunnerConfig(),
+    val kubernetes: KubernetesRunnerConfig = KubernetesRunnerConfig(),
+    val local: LocalRunnerConfig = LocalRunnerConfig()
 )
 
-data class LambdaExecutorConfig(
+data class LambdaRunnerConfig(
     val deploy: LambdaDeployConfig? = null,
     val credentials: AwsCredentialsConfig = AwsCredentialsConfig.Default,
     val awsRegion: String? = null,
@@ -94,11 +94,11 @@ data class LambdaDeployConfig(
     val concurrency: Int?
 )
 
-data class LocalExecutorConfig(
+data class LocalRunnerConfig(
     val enabled: Boolean = true
 )
 
-data class KubernetesExecutorConfig(
+data class KubernetesRunnerConfig(
     val namespace: String = "default",
     val context: String? = null,
     val deletePodAfterCompletion: Boolean = true,
@@ -133,7 +133,7 @@ fun ClusterConfig.toDomain(): Cluster = Cluster(
     groups = groups.mapValues { ConsumerGroup(name = it.value) }
 )
 
-enum class ExecutorName(@JsonValue val code: String) {
+enum class RunnerName(@JsonValue val code: String) {
     Lambda("lambda"), Local("local"), Kubernetes("kubernetes")
 }
 
