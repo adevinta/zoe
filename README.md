@@ -1,10 +1,14 @@
-# Zoe : The missing companion for kafka
+# Zoe : The missing companion for Kafka
 
 Zoe is a command line tool to interact with kafka in an easy and intuitive way. Wanna see this in action ? check out this demo...
 
 [![demo](https://asciinema.org/a/vSDNcUUaMMBkWxCSDD8u3s0No.svg)](https://asciinema.org/a/vSDNcUUaMMBkWxCSDD8u3s0No?speed=2.5&rows=35)
 
 Zoe really shines when it comes to interacting with cloud hosted kafka clusters (kubernetes, AWS, etc.) due to its ability to offload consumption and execution to kubernetes pods or lambda functions (more runners will be supported in the future).
+
+## Status
+
+Zoe is not GA yet. It has been open sourced very recently and is actively being improved toward stabilization. Documentation is also still to be done. That said, we are already using it at Adevinta and you can already start trying it if you are not afraid of digging into the code to solve some eventual undocumented problems :) . 
 
 ## Key features
 
@@ -18,9 +22,23 @@ Here are some of the most interesting features of zoe :
 - ... and more. 
 
 ## Install
-Available soon... (once migrated to a public github repository)
+
+1. Download the latest version of the zoe cli from the [release page](https://github.com/adevinta/zoe/releases) and uncompress it in your home directory (or wherever you wish)
+```
+curl -L https://github.com/adevinta/zoe/releases/download/v0.1.1/zoe-cli.tar.gz | tar -zx -C $HOME
+```
+2. Add the `$HOME/zoe-cli/bin` into your path by appending the following line in your `.bashrc` (or `.zshrc`) :
+```
+PATH=$PATH:$HOME/zoe-cli/bin
+``` 
+3. Init zoe configuration :
+```bash
+zoe config init
+```
+4. Go into the `./tutorials` folder to start using zoe.
 
 ## Documentation
+
 Available soon... (once migrated to a public github repository)
 
 ## Build from source
