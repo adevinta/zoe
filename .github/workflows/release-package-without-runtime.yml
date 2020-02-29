@@ -12,6 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: set upload url
+        id: fetch_release_data
+        run: |
+          UPLOAD_URL=$(jq -r '.release.upload_url' ${GITHUB_EVENT_PATH})
+          echo "::set-output name=upload_url::$UPLOAD_URL"
+
+      - name: get upload url
+        run: echo '${{ steps.fetch_release_data.outputs.upload_url }}'
+
       - name: Setup Java JDK
         uses: actions/setup-java@v1.3.0
         with:
@@ -21,17 +30,23 @@ jobs:
 
       - name: Build
         run: ./scripts/package-tar-without-runtime.sh
-
-      - name: Upload tar package to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: packages/zoe-cli.tar.gz
+        
+      - name: Upload tar package
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload zip package to release
-        uses: JasonEtco/upload-to-release@master
         with:
-          args: packages/zoe-cli.zip
+          upload_url: ${{ steps.fetch_release_data.outputs.upload_url }} 
+          asset_path: packages/zoe-cli.tar.gz
+          asset_name: zoe-cli.tar.gz
+          asset_content_type: application/zip
+          
+      - name: Upload zip package
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
+          asset_path: packages/zoe-cli.zip
+          asset_name: zoe-cli.zip
+          asset_content_type: application/zip
