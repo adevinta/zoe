@@ -1,0 +1,37 @@
+name: Publish runtimeless packages
+
+on:
+  release:
+    types: ["published"]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v1.3.0
+        with:
+          java-version: 11
+          java-package: jdk
+          architecture: x64
+
+      - name: Build
+        run: ./scripts/package-tar-without-runtime.sh
+
+      - name: Upload tar package to release
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: packages/zoe-cli.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload zip package to release
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: packages/zoe-cli.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

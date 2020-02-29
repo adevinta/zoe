@@ -22,11 +22,9 @@ if [[ -z "${target}" ]]; then
   exit 1
 fi
 
-output_package_dir="/tmp/package"
+tmp_output_package_dir="/tmp/package"
 
-set +e
-rm ${output_package_dir}/zoe_*.${target}
-set -e
+rm -f ${tmp_output_package_dir}/zoe_*.${target}
 
 ${THIS_DIR}/build.sh
 
@@ -39,10 +37,10 @@ ${JAVA_14_LINUX_DOCKER} /bin/bash -c "
     --main-class 'com.adevinta.oss.zoe.cli.MainKt' \\
     --main-jar ${ZOE_CLI_JAR} \\
     --type "${target}" \\
-    --dest "${output_package_dir}"
+    --dest "${tmp_output_package_dir}"
 "
 
-package=$(ls -t ${output_package_dir}/zoe*.${target} | head -n 1)
+package=$(ls -t ${tmp_output_package_dir}/zoe*.${target} | head -n 1)
 
 if [[ -z "${package}" ]]; then
   echo "Zoe cli package not found !"
