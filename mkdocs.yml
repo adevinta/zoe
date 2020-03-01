@@ -14,4 +14,4 @@ theme:
     accent: 'indigo'
 
 nav:
-  - 'Install': install
+  - 'Install': install.md

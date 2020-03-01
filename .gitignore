@@ -9,6 +9,7 @@ out
 draft.md
 .ipynb_checkpoints
 config.yml
+site
 
 zoe-cli/bin
 zoe-core/bin
