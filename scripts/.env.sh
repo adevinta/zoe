@@ -24,5 +24,6 @@ JAVA_DOCKER="${DOCKER_CMD_PREFIX} -v ${JAVA_DOCKER_HOME}:/root openjdk:11-jdk"
 # packaging related
 JAVA_14_LINUX_DOCKER="${DOCKER_CMD_PREFIX} -v ${JAVA_DOCKER_HOME}:/root openjdk:14-jdk-buster"
 
+ZOE_INSTALL_DIR="${PROJECT_DIR}/zoe-cli/build/install/zoe-cli-shadow"
 ZOE_CLI_LIB="${PROJECT_DIR}/zoe-cli/build/libs"
 ZOE_CLI_JAR="zoe-cli-final.jar"

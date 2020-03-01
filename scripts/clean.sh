@@ -13,6 +13,6 @@ set -ex
 THIS_DIR=$(readlink -f $(dirname $0))
 PROJECT_DIR=$(readlink -f "${THIS_DIR}/..")
 
-source $THIS_DIR/.env.sh
+source "$THIS_DIR/.env.sh"
 
-exec $JAVA_DOCKER ./gradlew clean
+"${PROJECT_DIR}"/gradlew clean

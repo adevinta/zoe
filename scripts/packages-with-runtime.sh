@@ -10,10 +10,11 @@
 
 set -ex
 
-THIS_DIR=$(readlink -f $(dirname $0))
+THIS_DIR=$(readlink -f $(dirname "$0"))
 PROJECT_DIR=$(readlink -f "${THIS_DIR}/..")
 
-source $THIS_DIR/.env.sh
+# shellcheck disable=SC1090
+source "$THIS_DIR/.env.sh"
 
 target=${1}
 
@@ -24,21 +25,23 @@ fi
 
 tmp_output_package_dir="/tmp/package"
 
-rm -f ${tmp_output_package_dir}/zoe_*.${target}
+rm -f ${tmp_output_package_dir}/zoe*.${target}
 
-${THIS_DIR}/build.sh
+if [[ ! -f  "${ZOE_CLI_LIB}/${ZOE_CLI_JAR}" ]]; then
+  echo "you need to build the zoe cli jar first !"
+  exit 1
+fi
 
-${JAVA_14_LINUX_DOCKER} /bin/bash -c "
-  apt update -y
-  apt install -y fakeroot rpm
-  jpackage \\
-    -i ${ZOE_CLI_LIB} \\
-    -n zoe \\
-    --main-class 'com.adevinta.oss.zoe.cli.MainKt' \\
-    --main-jar ${ZOE_CLI_JAR} \\
-    --type "${target}" \\
-    --dest "${tmp_output_package_dir}"
-"
+version=$("${PROJECT_DIR}"/scripts/version.sh)
+
+jpackage \
+    -i "${ZOE_CLI_LIB}" \
+    -n zoe \
+    --main-class 'com.adevinta.oss.zoe.cli.MainKt' \
+    --main-jar "${ZOE_CLI_JAR}" \
+    --type "${target}" \
+    --dest "${tmp_output_package_dir}" \
+    --app-version "${version}"
 
 package=$(ls -t ${tmp_output_package_dir}/zoe*.${target} | head -n 1)
 
@@ -47,5 +50,6 @@ if [[ -z "${package}" ]]; then
   exit 1
 fi
 
-mkdir -p ${PROJECT_DIR}/packages
-cp ${package} ${PROJECT_DIR}/packages
+mkdir -p "${PROJECT_DIR}/packages"
+rm -f "${PROJECT_DIR}/packages"/zoe*.${target}
+cp "${package}" "${PROJECT_DIR}/packages"
