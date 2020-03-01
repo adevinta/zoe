@@ -89,7 +89,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#zoe-the-missing-companion-for-kafka" tabindex="0" class="md-skip">
+      <a href="#zoe-the-kafka-companion" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -115,7 +115,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Zoe : The missing companion for Kafka
+                Zoe : The Kafka companion
               
             </span>
           
@@ -333,21 +333,21 @@
                   <a href="https://github.com/adevinta/zoe/edit/master/docs/index.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="zoe-the-missing-companion-for-kafka">Zoe : The missing companion for Kafka</h1>
+                <h1 id="zoe-the-kafka-companion">Zoe : The Kafka companion</h1>
 <p>Zoe is a command line tool to interact with kafka in an easy and intuitive way. Wanna see this in action ? check out this demo...</p>
 <p><a href="https://asciinema.org/a/vSDNcUUaMMBkWxCSDD8u3s0No?speed=2.5&amp;rows=35"><img alt="demo" src="https://asciinema.org/a/vSDNcUUaMMBkWxCSDD8u3s0No.svg" /></a></p>
 <p>Zoe really shines when it comes to interacting with cloud hosted kafka clusters (kubernetes, AWS, etc.) <strong>due to its ability to offload consumption and execution to kubernetes pods or lambda functions</strong> (more runners will be supported in the future).</p>
 <h2 id="status">Status</h2>
-<p>Zoe is not GA yet. It has been open sourced very recently and is actively being improved toward stabilization. Documentation is also still to be done. That said, we are already using it at Adevinta and you can already start trying it if you are not afraid of digging into the code to solve some eventual undocumented problems :) . </p>
+<p>Zoe has been open sourced very recently and is not GA yet. It is actively being improved towards stabilization. Documentation is also in progress. That said, we are already using it at Adevinta and you can already start trying it if you are not afraid of digging into the code to solve some eventual undocumented problems :) . </p>
 <h2 id="key-features">Key features</h2>
 <p>Here are some of the most interesting features of zoe :</p>
 <ul>
-<li>Consume kafka topics from a specific point in time (ex. from the last hour).</li>
-<li>Filter data based on content (ex. filter events with <code>id == '12345'</code>).</li>
-<li>Supports offloading consumption of data to multiple lambda functions, kubernetes pods, etc. for parallelism.</li>
+<li>Consume kafka topics from a specific point in time (ex. using <code>--from 'PT5h</code> from the last 5 hours).</li>
+<li>Filter data based on content (ex. using <code>--filter "id == '12345'"</code> filters records with the selected id).</li>
+<li>Supports offloading consumption of data to multiple lambda functions, kubernetes pods, etc. for parallelism (ex. adding <code>-x kubernetes</code> would offload all the requests to a configured kubernetes cluster).</li>
 <li>Monitor consumer groups' offsets.</li>
-<li>Upload avro schemas from a .avsc or .avdl file using different naming strategies.</li>
-<li>... and more. </li>
+<li>Upload avro schemas from a <code>.avsc</code> or <code>.avdl</code> file using different naming strategies.</li>
+<li>... and more.</li>
 </ul>
 <p>Go to the install section for instructions on how to install the zoe CLI.</p>
                 

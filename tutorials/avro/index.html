@@ -312,22 +312,16 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tutorial" class="md-nav__link">
-    Tutorial
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#start-using-zoe" class="md-nav__link">
-    Start using Zoe
+  <a href="#prepare-the-environment" class="md-nav__link">
+    Prepare the environment
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#start-using-zoe" class="md-nav__link">
+    Start using Zoe
+  </a>
   
 </li>
       
@@ -382,22 +376,16 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tutorial" class="md-nav__link">
-    Tutorial
-  </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#start-using-zoe" class="md-nav__link">
-    Start using Zoe
+  <a href="#prepare-the-environment" class="md-nav__link">
+    Prepare the environment
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#start-using-zoe" class="md-nav__link">
+    Start using Zoe
+  </a>
   
 </li>
       
@@ -437,7 +425,7 @@
 <li>Zoe</li>
 <li>Docker and docker-compose</li>
 </ul>
-<h2 id="tutorial">Tutorial</h2>
+<h2 id="prepare-the-environment">Prepare the environment</h2>
 <ul>
 <li>Clone the <a href="https://github.com/adevinta/zoe">repository</a> : <code>git clone https://github.com/adevinta/zoe.git</code></li>
 <li>Go to the directory : <code>tutorials/simple</code></li>
@@ -445,7 +433,7 @@
 <li>Point zoe to this tutorial's config : <code>export ZOE_CONFIG_DIR=$(pwd)/config</code></li>
 </ul>
 <p>Now, you're ready to use zoe to interact with the local kafka cluster. This cluster is available in the provided config above under the <code>local</code> alias (take a look at <code>zoe-config/default.yml</code>)</p>
-<h3 id="start-using-zoe">Start using Zoe</h3>
+<h2 id="start-using-zoe">Start using Zoe</h2>
 <p>In this tutorial we are still using the cats facts data that we used in the previous tutorial. But this time we are serializing into kafka in avro format.</p>
 <p>In order to do this, we have provided a ready to use avro schema that describe the fact cats data in the <code>schema.avdl</code> file. The first step is to deploy this schema.</p>
 <p>Usually, to deploy an <code>.avdl</code> file into the schema registry we first need to compile it into an <code>.avsc</code> file before posting it to the registry. With zoe, this compilation step is done automatically for us. In fact, zoe handles <code>.avdl</code> files seamlessly.</p>
