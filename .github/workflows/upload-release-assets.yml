@@ -82,7 +82,9 @@ jobs:
         id: fetch_release_data
         run: |
           UPLOAD_URL=$(jq -r '.release.upload_url' ${GITHUB_EVENT_PATH})
+          RELEASE_TAG=$(jq -r '.release.tag_name' ${GITHUB_EVENT_PATH})
           echo "::set-output name=upload_url::$UPLOAD_URL"
+          echo "::set-output name=release_tag::$RELEASE_TAG"
 
       - name: Setup Java JDK
         uses: actions/setup-java@v1.3.0
@@ -105,8 +107,10 @@ jobs:
 
       - name: Package
         id: package
+        env:
+          release_tag: ${{ steps.fetch_release_data.outputs.release_tag }}
         run: |
-          ./scripts/packages-with-runtime.sh ${target}
+          ./scripts/packages-with-runtime.sh ${target} ${release_tag:1}
           package_path=$(ls -t packages/zoe*.${target} | head -n 1)
           package_name=$(basename "$package_path")
           echo "::set-output name=package_path::$package_path"

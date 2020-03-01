@@ -19,9 +19,12 @@ source "$THIS_DIR/.env.sh"
 target=${1}
 
 if [[ -z "${target}" ]]; then
-  echo "usage : $0 [deb|rpm]"
+  echo "usage : $0 (deb|rpm) [version]"
   exit 1
 fi
+
+# if version not supplied, use the version from git
+version=${2:-$("${PROJECT_DIR}"/scripts/version.sh)}
 
 tmp_output_package_dir="/tmp/package"
 
@@ -31,8 +34,6 @@ if [[ ! -f  "${ZOE_CLI_LIB}/${ZOE_CLI_JAR}" ]]; then
   echo "you need to build the zoe cli jar first !"
   exit 1
 fi
-
-version=$("${PROJECT_DIR}"/scripts/version.sh)
 
 jpackage \
     -i "${ZOE_CLI_LIB}" \
