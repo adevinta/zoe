@@ -286,6 +286,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-you-will-learn" class="md-nav__link">
+    What you will learn
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#prerequisites" class="md-nav__link">
     Prerequisites
   </a>
@@ -368,6 +375,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-you-will-learn" class="md-nav__link">
+    What you will learn
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#prerequisites" class="md-nav__link">
     Prerequisites
   </a>
@@ -421,13 +435,24 @@
                 
                 
                 <h1 id="a-simple-example">A simple example</h1>
-<p>This tutorial walks through the most basic functionalities of zoe. It makes use of a dataset downloaded from the <a href="http://www.catfact.info/">Cat Facts API</a>.</p>
-<p>This tutorial will spin up a simple one node kafka cluster. Then it uses zoe to put some data in it and read it back. It also shows the filtering capabilities of zoe.</p>
-<p>If you want to run this tutorial yourself, you can find all the relevant files / datasets used in the <a href="https://github.com/adevinta/zoe/tree/master/tutorials/simple">simple tutorials</a> in the repository.</p>
+<p>This tutorial walks you through the most basic functionalities of zoe. It makes use of a dataset downloaded from the <a href="http://www.catfact.info/">Cat Facts API</a> to explore reading and writing data from / into kafka using zoe.</p>
+<p>In this tutorial, we will spin up a simple one node kafka cluster and then interact with it using zoe.</p>
+<p>If you want to run this tutorial yourself, you can find all the relevant files / datasets <a href="https://github.com/adevinta/zoe/tree/master/tutorials/simple">here</a>.</p>
+<h2 id="what-you-will-learn">What you will learn</h2>
+<p>In this tutorial, you will learn the following aspects of zoe :</p>
+<ul>
+<li>listing topics</li>
+<li>describing topics</li>
+<li>writing json data into kafka topics</li>
+<li>reading json data from a topic</li>
+<li>using jmespath expressions to filter read data based on its content.</li>
+</ul>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>For this tutorial you will need :
-- Zoe (install instructions <a href="../../install/">here</a>)
-- Docker and docker-compose</p>
+<p>For this tutorial you will need :</p>
+<ul>
+<li>Zoe (follow instructions <a href="../../install/">here</a>)</li>
+<li>Docker and docker-compose</li>
+</ul>
 <h2 id="tutorial">Tutorial</h2>
 <h3 id="prepare-the-environment">Prepare the environment</h3>
 <ul>
@@ -438,31 +463,30 @@
 </ul>
 <p>Now, you're ready to use zoe to interact with the local kafka cluster. This cluster is available in the provided config above under the <code>local</code> alias (take a look at <code>zoe-config/default.yml</code>)</p>
 <h3 id="start-using-zoe">Start using Zoe</h3>
-<p>To list and describe topics :
-```shell script</p>
-<h1 id="interact-with-the-topics">interact with the topics</h1>
-<p>zoe -c local topics list
-zoe -c local topics describe input-events-topic</p>
-<pre><code>
-To avoid repeating the `-c local` option on each command you can set the `local` cluster as the default one for the current session : `export ZOE_CLUSTER=local` 
+<p>To list and describe topics :</p>
+<pre><code># interact with the topics
+zoe -c local topics list
+zoe -c local topics describe input-events-topic
+</code></pre>
 
-We have some cats facts in the `data.json` file. Let's put it into the `input-events-topic` aliased as the `input` in zoe's configuration (`zoe-config/default.yml`) :
-```shell script
-zoe topics produce --topic input --from-file $(pwd)/data.json
+<p>To avoid repeating the <code>-c local</code> option on each command you can set the <code>local</code> cluster as the default one for the current session : <code>export ZOE_CLUSTER=local</code> </p>
+<p>We have some cats facts in the <code>data.json</code> file. Let's put it into the <code>input-events-topic</code> aliased as the <code>input</code> in zoe's configuration (<code>zoe-config/default.yml</code>) :</p>
+<pre><code>zoe topics produce --topic input --from-file $(pwd)/data.json
 </code></pre>
 
 <p>Read the data that we have just inserted :</p>
-<p>```shell script</p>
-<h1 id="read-the-10-last-events">read the 10 last events</h1>
-<p>zoe -q -o table topics consume input -n 10 --from 'PT1h'</p>
-<h1 id="display-events-in-a-table">display events in a table</h1>
-<p>zoe -q -o table topics consume input -n 10 --from 'PT1h' \
-       --query '{id: _id, type: type, user: user, upvotes: upvotes}'</p>
-<h1 id="filter-out-kasimirs-data">filter out Kasimir's data</h1>
-<p>zoe -q -o table topics consume input -n 10 --from 'PT1h' \
+<pre><code># read the 10 last events
+zoe -q -o table topics consume input -n 10 --from 'PT1h'
+
+# display events in a table
+zoe -q -o table topics consume input -n 10 --from 'PT1h' \
+       --query '{id: _id, type: type, user: user, upvotes: upvotes}'
+
+# filter out Kasimir's data
+zoe -q -o table topics consume input -n 10 --from 'PT1h' \
        --query '{id: _id, type: type, user: user, upvotes: upvotes}' \
-       --filter "user.name.first == 'Kasimir'"
-```</p>
+       --filter &quot;user.name.first == 'Kasimir'&quot;
+</code></pre>
                 
                   
                 

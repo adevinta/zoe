@@ -298,6 +298,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-you-will-learn" class="md-nav__link">
+    What you will learn
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#prerequisites" class="md-nav__link">
     Prerequisites
   </a>
@@ -361,6 +368,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-you-will-learn" class="md-nav__link">
+    What you will learn
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#prerequisites" class="md-nav__link">
     Prerequisites
   </a>
@@ -408,10 +422,21 @@
                 
                 <h1 id="zoe-with-avro">Zoe with Avro</h1>
 <p>This tutorial shows zoe support for avro and the schema registry. If you are new to zoe, start with <a href="../simple/">the simple example</a>.</p>
+<h2 id="what-you-will-learn">What you will learn</h2>
+<p>In this tutorial, you will learn the following aspects of zoe :</p>
+<ul>
+<li>listing avro schemas registerd in the schema registry</li>
+<li>deploying <code>.avdl</code> avro schemas</li>
+<li>writing json data into kafka topics using avro</li>
+<li>reading avro data from a topic</li>
+<li>using jmespath expressions to filter read data based on its content.</li>
+</ul>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>For this tutorial you will need :
-- Zoe
-- Docker and docker-compose</p>
+<p>For this tutorial you will need :</p>
+<ul>
+<li>Zoe</li>
+<li>Docker and docker-compose</li>
+</ul>
 <h2 id="tutorial">Tutorial</h2>
 <ul>
 <li>Clone the <a href="https://github.com/adevinta/zoe">repository</a> : <code>git clone https://github.com/adevinta/zoe.git</code></li>
@@ -423,36 +448,37 @@
 <h3 id="start-using-zoe">Start using Zoe</h3>
 <p>In this tutorial we are still using the cats facts data that we used in the previous tutorial. But this time we are serializing into kafka in avro format.</p>
 <p>In order to do this, we have provided a ready to use avro schema that describe the fact cats data in the <code>schema.avdl</code> file. The first step is to deploy this schema.</p>
-<p>Usually, to deploy an <code>.avdl</code> file into the schema registry we first need to compile it into an <code>.avsc</code> file before posting it to the registry. With zoe, this compilation step is done automatically for us. In fact, zoe handles <code>.avdl</code> files seamlessly.
-```shell script</p>
-<h1 id="list-currently-registered-avro-schemas">list currently registered avro schemas</h1>
-<p>zoe -q -c local schemas list</p>
-<h1 id="deploy-the-cat-facts-schema-from-the">deploy the cat facts schema from the</h1>
-<p>zoe -q -c local schemas deploy \
+<p>Usually, to deploy an <code>.avdl</code> file into the schema registry we first need to compile it into an <code>.avsc</code> file before posting it to the registry. With zoe, this compilation step is done automatically for us. In fact, zoe handles <code>.avdl</code> files seamlessly.</p>
+<pre><code># list currently registered avro schemas
+zoe -q -c local schemas list
+
+# deploy the cat facts schema from the 
+zoe -q -c local schemas deploy \
   --avdl \
   --from-file schema.avdl \
   --name CatFact \
   --strategy topicRecord \
   --topic input \
-  --dry-run</p>
-<pre><code>
-Produce some events from the `data.json` using avro :
-```shell script
-zoe -c local topics produce --topic input --from-file $(pwd)/data.json
+  --dry-run
 </code></pre>
 
-<p>Read the data from the topic :
-```shell script</p>
-<h1 id="read-the-10-last-events">read the 10 last events</h1>
-<p>zoe -q -o table -c local topics consume input -n 10 --from 'PT1h'</p>
-<h1 id="display-events-in-a-table">display events in a table</h1>
-<p>zoe -q -o table -c local topics consume input -n 10 --from 'PT1h' \
-       --query '{id: _id, type: type, user: user, upvotes: upvotes}'</p>
-<h1 id="filter-out-kasimirs-data">filter out Kasimir's data</h1>
-<p>zoe -q -o table -c local topics consume input -n 10 --from 'PT1h' \
+<p>Produce some events from the <code>data.json</code> using avro :</p>
+<pre><code>zoe -c local topics produce --topic input --from-file $(pwd)/data.json
+</code></pre>
+
+<p>Read the data from the topic :</p>
+<pre><code># read the 10 last events
+zoe -q -o table -c local topics consume input -n 10 --from 'PT1h'
+
+# display events in a table
+zoe -q -o table -c local topics consume input -n 10 --from 'PT1h' \
+       --query '{id: _id, type: type, user: user, upvotes: upvotes}'
+
+# filter out Kasimir's data
+zoe -q -o table -c local topics consume input -n 10 --from 'PT1h' \
        --query '{id: _id, type: type, user: user, upvotes: upvotes}' \
-       --filter "user.name.first == 'Kasimir'"
-```</p>
+       --filter &quot;user.name.first == 'Kasimir'&quot;
+</code></pre>
                 
                   
                 
