@@ -8,8 +8,6 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 set -ex
 
-PROJECT_DIR=$(readlink -f "$(dirname $0)/../..")
-
 target=${1}
 version=${2}
 
@@ -18,10 +16,11 @@ if [[ -z "${target}" || -z "${version}" ]]; then
   exit 1
 fi
 
+project_dir=$(pwd)
 tmp_output_package_dir=$(mktemp -d)
 
 jpackage \
-    -i "${PROJECT_DIR}/zoe-cli/build/libs" \
+    -i "${project_dir}/zoe-cli/build/libs" \
     -n zoe \
     --main-class 'com.adevinta.oss.zoe.cli.MainKt' \
     --main-jar "zoe-cli-final.jar" \
@@ -31,5 +30,5 @@ jpackage \
 
 package=$(find "${tmp_output_package_dir}" -maxdepth 1 -name 'zoe*')
 
-mkdir -p "${PROJECT_DIR}/packages"
-cp "${package}" "${PROJECT_DIR}/packages"
+mkdir -p "${project_dir}/packages"
+cp "${package}" "${project_dir}/packages"

@@ -1,4 +1,4 @@
-name: Publish runtimeless packages
+name: Publish release packages
 
 on:
   release:
@@ -42,10 +42,12 @@ jobs:
           package_version: ${{ steps.fetch_release_data.outputs.package_version }}
         run: |
           ./dev/scripts/packages-without-runtime.sh ${package_version}
+
+          # retrieve packages
           zip_package=$(ls -t packages/zoe-*.zip | head -n 1)
           tar_package=$(ls -t packages/zoe-*.tar.gz | head -n 1)
 
-          # test packages are found
+          # ensure packages are generated
           [[ -z "${zip_package}" || -z "${tar_package}" ]] && \
             { echo "one of the packages not found : (zip: ${tar_package} | tar: ${tar_package})"; exit 1; }
 
@@ -129,8 +131,10 @@ jobs:
           release_tag: ${{ steps.fetch_release_data.outputs.release_tag }}
         run: |
           ./dev/scripts/packages-with-runtime.sh ${target} ${release_tag:1}
+
           package_path=$(ls -t packages/zoe*.${target} | head -n 1)
           package_name=$(basename "$package_path")
+
           echo "::set-output name=package_path::$package_path"
           echo "::set-output name=package_name::$package_name"
 

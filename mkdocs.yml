@@ -1,7 +1,7 @@
 site_name: Zoe
 repo_name: Zoe
 repo_url: https://github.com/adevinta/zoe
-site_description: "Zoe: The missing companion for Kafka"
+site_description: "Zoe: The Kafka companion"
 site_author: Adevinta
 remote_branch: gh-pages
 
@@ -15,3 +15,6 @@ theme:
 
 nav:
   - 'Install': install.md
+  - 'Tutorials':
+      - 'A simple example': tutorials/simple.md
+      - 'Zoe with Avro': tutorials/avro.md
