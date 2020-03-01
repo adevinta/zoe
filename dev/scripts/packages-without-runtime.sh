@@ -23,14 +23,7 @@ if [[ ! -f  "${ZOE_CLI_LIB}/${ZOE_CLI_JAR}" ]]; then
 fi
 
 # create temporary packaging directoy
-tmp_output_package_dir="/tmp/package"
-rm -Rf "${tmp_output_package_dir}"
-mkdir -p "${tmp_output_package_dir}"
-
-# delete already existing artifacts if they exist
-mkdir -p "${PROJECT_DIR}/packages"
-rm -f "${PROJECT_DIR}/packages/zoe*.tar.gz"
-rm -f "${PROJECT_DIR}/packages/zoe*.zip"
+tmp_output_package_dir=$(mktemp -d)
 
 # package
 cp -R "${PROJECT_DIR}/zoe-cli/build/install/zoe-cli-shadow" "${tmp_output_package_dir}/zoe"
@@ -38,5 +31,6 @@ cp -R "${PROJECT_DIR}/zoe-cli/build/install/zoe-cli-shadow" "${tmp_output_packag
 (cd "${tmp_output_package_dir}" && zip -r zoe.zip zoe)
 
 # copy to target direction
+mkdir -p "${PROJECT_DIR}/packages"
 mv "${tmp_output_package_dir}/zoe.tar.gz" "${PROJECT_DIR}/packages/zoe-${version}.tar.gz"
 mv "${tmp_output_package_dir}/zoe.zip" "${PROJECT_DIR}/packages/zoe-${version}.zip"

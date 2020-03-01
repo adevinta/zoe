@@ -83,8 +83,8 @@ jobs:
         package:
           - type: deb
             os: ubuntu-latest
-#          - type: rpm
-#            os: ubuntu-latest
+          - type: rpm
+            os: ubuntu-latest
 
     runs-on: ${{ matrix.package.os }}
 

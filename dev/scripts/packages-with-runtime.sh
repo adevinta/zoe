@@ -6,15 +6,9 @@
 # The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
 set -ex
 
-THIS_DIR=$(readlink -f $(dirname "$0"))
-PROJECT_DIR=$(readlink -f "${THIS_DIR}/../..")
-
-# shellcheck disable=SC1090
-source "$THIS_DIR/.env.sh"
+PROJECT_DIR=$(readlink -f "$(dirname $0)/../..")
 
 target=${1}
 version=${2}
@@ -24,31 +18,18 @@ if [[ -z "${target}" || -z "${version}" ]]; then
   exit 1
 fi
 
-tmp_output_package_dir="/tmp/package"
-
-rm -f ${tmp_output_package_dir}/zoe*.${target}
-
-if [[ ! -f  "${ZOE_CLI_LIB}/${ZOE_CLI_JAR}" ]]; then
-  echo "you need to build the zoe cli jar first !"
-  exit 1
-fi
+tmp_output_package_dir=$(mktemp -d)
 
 jpackage \
-    -i "${ZOE_CLI_LIB}" \
+    -i "${PROJECT_DIR}/zoe-cli/build/libs" \
     -n zoe \
     --main-class 'com.adevinta.oss.zoe.cli.MainKt' \
-    --main-jar "${ZOE_CLI_JAR}" \
+    --main-jar "zoe-cli-final.jar" \
     --type "${target}" \
     --dest "${tmp_output_package_dir}" \
     --app-version "${version}"
 
-package=$(ls -t ${tmp_output_package_dir}/zoe*.${target} | head -n 1)
-
-if [[ -z "${package}" ]]; then
-  echo "Zoe cli package not found !"
-  exit 1
-fi
+package=$(find "${tmp_output_package_dir}" -maxdepth 1 -name 'zoe*')
 
 mkdir -p "${PROJECT_DIR}/packages"
-rm -f "${PROJECT_DIR}/packages"/zoe*.${target}
 cp "${package}" "${PROJECT_DIR}/packages"
