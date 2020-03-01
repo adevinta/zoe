@@ -23,67 +23,7 @@ Here are some of the most interesting features of zoe :
 
 ## Install
 
-### Tarball install (requires a JDK on the host machine)
-
-Java 11 or higher is required in order to install the runtimeless packages. If you don't have java installed already, you can use [sdkman](https://sdkman.io/) to easily install it. If you don't want to install java you can try one of the platform packages provided below if your platform is supported.
-
-Once java is installed, proceed with the following steps :
-
-1. Download the runtime-less zip or tar package of the zoe CLI from the [latest release page](https://github.com/adevinta/zoe/releases/latest) and uncompress it into your home directory (or wherever you wish)
-```
-ZOE_VERSION=0.2.2  # change it to the suitable version
-curl -L "https://github.com/adevinta/zoe/releases/download/v${ZOE_VERSION}/zoe-${ZOE_VERSION}.tar.gz" | tar -zx -C $HOME
-```
-2. Add the `$HOME/zoe/bin` into your path by appending the following line in your `.bashrc` (or `.zshrc`) :
-```
-PATH=$PATH:$HOME/zoe/bin
-``` 
-3. Init zoe configuration :
-```bash
-zoe config init
-```
-4. You are now ready to use zoe. Go to the `./tutorials` folder to start learning zoe.
-
-### Platform package install (Experimental - does not require an already installed JDK)
-
-The following packages are self contained. They ship with their own version of java virtual machine (thus the higher size of the package). The host machine does not need to have any java runtime installed already.
-
-The packages are built with [jpackage](https://jdk.java.net/jpackage/). Only few plateforms are supported for now but more will be supported in the future. 
-
-#### Ubuntu / Debian
-
-1. Download the runtime-full `.deb` package of the zoe CLI from the [latest release page](https://github.com/adevinta/zoe/releases/latest) and install it using `dpkg` :
-```
-ZOE_VERSION=0.2.2  # change it to the suitable version
-curl -L "https://github.com/adevinta/zoe/releases/download/v${ZOE_VERSION}/zoe_${ZOE_VERSION}-1_amd64.deb" -o /tmp/zoe.deb
-sudo dpkg -i /tmp/zoe.deb
-```
-2. Add the `/opt/zoe/bin` into your path by appending the following line in your `.bashrc` (or `.zshrc`) :
-```
-PATH=$PATH:/opt/zoe/bin
-```
-3. Init zoe configuration :
-```bash
-zoe config init
-```
-4. You are now ready to use zoe. Go to the `./tutorials` folder to start learning zoe.
-
-#### Centos
-
-1. Download the runtime-full `.deb` package of the zoe CLI from the [latest release page](https://github.com/adevinta/zoe/releases/latest) and install it using `dpkg` :
-```
-ZOE_VERSION=0.2.2  # change it to the suitable version
-sudo rpm -i "https://github.com/adevinta/zoe/releases/download/v${ZOE_VERSION}/zoe-${ZOE_VERSION}-1.x86_64.rpm"
-```
-2. Add the `/opt/zoe/bin` into your path by appending the following line in your `.bashrc` (or `.zshrc`) :
-```
-PATH=$PATH:/opt/zoe/bin
-```
-3. Init zoe configuration :
-```bash
-zoe config init
-```
-4. You are now ready to use zoe. Go to the `./tutorials` folder to start learning zoe.
+Go to the [install](docs/install.md) page for instructions on how to install the Zoe CLI.
 
 ## Documentation
 

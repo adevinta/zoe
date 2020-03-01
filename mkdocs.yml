@@ -1,0 +1,17 @@
+site_name: Zoe
+repo_name: Zoe
+repo_url: https://github.com/adevinta/zoe
+site_description: "Zoe: The missing companion for Kafka"
+site_author: Adevinta
+remote_branch: gh-pages
+
+copyright: 'Copyright (c) 2020 Adevinta'
+
+theme:
+  name: 'material'
+  palette:
+    primary: 'deep purple'
+    accent: 'indigo'
+
+nav:
+  - 'Install': install
