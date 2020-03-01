@@ -2,10 +2,19 @@
 set -ex
 
 THIS_DIR=$(readlink -f "$(dirname "$0")")
-PROJECT_DIR=$(readlink -f "${THIS_DIR}/..")
+PROJECT_DIR=$(readlink -f "${THIS_DIR}/../..")
 
 # shellcheck disable=SC1090
 source "$THIS_DIR/.env.sh"
+
+# if version not supplied, use the version from git
+version=${1}
+
+if [[ -z "${version}" ]]; then
+  echo "usage : $0 <version>"
+  exit 1
+fi
+
 
 # check build
 if [[ ! -f  "${ZOE_CLI_LIB}/${ZOE_CLI_JAR}" ]]; then
@@ -24,7 +33,6 @@ rm -f "${PROJECT_DIR}/packages/zoe*.tar.gz"
 rm -f "${PROJECT_DIR}/packages/zoe*.zip"
 
 # package
-version=$("${PROJECT_DIR}"/scripts/version.sh)
 cp -R "${PROJECT_DIR}/zoe-cli/build/install/zoe-cli-shadow" "${tmp_output_package_dir}/zoe"
 (cd "${tmp_output_package_dir}" && tar -czvf zoe.tar.gz zoe)
 (cd "${tmp_output_package_dir}" && zip -r zoe.zip zoe)

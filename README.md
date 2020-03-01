@@ -69,3 +69,11 @@ zoe-cli/build/install/zoe-cli-shadow/bin/zoe config init
 _ZOE_COMPLETE=bash java -cp zoe-cli/build/libs/zoe-cli-final.jar com.adevinta.oss.zoe.cli.MainKt > /tmp/complete.sh
 source /tmp/complete.sh
 ```
+
+## Development
+
+### Testing actions
+```bash
+docker build -t gh-actions:ubuntu-latest dev/actions/images/ubuntu
+act -P ubuntu-latest=gh-actions:ubuntu-latest -r -j release-runtimeless -e dev/actions/payloads/release.json release
+```

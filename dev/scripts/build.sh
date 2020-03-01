@@ -9,9 +9,4 @@
 
 set -ex
 
-THIS_DIR=$(readlink -f $(dirname $0))
-PROJECT_DIR=$(readlink -f "${THIS_DIR}/..")
-
-source "$THIS_DIR/.env.sh"
-
-"${PROJECT_DIR}"/gradlew zoe-cli:installShadowDist
+./gradlew zoe-cli:installShadowDist

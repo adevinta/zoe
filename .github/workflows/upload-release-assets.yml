@@ -18,7 +18,11 @@ jobs:
         id: fetch_release_data
         run: |
           UPLOAD_URL=$(jq -r '.release.upload_url' ${GITHUB_EVENT_PATH})
+          RELEASE_TAG=$(jq -r '.release.tag_name' ${GITHUB_EVENT_PATH})
+          PACKAGE_VERSION=$(echo $RELEASE_TAG | sed 's/^v//')
           echo "::set-output name=upload_url::$UPLOAD_URL"
+          echo "::set-output name=release_tag::$RELEASE_TAG"
+          echo "::set-output name=package_version::$PACKAGE_VERSION"
 
       - name: Setup Java JDK
         uses: actions/setup-java@v1.3.0
@@ -29,21 +33,26 @@ jobs:
 
       - name: Build
         run: |
-          ./scripts/clean.sh
-          ./scripts/build.sh
+          ./dev/scripts/clean.sh
+          ./dev/scripts/build.sh
 
       - name: Package
-        run: ./scripts/packages-without-runtime.sh
-
-      - name: Upload tar package
-        uses: actions/upload-release-asset@v1
+        id: package
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
-          asset_path: packages/zoe-cli.tar.gz
-          asset_name: zoe-cli.tar.gz
-          asset_content_type: application/zip
+          package_version: ${{ steps.fetch_release_data.outputs.package_version }}
+        run: |
+          ./dev/scripts/packages-without-runtime.sh ${package_version}
+          zip_package=$(ls -t packages/zoe-*.zip | head -n 1)
+          tar_package=$(ls -t packages/zoe-*.tar.gz | head -n 1)
+
+          # test packages are found
+          [[ -z "${zip_package}" || -z "${tar_package}" ]] && \
+            { echo "one of the packages not found : (zip: ${tar_package} | tar: ${tar_package})"; exit 1; }
+
+          echo "::set-output name=zip_package_path::${zip_package}"
+          echo "::set-output name=zip_package_name::$(basename ${zip_package})"
+          echo "::set-output name=tar_package_path::${tar_package}"
+          echo "::set-output name=tar_package_name::$(basename ${tar_package})"
 
       - name: Upload zip package
         uses: actions/upload-release-asset@v1
@@ -51,8 +60,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
-          asset_path: packages/zoe-cli.zip
-          asset_name: zoe-cli.zip
+          asset_path: ${{ steps.package.outputs.zip_package_path }}
+          asset_name: ${{ steps.package.outputs.zip_package_name }}
+          asset_content_type: application/zip
+
+      - name: Upload tar package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
+          asset_path: ${{ steps.package.outputs.tar_package_path }}
+          asset_name: ${{ steps.package.outputs.tar_package_name }}
           asset_content_type: application/zip
 
   release-runtimefull:
@@ -64,11 +83,8 @@ jobs:
         package:
           - type: deb
             os: ubuntu-latest
-          - type: rpm
-            os: ubuntu-latest
-#          - type: deb
-#            os: macos-latest
-
+#          - type: rpm
+#            os: ubuntu-latest
 
     runs-on: ${{ matrix.package.os }}
 
@@ -83,8 +99,10 @@ jobs:
         run: |
           UPLOAD_URL=$(jq -r '.release.upload_url' ${GITHUB_EVENT_PATH})
           RELEASE_TAG=$(jq -r '.release.tag_name' ${GITHUB_EVENT_PATH})
+          PACKAGE_VERSION=$(echo $RELEASE_TAG | sed 's/^v//')
           echo "::set-output name=upload_url::$UPLOAD_URL"
           echo "::set-output name=release_tag::$RELEASE_TAG"
+          echo "::set-output name=package_version::$PACKAGE_VERSION"
 
       - name: Setup Java JDK
         uses: actions/setup-java@v1.3.0
@@ -95,8 +113,8 @@ jobs:
 
       - name: Build
         run: |
-          ./scripts/clean.sh
-          ./scripts/build.sh
+          ./dev/scripts/clean.sh
+          ./dev/scripts/build.sh
 
       - name: Setup Java JDK
         uses: actions/setup-java@v1.3.0
@@ -110,7 +128,7 @@ jobs:
         env:
           release_tag: ${{ steps.fetch_release_data.outputs.release_tag }}
         run: |
-          ./scripts/packages-with-runtime.sh ${target} ${release_tag:1}
+          ./dev/scripts/packages-with-runtime.sh ${target} ${release_tag:1}
           package_path=$(ls -t packages/zoe*.${target} | head -n 1)
           package_name=$(basename "$package_path")
           echo "::set-output name=package_path::$package_path"
