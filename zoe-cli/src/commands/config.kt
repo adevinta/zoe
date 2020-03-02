@@ -65,6 +65,7 @@ class ConfigInit : CliktCommand(name = "init", help = "Initialize zoe config"), 
         Files.createDirectories(configDir.toPath())
 
         when {
+
             fromDir != null -> {
                 val sourceConfigFiles = fromDir.listFiles { file -> file.isFile && file.extension == "yml" }
                     ?: userError("provided source is not listable : $fromDir")
@@ -83,42 +84,45 @@ class ConfigInit : CliktCommand(name = "init", help = "Initialize zoe config"), 
                     }
                 }
             }
+
             else -> {
-                logger.info("creating new config file...")
+                logger.info("creating a new config file...")
 
                 val target = ctx.configDir.toPath().resolve("default.yml").toFile()
 
                 if (target.exists() && !overwrite) {
                     logger.info("config file '${target.absolutePath}' already exists ! (--overwrite to recreate)")
-                } else {
-                    val config = EnvConfig(
-                        runners = RunnersSection(default = RunnerName.Local),
-                        clusters = mapOf(
-                            "local" to ClusterConfig(
-                                registry = "http://localhost:8081",
-                                topics = mapOf(
-                                    "input" to TopicConfig(
-                                        "input-topic",
-                                        "input-topic-value"
-                                    )
-                                ),
-                                props = mapOf(
-                                    "bootstrap.servers" to "localhost:29092",
-                                    "key.deserializer" to "org.apache.kafka.common.serialization.StringDeserializer",
-                                    "value.deserializer" to "org.apache.kafka.common.serialization.StringDeserializer"
-                                )
-                            )
-                        ),
-                        storage = null,
-                        secrets = null
-                    )
-
-                    val jsonValue: JsonNode = json.valueToTree(config)
-
-                    yaml.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                        .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
-                        .writerWithDefaultPrettyPrinter().writeValue(target, jsonValue)
+                    return
                 }
+
+                val config = EnvConfig(
+                    runners = RunnersSection(default = RunnerName.Local),
+                    clusters = mapOf(
+                        "local" to ClusterConfig(
+                            registry = "http://localhost:8081",
+                            topics = mapOf(
+                                "input" to TopicConfig(
+                                    "input-topic",
+                                    "input-topic-value"
+                                )
+                            ),
+                            props = mapOf(
+                                "bootstrap.servers" to "localhost:29092",
+                                "key.deserializer" to "org.apache.kafka.common.serialization.StringDeserializer",
+                                "value.deserializer" to "org.apache.kafka.common.serialization.StringDeserializer"
+                            )
+                        )
+                    ),
+                    storage = null,
+                    secrets = null
+                )
+
+                val jsonValue: JsonNode = json.valueToTree(config)
+
+                yaml.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                    .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValue(target, jsonValue)
             }
         }
     }
