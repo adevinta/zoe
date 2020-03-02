@@ -8,6 +8,7 @@
 
 package com.adevinta.oss.zoe.service.runners
 
+import com.adevinta.oss.zoe.core.FailureResponse
 import java.io.Closeable
 import java.util.concurrent.CompletableFuture
 
@@ -24,4 +25,17 @@ class ZoeRunnerException(
     cause: Throwable?,
     val runnerName: String,
     val remoteStacktrace: List<String>?
-) : Exception("runner '$runnerName' failed ${message?.let { ": $it" } ?: ""}", cause)
+) : Exception("runner '$runnerName' failed ${message?.let { ": $it" } ?: ""}", cause) {
+    companion object
+}
+
+fun ZoeRunnerException.Companion.fromRunFailureResponse(
+    error: FailureResponse,
+    runnerName: String
+): ZoeRunnerException = ZoeRunnerException(
+    message = "${error.errorMessage} (type: ${error.errorType})",
+    cause = error.cause?.let { ZoeRunnerException.fromRunFailureResponse(error, runnerName) },
+    runnerName = runnerName,
+    remoteStacktrace = error.stackTrace
+)
+

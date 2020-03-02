@@ -8,6 +8,8 @@
 
 package com.adevinta.oss.zoe.service.runners
 
+import com.adevinta.oss.zoe.core.FailureResponse
+import com.adevinta.oss.zoe.core.fromThrowable
 import com.adevinta.oss.zoe.core.utils.*
 import com.adevinta.oss.zoe.service.utils.userError
 import io.fabric8.kubernetes.api.model.Pod
@@ -142,7 +144,7 @@ class KubernetesRunner(
 
                             zoeState.terminated != null ->
                                 try {
-                                    future.complete(
+                                    val response =
                                         client
                                             .pods()
                                             .withName(resource.metadata.name)
@@ -150,7 +152,24 @@ class KubernetesRunner(
                                             .file(responseFile)
                                             .read()
                                             .use { it.readAllBytes().toString(Charsets.UTF_8) }
-                                    )
+
+                                    when (zoeState.terminated.exitCode) {
+                                        0 -> future.complete(response)
+                                        else -> future.completeExceptionally(
+                                            response
+                                                .runCatching { parseJson<FailureResponse>() }
+                                                .map { ZoeRunnerException.fromRunFailureResponse(it, name) }
+                                                .getOrElse {
+                                                    ZoeRunnerException(
+                                                        message = "container exit status : ${zoeState.terminated}",
+                                                        cause = null,
+                                                        runnerName = name,
+                                                        remoteStacktrace = null
+                                                    )
+                                                }
+                                        )
+                                    }
+
                                 } catch (err: Throwable) {
                                     future.completeExceptionally(err)
                                 }

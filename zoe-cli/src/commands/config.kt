@@ -14,6 +14,7 @@ import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.service.utils.userError
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.JsonNode
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.flag
@@ -112,7 +113,7 @@ class ConfigInit : CliktCommand(name = "init", help = "Initialize zoe config"), 
                         secrets = null
                     )
 
-                    val jsonValue = json.valueToTree(config)
+                    val jsonValue: JsonNode = json.valueToTree(config)
 
                     yaml.setSerializationInclusion(JsonInclude.Include.NON_NULL)
                         .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
