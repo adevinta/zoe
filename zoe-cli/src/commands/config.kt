@@ -10,6 +10,7 @@ package com.adevinta.oss.zoe.cli.commands
 
 import com.adevinta.oss.zoe.cli.config.*
 import com.adevinta.oss.zoe.cli.utils.yaml
+import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.service.utils.userError
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -111,9 +112,11 @@ class ConfigInit : CliktCommand(name = "init", help = "Initialize zoe config"), 
                         secrets = null
                     )
 
+                    val jsonValue = json.valueToTree(config)
+
                     yaml.setSerializationInclusion(JsonInclude.Include.NON_NULL)
                         .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
-                        .writerWithDefaultPrettyPrinter().writeValue(target, config)
+                        .writerWithDefaultPrettyPrinter().writeValue(target, jsonValue)
                 }
             }
         }
