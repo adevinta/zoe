@@ -14,7 +14,9 @@ theme:
     accent: 'indigo'
 
 nav:
-  - 'Install': install.md
-  - 'Tutorials':
-      - 'A simple example': tutorials/simple.md
-      - 'Zoe with Avro': tutorials/avro.md
+  - 'Install':
+      - 'Install zoe': install/index.md
+      - 'Platform packages': install/package.md
+      - 'Tarball install': install/tarball.md
+      - 'Docker': install/docker.md
+  - 'Tutorials': tutorials.md
