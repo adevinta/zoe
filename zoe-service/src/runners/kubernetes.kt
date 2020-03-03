@@ -130,8 +130,14 @@ class KubernetesRunner(
                     override fun eventReceived(action: Watcher.Action, resource: Pod?) {
                         logger.debug("received event '$action' with pod : ${resource?.toJsonString()}")
 
+                        val podState = resource?.status?.phase
                         val zoeState = resource?.status?.containerStatuses?.find { it.name == "zoe" }?.state
+
                         when {
+                            podState == "Pending" -> {
+                                logger.debug("pod is spinning up...")
+                            }
+
                             zoeState == null ->
                                 future.completeExceptionally(
                                     ZoeRunnerException(
