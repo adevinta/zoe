@@ -23,7 +23,7 @@ Here are some of the most interesting features of zoe :
 
 ## Install
 
-Go to the [install](docs/install/index.md) page for instructions on how to install the Zoe CLI.
+Go to the [install](docs/install/overview.md) page for instructions on how to install the Zoe CLI.
 
 ## Sample commands
 

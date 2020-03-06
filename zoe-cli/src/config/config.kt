@@ -116,13 +116,13 @@ data class KubernetesRunnerConfig(
 sealed class AwsCredentialsConfig {
     object Default : AwsCredentialsConfig()
     data class Profile(val name: String) : AwsCredentialsConfig()
-    data class Static(val accessKey: String, val awsSecretAccessKey: String) : AwsCredentialsConfig()
+    data class Static(val accessKey: String, val secretAccessKey: String) : AwsCredentialsConfig()
 }
 
 fun AwsCredentialsConfig.resolve(): AWSCredentialsProvider = when (this) {
     is AwsCredentialsConfig.Default -> DefaultAWSCredentialsProviderChain()
     is AwsCredentialsConfig.Profile -> ProfileCredentialsProvider(name)
-    is AwsCredentialsConfig.Static -> AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, awsSecretAccessKey))
+    is AwsCredentialsConfig.Static -> AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretAccessKey))
 }
 
 fun TopicConfig.toDomain(): Topic = Topic(name = name, subject = subject)

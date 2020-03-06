@@ -7,14 +7,6 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---
-runners:
-  default: "local"
-  config:
-    lambda:
-      enabled: false
-    local:
-      enabled: true
-
 clusters:
   local:
     props:
@@ -23,3 +15,10 @@ clusters:
       value.deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
       key.serializer: "org.apache.kafka.common.serialization.StringSerializer"
       value.serializer: "org.apache.kafka.common.serialization.ByteArraySerializer"
+
+    topics:
+      input:
+        name: input-topic
+
+runners:
+  default: "local"

@@ -1,7 +1,7 @@
-site_name: Zoe
-repo_name: Zoe
+site_name: "Zoe - The Kafka Companion"
+repo_name: adevinta/zoe
 repo_url: https://github.com/adevinta/zoe
-site_description: "Zoe: The Kafka companion"
+site_description: "Zoe - The Kafka companion"
 site_author: Adevinta
 remote_branch: gh-pages
 
@@ -13,10 +13,40 @@ theme:
     primary: 'deep purple'
     accent: 'indigo'
 
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences
+
 nav:
+  - 'Overview': index.md
   - 'Install':
-      - 'Install zoe': install/index.md
+      - 'Overview': install/overview.md
       - 'Platform packages': install/package.md
       - 'Tarball install': install/tarball.md
       - 'Docker': install/docker.md
+  - 'Getting started':
+      - 'Overview': basics/overview.md
+      - 'Prepare the environment': basics/prepare.md
+      - 'Producing data': basics/produce.md
+      - 'Consuming data': basics/consume.md
+      - 'Operations': basics/operations.md
+  - 'Configuration':
+      - 'Overview': configuration/overview.md
+      - 'Environments': configuration/environments.md
+      - 'Configuration loading chain': configuration/chain.md
+      - 'Secrets': configuration/secrets.md
+      - 'Reference': configuration/reference.md
+  - 'Advanced usage':
+      - 'Using avro and schema registry': advanced/avro.md
+      - 'Registered expressions': advanced/expressions.md
+      - 'Secrets provider':
+          - 'Overview': advanced/secrets/overview.md
+          - 'Environment variables provider': advanced/secrets/envvars.md
+          - 'Strongbox provider': advanced/secrets/strongbox.md
+      - 'Runners in depth':
+          - 'Overview': advanced/runners/overview.md
+          - 'Local': advanced/runners/local.md
+          - 'Lambda': advanced/runners/lambda.md
+          - 'Kubernetes': advanced/runners/kubernetes.md
   - 'Tutorials': tutorials.md

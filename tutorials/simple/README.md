@@ -20,7 +20,7 @@ In this tutorial, you will learn the following aspects of zoe :
 
 For this tutorial you will need :
 
-- Zoe (follow instructions [here](../../docs/install/index.md))
+- Zoe (follow instructions [here](../../docs/install/overview.md))
 - Docker and docker-compose
 
 ## Prepare the environment
