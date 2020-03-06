@@ -33,6 +33,7 @@ import kotlinx.coroutines.withTimeout
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import java.io.InputStream
+import java.lang.Integer.MAX_VALUE
 import java.lang.Integer.min
 import java.text.SimpleDateFormat
 import java.time.Duration
@@ -97,8 +98,8 @@ class TopicsConsume : CliktCommand(name = "consume", help = "Consumes messages f
     private val formatter by option("--formatter").default("raw")
     private val query: String? by option("--query", help = "Jmespath query to execute on each record")
 
-    private val maxRecords: Int
-            by option("-n", "--max-records", help = "Max number of records to output").int().default(Int.MAX_VALUE)
+    private val maxRecords: Int?
+            by option("-n", "--max-records", help = "Max number of records to output").int()
 
     private val recordsPerBatch: Int?
             by option("--records-per-batch", help = "Max records per lambda call")
@@ -139,7 +140,8 @@ class TopicsConsume : CliktCommand(name = "consume", help = "Consumes messages f
         val cluster = ctx.requireCluster()
         val from = ConsumeFrom.Timestamp(ts = ZonedDateTime.now().minus(from).toEpochSecond() * 1000)
         val stop = if (continuously) StopCondition.Continuously else StopCondition.TopicEnd
-        val recordsPerBatch = recordsPerBatch ?: (if (continuously) min(maxRecords, 20) else maxRecords)
+        val maxRecords = maxRecords ?: (if (continuously) MAX_VALUE else 5)
+        val recordsPerBatch = recordsPerBatch ?: min(maxRecords, if (continuously) 20 else 1000)
 
         val records =
             service
