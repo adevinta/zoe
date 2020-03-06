@@ -161,7 +161,8 @@ fun mainModule(context: CliContext) = module {
 
             is SecretsProviderConfig.Strongbox -> StrongboxProvider(
                 credentials = secrets.credentials.resolve(),
-                region = secrets.region
+                region = secrets.region,
+                group = secrets.group
             )
 
             is SecretsProviderConfig.EnvVars -> EnvVarsSecretProvider(

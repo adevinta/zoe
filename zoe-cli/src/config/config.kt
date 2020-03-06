@@ -61,9 +61,9 @@ sealed class StorageConfig {
 sealed class SecretsProviderConfig {
     data class Strongbox(
         val region: String,
+        val group: String,
         val credentials: AwsCredentialsConfig = AwsCredentialsConfig.Default
-    ) :
-        SecretsProviderConfig()
+    ) : SecretsProviderConfig()
 
     data class EnvVars(val prepend: String?, val append: String?) : SecretsProviderConfig()
 }

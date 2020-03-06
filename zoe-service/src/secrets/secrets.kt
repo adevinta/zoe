@@ -83,16 +83,20 @@ object NoopSecretsProvider : SecretsProvider {
     override fun decipher(secret: String): String = secret
 }
 
-class StrongboxProvider(private val credentials: AWSCredentialsProvider, private val region: String) :
+class StrongboxProvider(
+    private val credentials: AWSCredentialsProvider,
+    private val region: String,
+    private val group: String
+) :
     SecretsProvider {
-    private val secretsPattern = Regex("""secret:(?:(\S+):)?(\S+):(\S+)""")
+    private val secretsPattern = Regex("""secret:(?:(\S+):)?:(\S+)""")
 
     override fun isSecret(value: String): Boolean = secretsPattern.matchEntire(value) != null
     override fun decipher(secret: String): String {
         val matches =
             secretsPattern.matchEntire(secret) ?: userError("secret not parsable by ${StrongboxProvider::class.java}")
 
-        val (profile, group, secretName) = matches.destructured
+        val (profile, secretName) = matches.destructured
 
         val credentials = if (profile.isNotEmpty()) ProfileCredentialsProvider(profile) else credentials
 
@@ -105,8 +109,7 @@ class StrongboxProvider(private val credentials: AWSCredentialsProvider, private
 
 }
 
-class EnvVarsSecretProvider(private val append: String, private val prepend: String) :
-    SecretsProvider {
+class EnvVarsSecretProvider(private val append: String, private val prepend: String) : SecretsProvider {
     private val secretsPattern = Regex("""secret(?::.+)*:(\S+)""")
 
     override fun isSecret(value: String): Boolean = secretsPattern.matchEntire(value) != null
