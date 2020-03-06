@@ -152,12 +152,12 @@ fun mainModule(context: CliContext) = module {
         )
     }
 
-    singleCloseable<SecretsProvider?> {
+    singleCloseable<SecretsProvider> {
         val config = get<EnvConfig>()
         val storage = get<KeyValueStore>()
 
         val provider = when (val secrets = config.secrets) {
-            null -> null
+            null -> NoopSecretsProvider
 
             is SecretsProviderConfig.Strongbox -> StrongboxProvider(
                 credentials = secrets.credentials.resolve(),
@@ -173,18 +173,18 @@ fun mainModule(context: CliContext) = module {
         }
 
         provider
-            ?.withCaching(
+            .withCaching(
                 store = storage.withNamespace("secrets"),
                 ttl = Duration.ofDays(1)
             )
-            ?.withLogging()
+            .withLogging()
     }
 
     singleCloseable<ZoeRunner> {
         val pool = get<ExecutorService>(named("io"))
 
         val runnersSectionWithSecrets =
-            get<SecretsProvider?>().resolveSecretsInJsonSerializable(get<EnvConfig>().runners)
+            get<SecretsProvider>().resolveSecretsInJsonSerializable(get<EnvConfig>().runners)
 
         when (context.runner ?: runnersSectionWithSecrets.default) {
             RunnerName.Lambda -> with(runnersSectionWithSecrets.config.lambda) {

@@ -17,11 +17,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import java.time.Duration
 
-fun SecretsProvider?.resolveSecrets(dict: Map<String, String>): Map<String, String> =
-    if (this != null) dict.mapValues { secretOrRaw(it.value) } else dict
+fun SecretsProvider.resolveSecrets(dict: Map<String, String>): Map<String, String> = when (this) {
+    is NoopSecretsProvider -> dict
+    else -> dict.mapValues { secretOrRaw(it.value) }
+}
 
-inline fun <reified T : Any> SecretsProvider?.resolveSecretsInJsonSerializable(obj: T): T =
-    if (this != null) resolveSecrets(obj.toJsonNode()).parseJson() else obj
+inline fun <reified T : Any> SecretsProvider.resolveSecretsInJsonSerializable(obj: T): T = when (this) {
+    is NoopSecretsProvider -> obj
+    else -> resolveSecrets(obj.toJsonNode()).parseJson()
+}
 
 fun SecretsProvider.resolveSecrets(node: JsonNode): JsonNode = when (node) {
     is ObjectNode -> json.createObjectNode().apply {

@@ -35,7 +35,7 @@ class ZoeService(
     private val configStore: ConfigStore,
     private val runner: ZoeRunner,
     private val storage: KeyValueStore,
-    private val secrets: SecretsProvider?
+    private val secrets: SecretsProvider
 ) {
 
     private val internalTopics = setOf("__confluent.support.metrics")

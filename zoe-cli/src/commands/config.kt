@@ -96,23 +96,20 @@ class ConfigInit : CliktCommand(name = "init", help = "Initialize zoe config"), 
                 }
 
                 val config = EnvConfig(
-                    runners = RunnersSection(default = RunnerName.Local),
                     clusters = mapOf(
                         "local" to ClusterConfig(
-                            registry = "http://localhost:8081",
-                            topics = mapOf(
-                                "input" to TopicConfig(
-                                    "input-topic",
-                                    "input-topic-value"
-                                )
-                            ),
                             props = mapOf(
                                 "bootstrap.servers" to "localhost:29092",
                                 "key.deserializer" to "org.apache.kafka.common.serialization.StringDeserializer",
-                                "value.deserializer" to "org.apache.kafka.common.serialization.StringDeserializer"
-                            )
+                                "value.deserializer" to "org.apache.kafka.common.serialization.StringDeserializer",
+                                "key.serializer" to "org.apache.kafka.common.serialization.StringSerializer",
+                                "value.serializer" to "org.apache.kafka.common.serialization.ByteArraySerializer"
+                            ),
+                            topics = mapOf("input" to TopicConfig("input-topic", null)),
+                            registry = null
                         )
                     ),
+                    runners = RunnersSection(default = RunnerName.Local),
                     storage = null,
                     secrets = null
                 )

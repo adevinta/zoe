@@ -78,6 +78,11 @@ class SecretsProviderWithCache(
     }
 }
 
+object NoopSecretsProvider : SecretsProvider {
+    override fun isSecret(value: String): Boolean = false
+    override fun decipher(secret: String): String = secret
+}
+
 class StrongboxProvider(private val credentials: AWSCredentialsProvider, private val region: String) :
     SecretsProvider {
     private val secretsPattern = Regex("""secret:(?:(\S+):)?(\S+):(\S+)""")
