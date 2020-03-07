@@ -1,6 +1,6 @@
 # Prepare the environment
 
-In this step, we will spin up a single node kafka cluster with docker and docker compose. This cluster will be already initialized with some topics created by an initializer script.
+In this step, we will spin up a single node kafka cluster with docker and docker compose. This cluster will be initialized with some topics created by an initializer script.
 
 We will then create the required zoe configuration to point to this cluster so we can start interacting with it.
 
@@ -48,7 +48,7 @@ zoe -v config init
 2020-03-07 01:43:16 INFO zoe: creating a new config file...
 ```
 
-This creates a default configuration file at `~/.zoe/config/default.yml` that can be used as a starting point. This file looks like the following (some optional fields have been omitted for readability):
+This creates a default configuration file at `~/.zoe/config/default.yml` that can be used as a starting point. The file looks like the following (some optional fields have been omitted for readability):
 
 ```yaml
 clusters:
@@ -67,8 +67,7 @@ runners:
 
 This config file defines the following elements :
 
-- A `clusters` section where all the kafka clusters configuration are defined. Each cluster configuration is keyed by an alias. In this case, a single kafka cluster configuration aliased `local` is defined in the above config. This alias is what we will use to refer to this cluster when using `zoe`.
-- Each cluster configuration defines :
+- A `clusters` section where all the kafka clusters configuration are defined. Each cluster configuration is keyed by an alias. In this case, a single kafka cluster configuration aliased `local` is defined in the above config. This alias is what we will use to refer to this cluster when using `zoe`. Each cluster configuration defines :
     - A `props` section that represent the sets of properties to be injected to the kafka clients when interacting with the cluster.
     - A `topics` section that contain a list of topic configuration keyed by an alias. In this case, one topic is defined with the alias `input` and whose real name in kafka is `input-topic`. This alias is what we will use when writing or reading from the topic in zoe to avoid dealing with and remembering long topic names.
 - Lastly, there is a `runners` section that defines the `local` runner as the default. We will talk more about runners in [the advanced section](../advanced/runners/overview.md) but keep in mind that zoe offloads the consumption and the interaction with kafka clusters to "runners" that can either be local or remote (lambda functions or kubernetes pods).
