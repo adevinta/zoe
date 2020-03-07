@@ -24,7 +24,12 @@ import java.io.Closeable
 import java.time.Duration
 
 interface SecretsProvider : Closeable {
-    fun isSecret(value: String): Boolean
+
+    companion object {
+        val secretsPattern = Regex("""secret(?::(\S+))*:(\w+)""")
+    }
+
+    fun isSecret(value: String): Boolean = secretsPattern.matchEntire(value) != null
     fun decipher(secret: String): String
 
     override fun close() {}
@@ -86,19 +91,18 @@ object NoopSecretsProvider : SecretsProvider {
 class StrongboxProvider(
     private val credentials: AWSCredentialsProvider,
     private val region: String,
-    private val group: String
-) :
-    SecretsProvider {
-    private val secretsPattern = Regex("""secret:(?:(\S+):)?:(\S+)""")
+    private val defaultGroup: String
+) : SecretsProvider {
+    private val secretsPattern = Regex("""secret(?::([a-zA-Z0-9_\-.]+))?(?::([a-zA-Z0-9_\-.]+))?:(\w+)""")
 
-    override fun isSecret(value: String): Boolean = secretsPattern.matchEntire(value) != null
     override fun decipher(secret: String): String {
         val matches =
             secretsPattern.matchEntire(secret) ?: userError("secret not parsable by ${StrongboxProvider::class.java}")
 
-        val (profile, secretName) = matches.destructured
+        val (profile, parsedGroup, secretName) = matches.destructured
 
         val credentials = if (profile.isNotEmpty()) ProfileCredentialsProvider(profile) else credentials
+        val group = if (parsedGroup.isNotEmpty()) parsedGroup else defaultGroup
 
         logger.info("fetching secret : $secretName (group: $group, profile : $profile)")
 
@@ -112,7 +116,6 @@ class StrongboxProvider(
 class EnvVarsSecretProvider(private val append: String, private val prepend: String) : SecretsProvider {
     private val secretsPattern = Regex("""secret(?::.+)*:(\S+)""")
 
-    override fun isSecret(value: String): Boolean = secretsPattern.matchEntire(value) != null
     override fun decipher(secret: String): String {
         val matches =
             secretsPattern.matchEntire(secret) ?: userError("secret not parsable by ${StrongboxProvider::class.java}")
