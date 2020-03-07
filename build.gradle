@@ -13,9 +13,18 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version "1.3.70" apply false
     id 'com.github.johnrengelman.shadow' version "4.0.4" apply false
     id 'com.google.cloud.tools.jib' version '2.0.0' apply false
+    id 'com.palantir.git-version' version '0.12.2'
 }
 
 allprojects {
+    group 'com.adevinta.oss'
+
+    /**
+     * Assumes tags have the format of v*.*.*
+     * strips the starting 'v' character to make the version number compatible with '.deb' packages
+     */
+    version versionDetails().lastTag.replaceAll("^v", "")
+
     repositories {
         mavenLocal()
         jcenter()
@@ -29,9 +38,6 @@ subprojects {
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'maven-publish'
 
-    group 'com.adevinta.oss'
-    version 'final'
-
     sourceCompatibility = 11
 
     dependencies {
@@ -40,5 +46,5 @@ subprojects {
 }
 
 wrapper {
-    gradleVersion = '6.2.1'
+    gradleVersion = '6.2.2'
 }

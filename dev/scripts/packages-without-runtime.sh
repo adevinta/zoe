@@ -9,23 +9,10 @@
 
 set -ex
 
-THIS_DIR=$(readlink -f "$(dirname "$0")")
-PROJECT_DIR=$(readlink -f "${THIS_DIR}/../..")
-
-# shellcheck disable=SC1090
-source "$THIS_DIR/.env.sh"
-
-# if version not supplied, use the version from git
-version=${1}
-
-if [[ -z "${version}" ]]; then
-  echo "usage : $0 <version>"
-  exit 1
-fi
-
+source dev/scripts/env.sh
 
 # check build
-if [[ ! -f  "${ZOE_CLI_LIB}/${ZOE_CLI_JAR}" ]]; then
+if [[ ! -d "${zoe_cli_install_dir}" ]]; then
   echo "you need to build the zoe cli jar first !"
   exit 1
 fi
@@ -34,11 +21,11 @@ fi
 tmp_output_package_dir=$(mktemp -d)
 
 # package
-cp -R "${PROJECT_DIR}/zoe-cli/build/install/zoe-cli-shadow" "${tmp_output_package_dir}/zoe"
+cp -R "${zoe_cli_install_dir}" "${tmp_output_package_dir}/zoe"
 (cd "${tmp_output_package_dir}" && tar -czvf zoe.tar.gz zoe)
 (cd "${tmp_output_package_dir}" && zip -r zoe.zip zoe)
 
 # copy to target direction
-mkdir -p "${PROJECT_DIR}/packages"
-mv "${tmp_output_package_dir}/zoe.tar.gz" "${PROJECT_DIR}/packages/zoe-${version}.tar.gz"
-mv "${tmp_output_package_dir}/zoe.zip" "${PROJECT_DIR}/packages/zoe-${version}.zip"
+mkdir -p "${packages_dir}"
+mv "${tmp_output_package_dir}/zoe.tar.gz" "${packages_dir}/zoe-${project_version}.tar.gz"
+mv "${tmp_output_package_dir}/zoe.zip" "${packages_dir}/zoe-${project_version}.zip"

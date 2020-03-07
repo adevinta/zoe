@@ -9,26 +9,26 @@
 set -ex
 
 target=${1}
-version=${2}
 
-if [[ -z "${target}" || -z "${version}" ]]; then
-  echo "usage : $0 <[deb|rpm]> <version>"
+if [[ -z "${target}" ]]; then
+  echo "usage : $0 <[deb|rpm]>"
   exit 1
 fi
 
-project_dir=$(pwd)
+source dev/scripts/env.sh
+
 tmp_output_package_dir=$(mktemp -d)
 
 jpackage \
-    -i "${project_dir}/zoe-cli/build/libs" \
+    -i "${zoe_cli_libs}" \
     -n zoe \
     --main-class 'com.adevinta.oss.zoe.cli.MainKt' \
-    --main-jar "zoe-cli-final.jar" \
+    --main-jar "${zoe_cli_jar_name}" \
     --type "${target}" \
     --dest "${tmp_output_package_dir}" \
-    --app-version "${version}"
+    --app-version "${project_version}"
 
 package=$(find "${tmp_output_package_dir}" -maxdepth 1 -name 'zoe*')
 
-mkdir -p "${project_dir}/packages"
-cp "${package}" "${project_dir}/packages"
+mkdir -p "${packages_dir}"
+cp "${package}" "${packages_dir}"

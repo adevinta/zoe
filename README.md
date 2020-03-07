@@ -95,7 +95,7 @@ zoe-cli/build/install/zoe-cli-shadow/bin/zoe config init
 
 ## Auto completion (optional)
 ```bash
-_ZOE_COMPLETE=bash java -cp zoe-cli/build/libs/zoe-cli-final.jar com.adevinta.oss.zoe.cli.MainKt > /tmp/complete.sh
+_ZOE_COMPLETE=bash zoe-cli/build/install/zoe-cli-shadow/bin/zoe > /tmp/complete.sh
 source /tmp/complete.sh
 ```
 

@@ -9,4 +9,7 @@
 
 set -ex
 
-./gradlew clean
+source dev/scripts/env.sh
+
+${project_dir}/gradlew clean
+rm -Rf "${packages_dir}"

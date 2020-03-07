@@ -13,16 +13,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: '100'
 
       - name: set upload url
         id: fetch_release_data
         run: |
           UPLOAD_URL=$(jq -r '.release.upload_url' ${GITHUB_EVENT_PATH})
-          RELEASE_TAG=$(jq -r '.release.tag_name' ${GITHUB_EVENT_PATH})
-          PACKAGE_VERSION=$(echo $RELEASE_TAG | sed 's/^v//')
           echo "::set-output name=upload_url::$UPLOAD_URL"
-          echo "::set-output name=release_tag::$RELEASE_TAG"
-          echo "::set-output name=package_version::$PACKAGE_VERSION"
 
       - name: Setup Java JDK
         uses: actions/setup-java@v1.3.0
@@ -38,10 +36,8 @@ jobs:
 
       - name: Package
         id: package
-        env:
-          package_version: ${{ steps.fetch_release_data.outputs.package_version }}
         run: |
-          ./dev/scripts/packages-without-runtime.sh ${package_version}
+          ./dev/scripts/packages-without-runtime.sh
 
           # retrieve packages
           zip_package=$(ls -t packages/zoe-*.zip | head -n 1)
@@ -100,11 +96,7 @@ jobs:
         id: fetch_release_data
         run: |
           UPLOAD_URL=$(jq -r '.release.upload_url' ${GITHUB_EVENT_PATH})
-          RELEASE_TAG=$(jq -r '.release.tag_name' ${GITHUB_EVENT_PATH})
-          PACKAGE_VERSION=$(echo $RELEASE_TAG | sed 's/^v//')
           echo "::set-output name=upload_url::$UPLOAD_URL"
-          echo "::set-output name=release_tag::$RELEASE_TAG"
-          echo "::set-output name=package_version::$PACKAGE_VERSION"
 
       - name: Setup Java JDK
         uses: actions/setup-java@v1.3.0
@@ -127,10 +119,8 @@ jobs:
 
       - name: Package
         id: package
-        env:
-          release_tag: ${{ steps.fetch_release_data.outputs.release_tag }}
         run: |
-          ./dev/scripts/packages-with-runtime.sh ${target} ${release_tag:1}
+          ./dev/scripts/packages-with-runtime.sh ${target}
 
           package_path=$(ls -t packages/zoe*.${target} | head -n 1)
           package_name=$(basename "$package_path")
