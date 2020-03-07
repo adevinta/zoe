@@ -1,0 +1,136 @@
+<!doctype html><html lang="en" class="no-js"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta name="description" content="Zoe - The Kafka companion"><meta name="author" content="Adevinta"><meta name="lang:clipboard.copy" content="Copy to clipboard"><meta name="lang:clipboard.copied" content="Copied to clipboard"><meta name="lang:search.language" content="en"><meta name="lang:search.pipeline.stopwords" content="True"><meta name="lang:search.pipeline.trimmer" content="True"><meta name="lang:search.result.none" content="No matching documents"><meta name="lang:search.result.one" content="1 matching document"><meta name="lang:search.result.other" content="# matching documents"><meta name="lang:search.tokenizer" content="[\s\-]+"><link rel="shortcut icon" href="../../assets/images/favicon.png"><meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.3.1"><title>Producing data - Zoe - The Kafka Companion</title><link rel="stylesheet" href="../../assets/stylesheets/application.4031d38b.css"><link rel="stylesheet" href="../../assets/stylesheets/application-palette.224b79ff.css"><meta name="theme-color" content="#7e57c2"><script src="../../assets/javascripts/modernizr.74668098.js"></script><link href="https://fonts.gstatic.com" rel="preconnect" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=swap"><style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style><link rel="stylesheet" href="../../assets/fonts/material-icons.css"></head><body dir="ltr" data-md-color-primary="deep-purple" data-md-color-accent="indigo"><svg class="md-svg"><defs><svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg></defs></svg> <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off"> <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off"> <label class="md-overlay" data-md-component="overlay" for="__drawer"></label><a href="#producing-data" tabindex="1" class="md-skip">Skip to content </a><header class="md-header" data-md-component="header"><nav class="md-header-nav md-grid"><div class="md-flex"><div class="md-flex__cell md-flex__cell--shrink"><a href="../.." title="Zoe - The Kafka Companion" class="md-header-nav__button md-logo"><i class="md-icon"></i></a></div><div class="md-flex__cell md-flex__cell--shrink"><label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label></div><div class="md-flex__cell md-flex__cell--stretch"><div class="md-flex__ellipsis md-header-nav__title" data-md-component="title"><span class="md-header-nav__topic">Zoe - The Kafka Companion</span><span class="md-header-nav__topic">Producing data</span></div></div><div class="md-flex__cell md-flex__cell--shrink"><label class="md-icon md-icon--search md-header-nav__button" for="__search"></label><div class="md-search" data-md-component="search" role="dialog"><label class="md-search__overlay" for="__search"></label><div class="md-search__inner" role="search"><form class="md-search__form" name="search"><input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active"> <label class="md-icon md-search__icon" for="__search"></label> <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">&#xE5CD;</button></form><div class="md-search__output"><div class="md-search__scrollwrap" data-md-scrollfix><div class="md-search-result" data-md-component="result"><div class="md-search-result__meta">Type to start searching</div><ol class="md-search-result__list"></ol></div></div></div></div></div></div><div class="md-flex__cell md-flex__cell--shrink"><div class="md-header-nav__source"><a href="https://github.com/adevinta/zoe/" title="Go to repository" class="md-source" data-md-source="github"><div class="md-source__icon"><svg viewBox="0 0 24 24" width="24" height="24"><use xlink:href="#__github" width="24" height="24"></use></svg></div><div class="md-source__repository">adevinta/zoe</div></a></div></div></div></nav></header><div class="md-container"><main class="md-main"><div class="md-main__inner md-grid" data-md-component="container"><div class="md-sidebar md-sidebar--primary" data-md-component="navigation"><div class="md-sidebar__scrollwrap"><div class="md-sidebar__inner"><nav class="md-nav md-nav--primary" data-md-level="0"><label class="md-nav__title md-nav__title--site" for="__drawer"><a href="../.." title="Zoe - The Kafka Companion" class="md-nav__button md-logo"><i class="md-icon"></i></a>Zoe - The Kafka Companion</label><div class="md-nav__source"><a href="https://github.com/adevinta/zoe/" title="Go to repository" class="md-source" data-md-source="github"><div class="md-source__icon"><svg viewBox="0 0 24 24" width="24" height="24"><use xlink:href="#__github" width="24" height="24"></use></svg></div><div class="md-source__repository">adevinta/zoe</div></a></div><ul class="md-nav__list" data-md-scrollfix><li class="md-nav__item"><a href="../.." title="Overview" class="md-nav__link">Overview</a></li><li class="md-nav__item md-nav__item--nested"><input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2"><label class="md-nav__link" for="nav-2">Install</label><nav class="md-nav" data-md-component="collapsible" data-md-level="1"><label class="md-nav__title" for="nav-2">Install</label><ul class="md-nav__list" data-md-scrollfix><li class="md-nav__item"><a href="../../install/overview/" title="Overview" class="md-nav__link">Overview</a></li><li class="md-nav__item"><a href="../../install/package/" title="Platform packages" class="md-nav__link">Platform packages</a></li><li class="md-nav__item"><a href="../../install/tarball/" title="Tarball install" class="md-nav__link">Tarball install</a></li><li class="md-nav__item"><a href="../../install/docker/" title="Docker" class="md-nav__link">Docker</a></li></ul></nav></li><li class="md-nav__item md-nav__item--active md-nav__item--nested"><input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked><label class="md-nav__link" for="nav-3">Getting started</label><nav class="md-nav" data-md-component="collapsible" data-md-level="1"><label class="md-nav__title" for="nav-3">Getting started</label><ul class="md-nav__list" data-md-scrollfix><li class="md-nav__item"><a href="../overview/" title="Overview" class="md-nav__link">Overview</a></li><li class="md-nav__item"><a href="../prepare/" title="Prepare the environment" class="md-nav__link">Prepare the environment</a></li><li class="md-nav__item md-nav__item--active"><input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc"><label class="md-nav__link md-nav__link--active" for="__toc">Producing data</label><a href="./" title="Producing data" class="md-nav__link md-nav__link--active">Producing data</a><nav class="md-nav md-nav--secondary"><label class="md-nav__title" for="__toc">Table of contents</label><ul class="md-nav__list" data-md-scrollfix><li class="md-nav__item"><a href="#prerequisites" title="Prerequisites" class="md-nav__link">Prerequisites</a></li><li class="md-nav__item"><a href="#producing-data_1" title="Producing data" class="md-nav__link">Producing data</a><nav class="md-nav"><ul class="md-nav__list"><li class="md-nav__item"><a href="#write-data-from-stdin" title="Write data from stdin" class="md-nav__link">Write data from stdin</a></li><li class="md-nav__item"><a href="#write-data-from-a-json-file" title="Write data from a json file" class="md-nav__link">Write data from a json file</a></li></ul></nav></li></ul></nav></li><li class="md-nav__item"><a href="../consume/" title="Consuming data" class="md-nav__link">Consuming data</a></li><li class="md-nav__item"><a href="../operations/" title="Operations" class="md-nav__link">Operations</a></li></ul></nav></li><li class="md-nav__item md-nav__item--nested"><input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4"><label class="md-nav__link" for="nav-4">Configuration</label><nav class="md-nav" data-md-component="collapsible" data-md-level="1"><label class="md-nav__title" for="nav-4">Configuration</label><ul class="md-nav__list" data-md-scrollfix><li class="md-nav__item"><a href="../../configuration/overview/" title="Overview" class="md-nav__link">Overview</a></li><li class="md-nav__item"><a href="../../configuration/environments/" title="Environments" class="md-nav__link">Environments</a></li><li class="md-nav__item"><a href="../../configuration/chain/" title="Configuration loading chain" class="md-nav__link">Configuration loading chain</a></li><li class="md-nav__item"><a href="../../configuration/secrets/" title="Secrets" class="md-nav__link">Secrets</a></li><li class="md-nav__item"><a href="../../configuration/reference/" title="Reference" class="md-nav__link">Reference</a></li></ul></nav></li><li class="md-nav__item md-nav__item--nested"><input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5"><label class="md-nav__link" for="nav-5">Advanced usage</label><nav class="md-nav" data-md-component="collapsible" data-md-level="1"><label class="md-nav__title" for="nav-5">Advanced usage</label><ul class="md-nav__list" data-md-scrollfix><li class="md-nav__item"><a href="../../advanced/avro/" title="Using avro and schema registry" class="md-nav__link">Using avro and schema registry</a></li><li class="md-nav__item"><a href="../../advanced/expressions/" title="Registered expressions" class="md-nav__link">Registered expressions</a></li><li class="md-nav__item md-nav__item--nested"><input class="md-toggle md-nav__toggle" data-md-toggle="nav-5-3" type="checkbox" id="nav-5-3"><label class="md-nav__link" for="nav-5-3">Secrets provider</label><nav class="md-nav" data-md-component="collapsible" data-md-level="2"><label class="md-nav__title" for="nav-5-3">Secrets provider</label><ul class="md-nav__list" data-md-scrollfix><li class="md-nav__item"><a href="../../advanced/secrets/overview/" title="Overview" class="md-nav__link">Overview</a></li><li class="md-nav__item"><a href="../../advanced/secrets/envvars/" title="Environment variables provider" class="md-nav__link">Environment variables provider</a></li><li class="md-nav__item"><a href="../../advanced/secrets/strongbox/" title="Strongbox provider" class="md-nav__link">Strongbox provider</a></li></ul></nav></li><li class="md-nav__item md-nav__item--nested"><input class="md-toggle md-nav__toggle" data-md-toggle="nav-5-4" type="checkbox" id="nav-5-4"><label class="md-nav__link" for="nav-5-4">Runners in depth</label><nav class="md-nav" data-md-component="collapsible" data-md-level="2"><label class="md-nav__title" for="nav-5-4">Runners in depth</label><ul class="md-nav__list" data-md-scrollfix><li class="md-nav__item"><a href="../../advanced/runners/overview/" title="Overview" class="md-nav__link">Overview</a></li><li class="md-nav__item"><a href="../../advanced/runners/local/" title="Local" class="md-nav__link">Local</a></li><li class="md-nav__item"><a href="../../advanced/runners/lambda/" title="Lambda" class="md-nav__link">Lambda</a></li><li class="md-nav__item"><a href="../../advanced/runners/kubernetes/" title="Kubernetes" class="md-nav__link">Kubernetes</a></li></ul></nav></li></ul></nav></li><li class="md-nav__item"><a href="../../tutorials/" title="Tutorials" class="md-nav__link">Tutorials</a></li></ul></nav></div></div></div><div class="md-sidebar md-sidebar--secondary" data-md-component="toc"><div class="md-sidebar__scrollwrap"><div class="md-sidebar__inner"><nav class="md-nav md-nav--secondary"><label class="md-nav__title" for="__toc">Table of contents</label><ul class="md-nav__list" data-md-scrollfix><li class="md-nav__item"><a href="#prerequisites" title="Prerequisites" class="md-nav__link">Prerequisites</a></li><li class="md-nav__item"><a href="#producing-data_1" title="Producing data" class="md-nav__link">Producing data</a><nav class="md-nav"><ul class="md-nav__list"><li class="md-nav__item"><a href="#write-data-from-stdin" title="Write data from stdin" class="md-nav__link">Write data from stdin</a></li><li class="md-nav__item"><a href="#write-data-from-a-json-file" title="Write data from a json file" class="md-nav__link">Write data from a json file</a></li></ul></nav></li></ul></nav></div></div></div><div class="md-content"><article class="md-content__inner md-typeset"><a href="https://github.com/adevinta/zoe/edit/master/docs/basics/produce.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a><h1 id="producing-data">Producing data</h1>
+<p>In this step, we are going to use zoe to write some json data into Kafka.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>You should have completed the previous step : <a href="../prepare/">Prepare the environment</a></li>
+</ul>
+<h2 id="producing-data_1">Producing data</h2>
+<p>There are multiple ways to write json data using zoe. </p>
+<h3 id="write-data-from-stdin">Write data from stdin</h3>
+<p>The simplest way is to give the json data to zoe from stdin :</p>
+<div class="superfences-tabs">
+<input name="__tabs_1" type="radio" id="__tab_1_0" checked="checked" />
+<label for="__tab_1_0">command</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="nb">echo</span> <span class="s1">&#39;[{&quot;msg&quot;: &quot;hello world&quot;}]&#39;</span> <span class="p">|</span> zoe -v --cluster <span class="nb">local</span> topics produce --topic input --from-stdin
+</pre></div></div>
+<input name="__tabs_1" type="radio" id="__tab_1_1" />
+<label for="__tab_1_1">output</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;produced&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;offset&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="nt">&quot;partition&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nt">&quot;topic&quot;</span><span class="p">:</span> <span class="s2">&quot;input-topic&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;timestamp&quot;</span><span class="p">:</span> <span class="mi">1583483283555</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;skipped&quot;</span><span class="p">:</span> <span class="p">[]</span>
+<span class="p">}</span>
+</pre></div></div>
+<input name="__tabs_1" type="radio" id="__tab_1_2" />
+<label for="__tab_1_2">logs</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span>2020-03-06 09:28:02 INFO zoe: loading config from url : file: ~/.zoe/config/default.yml
+2020-03-06 09:28:03 INFO zoe: producing &#39;1&#39; records to topic &#39;input-topic&#39;
+2020-03-06 09:28:03 INFO AppInfoParser: Kafka version: 2.3.1
+2020-03-06 09:28:03 INFO AppInfoParser: Kafka commitId: 18a913733fb71c01
+2020-03-06 09:28:03 INFO AppInfoParser: Kafka startTimeMs: 1583483283410
+2020-03-06 09:28:03 INFO Metadata: [Producer clientId=producer-1] Cluster ID: y50BSUG2RzipAYoKITJuQg
+2020-03-06 09:28:03 INFO KafkaProducer: [Producer clientId=producer-1] Closing the Kafka producer with timeoutMillis = 9223372036854775807 ms.
+</pre></div></div>
+</div>
+<p>Zoe expects a json array as input from stdin and writes the array's elements one by one into the target topic : the <code>input</code> topic in this case. Remember that <code>input</code> is the alias given to the <code>input-topic</code> in zoe's configuration in the <a href="../prepare/#configuring-zoe">previous section</a>.</p>
+<p>We can check the data we have just written by using the following command (we will learn more about the <code>consume</code> command in the next section) :</p>
+<div class="superfences-tabs">
+<input name="__tabs_2" type="radio" id="__tab_2_0" checked="checked" />
+<label for="__tab_2_0">input</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span>zoe -v --cluster <span class="nb">local</span> topics consume input -n <span class="m">1</span>
+</pre></div></div>
+<input name="__tabs_2" type="radio" id="__tab_2_1" />
+<label for="__tab_2_1">output</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="p">{</span><span class="nt">&quot;msg&quot;</span><span class="p">:</span> <span class="s2">&quot;hello world&quot;</span><span class="p">}</span>
+</pre></div></div>
+</div>
+<p>We can have more information about the message key, offset and timestamp by adding the <code>--verbose</code> flag </p>
+<div class="superfences-tabs">
+<input name="__tabs_3" type="radio" id="__tab_3_0" checked="checked" />
+<label for="__tab_3_0">input</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span>zoe -v --cluster <span class="nb">local</span> topics consume input -n <span class="m">1</span> --verbose
+</pre></div></div>
+<input name="__tabs_3" type="radio" id="__tab_3_1" />
+<label for="__tab_3_1">output</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;2d57d220-7340-4c0c-ab66-fd51c0157cae&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;offset&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="nt">&quot;timestamp&quot;</span><span class="p">:</span> <span class="mi">1583483283555</span><span class="p">,</span>
+    <span class="nt">&quot;partition&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="nt">&quot;topic&quot;</span><span class="p">:</span> <span class="s2">&quot;input-topic&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;formatted&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;msg&quot;</span><span class="p">:</span> <span class="s2">&quot;hello world&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div></div>
+</div>
+<p>Notice that the message key is a generated key. By default, zoe generates UUID keys when writing messages into kafka. We can make it pick the key from a field in the message with <code>--key-path</code> option.</p>
+<div class="superfences-tabs">
+<input name="__tabs_4" type="radio" id="__tab_4_0" checked="checked" />
+<label for="__tab_4_0">command</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="nb">echo</span> <span class="s1">&#39;[{&quot;id&quot;: &quot;1&quot;, &quot;msg&quot;: &quot;hello world&quot;}]&#39;</span> <span class="p">|</span> zoe -v --cluster <span class="nb">local</span> topics produce --topic input --from-stdin --key-path <span class="s1">&#39;id&#39;</span>
+</pre></div></div>
+<input name="__tabs_4" type="radio" id="__tab_4_1" />
+<label for="__tab_4_1">output</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;produced&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;offset&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="nt">&quot;partition&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nt">&quot;topic&quot;</span><span class="p">:</span> <span class="s2">&quot;input-topic&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;timestamp&quot;</span><span class="p">:</span> <span class="mi">1583488726267</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;skipped&quot;</span><span class="p">:</span> <span class="p">[]</span>
+<span class="p">}</span>
+</pre></div></div>
+</div>
+<p>The key path option argument is a <a href="https://jmespath.org/">Jmespath</a> expression that is executed against each input message. The result of the expression will be used as the record's key. It is also possible to do the same to set the messages timestamp with the <code>--ts-path</code>. Use <code>zoe topics produce --help</code> for more information.</p>
+<h3 id="write-data-from-a-json-file">Write data from a json file</h3>
+<p>The other way to write data into Kafka with zoe is to use a json file.</p>
+<p>In the following example, we will use a sample dataset downloaded from the <a href="https://cat-fact.herokuapp.com/#/cat/facts">cats facts API</a>. You can inspect the sample in the repository at <a href="https://github.com/adevinta/zoe/blob/master/tutorials/simple/data.json">tutorials/simple/data.json</a>.</p>
+<p>Let's write this json file into the <code>input</code> topic.</p>
+<div class="superfences-tabs">
+<input name="__tabs_5" type="radio" id="__tab_5_0" checked="checked" />
+<label for="__tab_5_0">command</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span>zoe -v topics produce --topic input --from-file tutorials/simple/data.json
+</pre></div></div>
+<input name="__tabs_5" type="radio" id="__tab_5_1" />
+<label for="__tab_5_1">logs</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span>2020-03-06 11:07:18 INFO zoe: loading config from url : file:~/.zoe/config/default.yml
+2020-03-06 11:07:18 INFO zoe: producing &#39;212&#39; records to topic &#39;input-topic&#39;
+2020-03-06 11:07:18 INFO AppInfoParser: Kafka version: 2.3.1
+2020-03-06 11:07:18 INFO AppInfoParser: Kafka commitId: 18a913733fb71c01
+2020-03-06 11:07:18 INFO AppInfoParser: Kafka startTimeMs: 1583489238910
+2020-03-06 11:07:19 INFO Metadata: [Producer clientId=producer-1] Cluster ID: y50BSUG2RzipAYoKITJuQg
+2020-03-06 11:07:19 INFO KafkaProducer: [Producer clientId=producer-1] Closing the Kafka producer with timeoutMillis = 9223372036854775807 ms.
+</pre></div></div>
+<input name="__tabs_5" type="radio" id="__tab_5_2" />
+<label for="__tab_5_2">output</label>
+<div class="superfences-content"><div class="codehilite"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;produced&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;offset&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="nt">&quot;partition&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nt">&quot;topic&quot;</span><span class="p">:</span> <span class="s2">&quot;input-topic&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;timestamp&quot;</span><span class="p">:</span> <span class="mi">1583489239047</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;offset&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="nt">&quot;partition&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nt">&quot;topic&quot;</span><span class="p">:</span> <span class="s2">&quot;input-topic&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;timestamp&quot;</span><span class="p">:</span> <span class="mi">1583489239054</span>
+        <span class="p">},</span>
+        <span class="err">...</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;skipped&quot;</span><span class="p">:</span> <span class="p">[]</span>
+<span class="p">}</span>
+</pre></div></div>
+</div>
+<p>You can know more about the <code>produce</code> command with <code>zoe topics produce --help</code>. </p></article></div></div></main><footer class="md-footer"><div class="md-footer-nav"><nav class="md-footer-nav__inner md-grid"><a href="../prepare/" title="Prepare the environment" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev"><div class="md-flex__cell md-flex__cell--shrink"><i class="md-icon md-icon--arrow-back md-footer-nav__button"></i></div><div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span class="md-flex__ellipsis"><span class="md-footer-nav__direction">Previous</span>Prepare the environment</span></div></a><a href="../consume/" title="Consuming data" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next"><div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span class="md-flex__ellipsis"><span class="md-footer-nav__direction">Next</span>Consuming data</span></div><div class="md-flex__cell md-flex__cell--shrink"><i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i></div></a></nav></div><div class="md-footer-meta md-typeset"><div class="md-footer-meta__inner md-grid"><div class="md-footer-copyright"><div class="md-footer-copyright__highlight">Copyright (c) 2020 Adevinta</div>powered by <a href="https://www.mkdocs.org">MkDocs</a> and <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a></div></div></div></footer></div><script src="../../assets/javascripts/application.b260a35d.js"></script><script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script></body></html>
