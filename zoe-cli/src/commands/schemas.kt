@@ -10,6 +10,7 @@ package com.adevinta.oss.zoe.cli.commands
 
 import com.adevinta.oss.zoe.cli.commands.DeploySchema.SubjectNameStrategyEnum.*
 import com.adevinta.oss.zoe.cli.utils.fetch
+import com.adevinta.oss.zoe.cli.utils.globalTermColors
 import com.adevinta.oss.zoe.core.functions.SchemaContent
 import com.adevinta.oss.zoe.core.functions.SchemaContent.AvdlSchema
 import com.adevinta.oss.zoe.core.functions.SchemaContent.AvscSchema
@@ -94,7 +95,19 @@ class DeploySchema : CliktCommand(
         
         {"type":"actual","id":21,"subject":"tenant-input-topic-com.schibsted.serenity.ad.v1.ModuleReason"}
     """,
-    printHelpOnEmptyArgs = true
+    printHelpOnEmptyArgs = true,
+    epilog = with(globalTermColors) {
+        """```
+        |Examples:
+        |
+        |  Deploy a schema named 'SerenityResult' from an .avdl file:
+        |  > ${bold("""zoe -c local schemas deploy --avdl --from-file schema.avdl --name SerenityResult""")}
+        |  
+        |  Use the dry-run mode to check the compiled schema :
+        |  > ${bold("""zoe -c local schemas deploy --avdl --from-file schema.avdl --name SerenityResult""")}
+        |
+        |```""".trimMargin()
+    }
 ), KoinComponent {
 
     enum class SubjectNameStrategyEnum { Topic, Record, TopicRecord }
@@ -108,7 +121,7 @@ class DeploySchema : CliktCommand(
     private val fromStdin by option("--from-stdin", help = "Consume data from stdin").flag(default = false)
     private val fromFile
             by option("--from-file", help = "Consume data from a json file")
-                .file(exists = true, fileOkay = true, readable = true)
+                .file(mustExist = true, canBeFile = true, mustBeReadable = true)
 
     private val topic by option("--topic", help = "Target topic")
     private val suffix

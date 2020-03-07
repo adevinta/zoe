@@ -11,6 +11,7 @@ package com.adevinta.oss.zoe.cli.commands
 import com.adevinta.oss.zoe.cli.config.Format
 import com.adevinta.oss.zoe.cli.utils.batches
 import com.adevinta.oss.zoe.cli.utils.fetch
+import com.adevinta.oss.zoe.cli.utils.globalTermColors
 import com.adevinta.oss.zoe.core.functions.PartitionProgress
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
@@ -88,7 +89,28 @@ class TopicsDescribe : CliktCommand(name = "describe", help = "describe a topic"
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-class TopicsConsume : CliktCommand(name = "consume", help = "Consumes messages from a topic"), KoinComponent {
+class TopicsConsume : CliktCommand(
+    name = "consume",
+    help = "Consumes messages from a topic",
+    epilog = with(globalTermColors) {
+        """```
+        |Examples:
+        |
+        |  Consume 10 records from the input topic from the last 2 hours:
+        |  > ${bold("zoe -c local topics consume input -n 10 --from 'PT2h'")}
+        |  
+        |  Consume 5 records from the last day and filter only messages with id = 123:
+        |  > ${bold("""zoe -c local topics consume input -n 10 --from 'P1d' --filter "id == '123'"""")}
+        |  
+        |  Select only a subset of fields and output the results as a table:
+        |  > ${bold("""zoe -o table -c local topics consume input -n 10 --query '{id: id, text: text.value}'""")}
+        |  
+        |  Consume from the topic continuously starting from the last hour:
+        |  > ${bold("""zoe -c local topics consume input --continuously --from 'PT1h'""")}
+        |
+        |```""".trimMargin()
+    }
+), KoinComponent {
     private val from: Duration
             by option(help = "Amount of time to go back in the past")
                 .convert { Duration.parse(it) }
@@ -187,7 +209,34 @@ class TopicsConsume : CliktCommand(name = "consume", help = "Consumes messages f
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-class TopicsProduce : CliktCommand(name = "produce", help = "produce messages into topics"), KoinComponent {
+class TopicsProduce : CliktCommand(
+    name = "produce",
+    help = "produce messages into topics",
+    printHelpOnEmptyArgs = true,
+    epilog = with(globalTermColors) {
+        """```
+        |Examples:
+        |
+        |  Produce a record into the 'input' topic from stdin (requires input to be a json array):
+        |  > ${bold("""echo '[{"id": "1", "msg": "hello"}]' | zoe -c local topics produce -t input --from-stdin""")}
+        |  
+        |  Use streaming mode to accept records one by one (does not require input to be a json array):
+        |  > ${bold(
+            """echo '{"id": "1", "msg": "hello"}' | zoe -c local topics produce -t input --from-stdin --streaming"""
+        )}
+        |  
+        |  Use the id field of the input messages to determine the Kafka record key:
+        |  > ${bold("""echo '[{"id": "1", "msg": "hello"}]' | zoe -c local topics produce -t input --from-stdin --key-path 'id'""")}
+        |  
+        |  Write the data from a json file (requires the content in the file to be a json array):
+        |  > ${bold("""zoe -c local topics produce -t input --from-file data.json""")}
+        |  
+        |  Pipe data from another topic:
+        |  > ${bold("""zoe -c remote topics consume input --continuously | zoe -c local topics produce -t output --from-stdin --streaming""")}
+        |
+        |```""".trimMargin()
+    }
+), KoinComponent {
 
     private val dryRun by option("--dry-run", help = "Do not actually produce records").flag(default = false)
     private val topic
@@ -203,7 +252,7 @@ class TopicsProduce : CliktCommand(name = "produce", help = "produce messages in
     private val fromStdin by option("--from-stdin", help = "Consume data from stdin").flag(default = false)
     private val fromFile
             by option("--from-file", help = "Consume data from a json file")
-                .file(exists = true, fileOkay = true, readable = true)
+                .file(mustExist = true, canBeFile = true, mustBeReadable = true)
 
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()

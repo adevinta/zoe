@@ -38,7 +38,7 @@ dependencies {
     implementation(
             "org.koin:koin-core:2.0.1",
             'com.jakewharton.picnic:picnic:0.2.0',
-            'com.github.ajalt:clikt:2.0.0',
+            'com.github.ajalt:clikt:2.5.0',
             'com.github.ajalt:mordant:1.2.1',
             'org.slf4j:slf4j-log4j12:1.7.26',
             'log4j:log4j:1.2.17',

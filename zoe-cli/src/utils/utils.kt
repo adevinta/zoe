@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.github.ajalt.mordant.TermColors
 import com.jakewharton.picnic.BorderStyle
 import com.jakewharton.picnic.Table
 import com.jakewharton.picnic.TextAlignment
@@ -237,3 +238,5 @@ private fun toTable(input: JsonNode, level: Int = 0): Table = table {
         }
     }
 }
+
+val globalTermColors = TermColors()

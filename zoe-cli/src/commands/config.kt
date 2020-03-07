@@ -48,9 +48,9 @@ class ConfigInit : CliktCommand(name = "init", help = "Initialize zoe config"), 
     )
 
     private val from: File? by option("--from", help = "Import from an existing configuration folder").file(
-        exists = true,
-        folderOkay = true,
-        readable = true
+        mustExist = true,
+        canBeDir = true,
+        mustBeReadable = true
     )
 
     override fun run() {

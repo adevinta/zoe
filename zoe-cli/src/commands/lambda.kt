@@ -85,7 +85,7 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
 
     private val jar
             by option("--jar", help = "Path to the zoe jar file", hidden = true, envvar = "ZOE_JAR_PATH")
-                .file(exists = true, fileOkay = true, readable = true)
+                .file(mustExist = true, canBeFile = true, mustBeReadable = true)
                 .required()
 
     private val dryRun: Boolean by option("--dry-run", help = "Dry run mode").flag(default = false)
