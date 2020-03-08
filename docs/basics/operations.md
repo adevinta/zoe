@@ -1,10 +1,10 @@
 # Operations
 
-Zoe can do much more than just producing and consuming data. In this section, you will find examples of some additional capabilities of zoe.
+Zoe can do much more than just producing and consuming data from Kafka. In this section, you will find examples of some additional capabilities of zoe.
 
 ## Interacting with consumer groups
 
-Fetch the offsets of a consumer group :
+Fetch the offsets and lags of a specific consumer group :
 
 ```bash tab="command"
 zoe -o table -v -c my-cluster groups offsets my-consumer-group-name

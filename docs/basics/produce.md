@@ -8,11 +8,11 @@ In this step, we are going to use zoe to write some json data into Kafka.
 
 ## Producing data
 
-There are multiple ways to write json data using zoe. 
+There are multiple ways to write json data to a Kafka cluster using zoe. 
 
 ### Write data from stdin
 
-The simplest way is to give the json data to zoe from stdin :
+The simplest way is to inject the data from stdin :
 
 ```bash tab="command"
 echo '[{"msg": "hello world"}]' | zoe -v --cluster local topics produce --topic input --from-stdin
@@ -42,9 +42,9 @@ echo '[{"msg": "hello world"}]' | zoe -v --cluster local topics produce --topic 
 2020-03-06 09:28:03 INFO KafkaProducer: [Producer clientId=producer-1] Closing the Kafka producer with timeoutMillis = 9223372036854775807 ms.
 ```
 
-Zoe expects a json array as input from stdin and writes the array's elements one by one into the target topic : the `input` topic in this case. Remember that `input` is the alias given to the `input-topic` in zoe's configuration in the [previous section](../prepare/#configuring-zoe).
+Zoe expects a valid json array as input from stdin. It iterates over the elements and writes them one by one to the target topic: the topic aliased `input` in this case. Remember that the alias `input` was given to the `input-topic` in zoe's configuration in the [previous section](../prepare/#configuring-zoe).
   
-We can check the data we have just written by using the following command (we will learn more about the `consume` command in the next section) :
+Now, we can check the data we have just written by using the `consume` command (we will learn more about the `consume` command in the next section) :
 
 ```bash tab="input"
 zoe -v --cluster local topics consume input -n 1
@@ -73,7 +73,7 @@ zoe -v --cluster local topics consume input -n 1 --verbose
 }
 ```
 
-Notice that the message key is a generated key. By default, zoe generates UUID keys when writing messages into kafka. We can make it pick the key from a field in the message with `--key-path` option.
+Notice that the message key is a generated UUID. By default, zoe generates UUID keys when writing messages into kafka. We can make it instead pick the key from a field in the message with the `--key-path` option:
 
 ```bash tab="command"
 echo '[{"id": "1", "msg": "hello world"}]' | zoe -v --cluster local topics produce --topic input --from-stdin --key-path 'id'
@@ -99,7 +99,7 @@ The key path option argument is a [Jmespath](https://jmespath.org/) expression t
 
 The other way to write data into Kafka with zoe is to use a json file.
 
-In the following example, we will use a sample dataset downloaded from the [cats facts API](https://cat-fact.herokuapp.com/#/cat/facts). You can inspect the sample in the repository at [tutorials/simple/data.json](https://github.com/adevinta/zoe/blob/master/tutorials/simple/data.json).
+The following example uses a sample dataset downloaded from the [cats facts API](https://cat-fact.herokuapp.com/#/cat/facts). You can inspect the sample in the repository at [tutorials/simple/data.json](https://github.com/adevinta/zoe/blob/master/tutorials/simple/data.json).
 
 Let's write this json file into the `input` topic.
 
@@ -139,3 +139,23 @@ zoe -v topics produce --topic input --from-file tutorials/simple/data.json
 ```
 
 You can know more about the `produce` command with `zoe topics produce --help`. 
+
+## Writing data in streaming mode
+
+In all the examples above, zoe was expecting a valid json array as input. This is because zoe parses the input data (from stdin or from a file) entirely before sending it to Kafka. This is the default behavior of the `produce` command.
+
+This behavior is not suitable when streaming data to the `zoe produce` command from a continuous data source (ex. a tcp connection or an http command) because:
+
+- The data is usually not formatted as a Json Array. It's often rather a json per line.
+- We do not want zoe to buffer all the data internally before sending it.
+
+For these cases, Zoe supports a streaming mode by setting a `--streaming` flag. In this mode :
+
+- Zoe expects one valid json object per line (separated by line breaks)
+- Zoe will keep listening to the input stream continuously. It needs to be stopped using a stop signal (`Ctrl-C`).
+
+Streaming mode can be enabled like the following :
+
+```bash tab="command"
+echo '{"msg": "hello world"}' | zoe -v --cluster local topics produce --topic input --from-stdin --streaming
+```

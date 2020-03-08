@@ -1,6 +1,6 @@
 # Consuming data
 
-In this step, we will learn more about the `consume` command by consuming the data produced during the previous section.
+In this step, we will learn more about the `consume` command by reading the data produced during the previous section.
 
 ## Prerequisites
 
@@ -25,9 +25,13 @@ zoe -v --cluster local topics consume input
 {"_id":"5a4d76916ef087002174c28b","text":"A cat’s nose pad is ridged with a unique pattern, ...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":4,"userUpvoted":null}
 ```
 
+By default, zoe consumes 5 records starting from the last hour.
+
 ### Controlling the time range
 
-By default, zoe outputs 5 records from the last hour. We can control the number of output records (`-n`) and the time range (`--from`). For example, to get only 2 records starting the consumption from the last 6 hours :
+We can control the number of output records (`-n`) and the starting time of the consumption (`--from`).
+
+For example, to start the consumption from the last 6 hours and read only 2 records:
 
 ```bash tab="command"
 zoe -v --cluster local topics consume input -n 2 --from 'PT6h'
@@ -38,11 +42,11 @@ zoe -v --cluster local topics consume input -n 2 --from 'PT6h'
 {"_id":"5b1b411d841d9700146158d9","text":"The Egyptian Mau’s name is derived from the Middle...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":5,"userUpvoted":null}
 ```
 
-The `--from` option takes an [ISO-8601 duration format](https://en.wikipedia.org/wiki/ISO_8601#Durations).
+The `--from` option takes a duration in [ISO-8601 format](https://en.wikipedia.org/wiki/ISO_8601#Durations).
 
 ### Selecting a subset of the fields
 
-We can select a subset of the output fields by using `--query` option and giving it a [jmespath expression](https://jmespath.org/) that runs against each message read. The result of this expression will be the data output by zoe :
+We can format the output rows by using the `--query` option and giving it a [jmespath expression](https://jmespath.org/). Zoe will run this Jmespath expression against each message and the result will be output instead of the original message itself. A typical use case is when we want only a subset of the existing fields:
 
 ```bash tab="command"
 zoe -v --cluster local \
@@ -60,7 +64,7 @@ zoe -v --cluster local \
 
 ### Pretty display
 
-We can display the result in a nicely formatted table by using the `--output table` option. Let's use the previous command as an example :
+Zoe can display the consumed data in a nicely formatted table by using the `--output table` option:
 
 ```bash tab="command"
 zoe -v --cluster local \
@@ -121,9 +125,13 @@ zoe -v --cluster local \
 ]
 ```
 
+These display options are not only availabe for the `consume`. They are available for all the zoe commands. In fact, Zoe can consistently display all its output as a table. 
+
 ### Filtering data based on content
 
-Zoe can also use Jmespath expressions that return a boolean against each read message from kafka and use the result to filter the returned data. This can be used to perform searches into kafka topics. This is one of the most interesting features of Zoe. When combined with remote runners (ex. `--runner kubernetes`) and parallel execution (`--jobs 20` to spin up 20 pods), we can perform expensive searches in large topics in a relatively short amount of time. You can learn more about runners and parallel execution in the advanced section of the documentation.
+Zoe can also use [Jmespath expressions](https://jmespath.org/) that return a boolean to filter the output messages. Zoe runs this expression against each message and depending on the boolean result, zoe will discard the message or not.
+
+This feature can be used to perform searches into Kafka topics. It is one of the most interesting features of Zoe. When combined with remote runners (ex. `--runner kubernetes`) and parallel execution (`--jobs 20` to spin up 20 pods), we can perform expensive searches in large topics in a relatively short amount of time. You can learn more about runners and parallel execution in the advanced section of the documentation.
 
 Filters are enabled with the `--filter` option. For example, to read only Kasimir's cat facts :
 
@@ -154,4 +162,4 @@ zoe --cluster my-production-cluster \
     --jobs 25
 ```
 
-This command will not work as is on your computer at this stage because this requires additional configuration to zoe related to the target kubernetes cluster. But there is a tutorial available in this documentation to try out zoe with a kubernetes cluster using Minikube.
+This command will not work as is on your computer at this stage because this requires additional work to configure access to a kubernetes cluster with zoe. But there is a tutorial available in this documentation to try out zoe with a kubernetes cluster using Minikube.

@@ -1,6 +1,6 @@
 # Using avro and the schema registry
 
-Zoe has good support for Avro and the schema registry. It makes it easy to consume avro data and display it nicely as normal json objects or as a table (`--output table`). It is also easy to produce Avro data from json files as an input.
+Zoe has good support for Avro and the schema registry. It makes it easy to consume and display avro data nicely as normal json objects or as a table (`--output table`). It is also easy to produce Avro data from json files as an input.
 
 ## Consuming Avro data
 

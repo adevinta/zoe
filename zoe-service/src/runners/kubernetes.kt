@@ -9,12 +9,14 @@
 package com.adevinta.oss.zoe.service.runners
 
 import com.adevinta.oss.zoe.core.FailureResponse
-import com.adevinta.oss.zoe.core.fromThrowable
 import com.adevinta.oss.zoe.core.utils.*
 import com.adevinta.oss.zoe.service.utils.userError
 import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.api.model.Quantity
-import io.fabric8.kubernetes.client.*
+import io.fabric8.kubernetes.client.DefaultKubernetesClient
+import io.fabric8.kubernetes.client.KubernetesClientException
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient
+import io.fabric8.kubernetes.client.Watcher
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit

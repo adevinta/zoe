@@ -2,7 +2,7 @@
 
 This secrets provider fetches secret values from [strongbox](https://github.com/schibsted/strongbox).
 
-To use the strongbox secrets provider, add the following zoe's configuration :
+To use the strongbox secrets provider, add the following in zoe's configuration :
 
 ```yaml
 secrets:
@@ -11,9 +11,11 @@ secrets:
   group: my-group
 ```
 
-When zoe encounters `secret:JAAS_CONFIG`, the strongbox secrets provider looks up a secret named `JAAS_CONFIG` from strongbox that belongs to the group named `my-group`.
+Using the configuration above, when zoe encounters `secret:JAAS_CONFIG`, the strongbox secrets provider looks up a secret named `JAAS_CONFIG` that belongs to the group named `my-group` from strongbox.
 
-The strongbox secrets provider uses the AWS default credentials chain by default to authenticate with AWS. This can be overridden in the provider's config :
+## Supported credentials
+
+The strongbox secrets provider needs to authenticate to AWS. By default, it uses the AWS default credentials chain. But this can be overridden in the `credentials` section of the strongbox provider config. The same credentials types are supported as the [lambda credentials](../runners/lambda/#supported-credentials):
 
 ```yaml tab="profile"
 secrets:

@@ -10,14 +10,14 @@ Zoe really shines when it comes to interacting with cloud hosted kafka clusters 
 
 Zoe has a lot of selling points. Here are some of the most interesting features of zoe :
 
+- Supports offloading consumption of data to lambda functions, kubernetes pods, etc. for parallelism (ex. adding `-r kubernetes` would offload all the requests to multiple pods in a configured kubernetes cluster).
 - Consume kafka topics from a specific point in time (ex. using `--from 'PT5h` from the last 5 hours).
 - Filter data based on content (ex. using `--filter "id == '12345'"` filters records with the selected id).
-- Supports offloading consumption of data to multiple lambda functions, kubernetes pods, etc. for parallelism (ex. adding `-x kubernetes` would offload all the requests to a configured kubernetes cluster).
 - Monitor consumer groups' offsets.
 - Upload avro schemas from a `.avsc` or `.avdl` file using different naming strategies.
 - ... and more.
 
-Go to the install section for instructions on how to install the zoe CLI.
+Go to the [install section](install/overview.md) for instructions on how to install the zoe CLI.
 
 ## Sample commands
 
@@ -74,7 +74,7 @@ zoe --cluster local \
     topics read \
     -n 10 \
     --from 'PT6h' \
-    --filter "user.name.first == 'Kasimir'
+    --filter "user.name.first == 'Kasimir'"
 ```
 
 ```text tab="output"
@@ -104,7 +104,7 @@ zoe --cluster my-production-kafka \
     topics read \
     -n 10 \
     --from 'PT6h' \
-    --filter "user.name.first == 'Kasimir' \
+    --filter "user.name.first == 'Kasimir'" \
     --jobs 10
 ```
 

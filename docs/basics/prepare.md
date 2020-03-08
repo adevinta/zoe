@@ -11,9 +11,9 @@ For this tutorial you will need :
 - Zoe (follow the install instructions [here](../install/overview.md))
 - Docker and docker-compose
 
-## Spin up the kafka cluster
+## Spin up the Kafka cluster
 
-Clone the [zoe repository](https://github.com/adevinta/zoe) and spin up the kafka cluster :
+Clone the [zoe repository](https://github.com/adevinta/zoe) and use the provided compose file to spin up the kafka cluster :
 
 ```bash
 # clone the repo
@@ -36,7 +36,7 @@ Now let's go to the next step and configure zoe to point to this cluster.
 
 ## Configuring zoe
 
-Zoe uses a central configuration file to store all the information related to the kafka clusters that we want to interact with. This file keeps all the cluster properties (`bootstrap.servers`, etc.) and topics configuration so we don't have to repeat them again and again each time we want to interact with the cluster.
+Zoe uses a central configuration file to store all the information related to the kafka clusters we may interact with. This file keeps all the cluster properties (`bootstrap.servers`, etc.) and topics configuration so we don't have to repeat them again and again each time we want to interact with the cluster.
 
 We can easily initialize a default configuration file using :
 
@@ -67,24 +67,24 @@ runners:
 
 This config file defines the following elements :
 
-- A `clusters` section where all the kafka clusters configuration are defined. Each cluster configuration is keyed by an alias. In this case, a single kafka cluster configuration aliased `local` is defined in the above config. This alias is what we will use to refer to this cluster when using `zoe`. Each cluster configuration defines :
-    - A `props` section that represent the sets of properties to be injected to the kafka clients when interacting with the cluster.
-    - A `topics` section that contain a list of topic configuration keyed by an alias. In this case, one topic is defined with the alias `input` and whose real name in kafka is `input-topic`. This alias is what we will use when writing or reading from the topic in zoe to avoid dealing with and remembering long topic names.
-- Lastly, there is a `runners` section that defines the `local` runner as the default. We will talk more about runners in [the advanced section](../advanced/runners/overview.md) but keep in mind that zoe offloads the consumption and the interaction with kafka clusters to "runners" that can either be local or remote (lambda functions or kubernetes pods).
+- A `clusters` section where all the kafka clusters configuration are defined. Each cluster configuration is keyed by an alias. In the configuration above, a single kafka cluster configuration aliased by `local` is defined in the above config. This alias is what we will use to refer to this cluster when using `zoe --cluster local`. Each cluster configuration defines:
+    - A `props` section that represent the set of properties to be injected to the kafka clients when interacting with the cluster.
+    - A `topics` section that contain a list of topic configuration keyed by an alias. In the configuration above, one topic configuration is defined with the alias `input`. A topic configuration contains the real name of the topic (in this case `input-topic`) and optionally a subject name if the topic is an avro topic. This alias is what we will use to refer to the topic when targeting it for writing or reading in zoe. This relieves us from the difficulty of dealing with and remembering long topic names.
+- Lastly, there is a `runners` section that defines the `local` runner as the default. We will talk more about runners in [the advanced section](../advanced/runners/overview.md) of this documentation but keep in mind that zoe offloads the consumption and the interaction with kafka clusters to "runners" that can either be local or remote (lambda functions or kubernetes pods).
 
-The default configuration is already enough to interact with our locally spinned up kafka cluster. So we should be able to start interacting with it without any change.
+The default generated configuration is already enough to interact with our locally spinned up kafka cluster. We should be able to start interacting with it without any change.
 
-We can use zoe to inspect the kafka cluster and list the available topics :
+Let's use zoe to list the available topics :
 
 ```bash tab="command"
-zoe -c local topics list
+zoe --cluster local topics list
 ```
 
 ```json tab="output"
 ["input-topic", "another-topic"]
 ```
 
-We can see that there is 2 topics within our cluster. Let's modify the configuration to add these 2 topics and give them an alias so we don't have to remember their names :
+We can see that there is 2 topics within our cluster. To avoid having to remember their names, let's add them in the configuration and give them a friendly alias:
 
 ```yaml
 clusters:
@@ -106,4 +106,4 @@ runners:
   default: "local"
 ``` 
 
-Now that our configuration is ready, let's use zoe to produce some test data into the cluster.
+Now that our configuration is ready, let's use zoe to [produce some test data into the cluster](produce.md).

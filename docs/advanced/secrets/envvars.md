@@ -4,7 +4,7 @@ This secrets provider looks up secret values from the environment.
 
 When zoe encounters `secret:SECRET_NAME` in the configuration, this provider searches for an environment variable named `SECRET_NAME`.
 
-The environment variable name to look for by the provider can be altered using the `append` or `prepend` config properties :
+The name of the environment variable to look for can be altered using the `append` or `prepend` config properties :
 
 ```yaml
 secrets:
@@ -13,9 +13,9 @@ secrets:
     prepend: _PRO
 ```
 
-In this case, when zoe encounters `secret:JAAS_CONFIG`, this provider looks up for an environment variable named `ZOE_SECRET_JAAS_CONFIG_PRO`.
+In the configuration above, when zoe encounters `secret:JAAS_CONFIG`, this provider looks up for an environment variable named `ZOE_SECRET_JAAS_CONFIG_PRO`.
 
-The `append` and `prepend` properties are useful when using the same secret name across different zoe environment files. Here is a typical example of a `staging.yml` and a `prod.yml` file:
+The `append` and `prepend` properties are useful when using the same secret name across different zoe [environment files](../../configuration/environments.md). Here is a typical example of a `staging.yml` and a `prod.yml` file:
 
 ```yaml tab="staging.yml"
 secrets:
