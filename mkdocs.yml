@@ -35,7 +35,6 @@ nav:
       - 'Overview': configuration/overview.md
       - 'Environments': configuration/environments.md
       - 'Configuration loading chain': configuration/chain.md
-      - 'Secrets': configuration/secrets.md
       - 'Reference': configuration/reference.md
   - 'Advanced usage':
       - 'Using avro and schema registry': advanced/avro.md

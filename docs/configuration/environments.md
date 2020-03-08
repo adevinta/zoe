@@ -1,8 +1,8 @@
 # Environments
 
-Zoe allows us to separate clusters configuration into multiple environments. This can be achieved by creating a dedicated yaml file for each environment in zoe's configuration directoy `~/.zoe/config`.
+Zoe allows us to separate clusters configuration into multiple environments. This can be achieved by creating a dedicated yaml file for each environment in zoe's configuration directory `~/.zoe/config`.
 
-A typical use case is when we are dealing with a development, a staging and a production kafka cluster. In this case, we can create 3 configuration files :
+A typical use case is when dealing with a development, a staging and a production kafka cluster. In this case, we can create 3 configuration files :
 
 ```text
 ~/.zoe/config

@@ -36,7 +36,7 @@ clusters:
     topics:
 
       topic-alias:
-        name: fulle-name-of-the-topic-in-the-cluster
+        name: full-name-of-the-topic-in-the-cluster
         subject: subject-name-of-the-topic
 
 # Runners configuration

@@ -8,7 +8,7 @@ Zoe really shines when it comes to interacting with cloud hosted kafka clusters 
 
 ## Key features
 
-Zoe has a lot of selling points. Here are some of the most interesting features of zoe :
+Here are some of the most interesting features of zoe :
 
 - Supports offloading consumption of data to lambda functions, kubernetes pods, etc. for parallelism (ex. adding `-r kubernetes` would offload all the requests to multiple pods in a configured kubernetes cluster).
 - Consume kafka topics from a specific point in time (ex. using `--from 'PT5h` from the last 5 hours).
