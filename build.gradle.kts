@@ -14,7 +14,7 @@ buildscript {
 
 plugins {
     java
-    id("org.jetbrains.kotlin.jvm") version "1.3.70" apply false
+    kotlin("jvm") version "1.3.70" apply false
     id("com.github.johnrengelman.shadow") version "4.0.4" apply false
     id("com.google.cloud.tools.jib") version "2.1.0" apply false
     id("com.palantir.git-version") version "0.12.2"
@@ -49,6 +49,6 @@ subprojects {
     }
 
     dependencies {
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+        implementation(kotlin("stdlib-jdk8"))
     }
 }

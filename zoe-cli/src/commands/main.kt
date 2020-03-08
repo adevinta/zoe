@@ -9,7 +9,10 @@
 package com.adevinta.oss.zoe.cli.commands
 
 import com.adevinta.oss.zoe.cli.config.*
+import com.adevinta.oss.zoe.cli.utils.loadFileFromResources
 import com.adevinta.oss.zoe.cli.utils.singleCloseable
+import com.adevinta.oss.zoe.core.utils.logger
+import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.ZoeService
 import com.adevinta.oss.zoe.service.config.InMemoryConfigStore
 import com.adevinta.oss.zoe.service.config.RegisteredExpression
@@ -204,10 +207,30 @@ fun mainModule(context: CliContext) = module {
 
             RunnerName.Kubernetes -> {
                 val kubeConfig = runnersSectionWithSecrets.config.kubernetes
+                val zoeImage = with(kubeConfig.image) {
+                    val version =
+                        loadFileFromResources("version.json")?.toJsonNode()?.get("projectVersion")?.asText()
+
+                    val actualTag = when (tag) {
+                        null -> {
+                            when (version) {
+                                null -> {
+                                    logger.warn("Couldn't find package version from resources... Using 'latest'")
+                                    "latest"
+                                }
+                                else -> version
+                            }
+                        }
+                        else -> tag
+                    }
+
+                    "$registry/$image:$actualTag"
+                }
+
                 KubernetesRunner(
                     name = RunnerName.Kubernetes.code,
                     configuration = KubernetesRunner.Config(
-                        zoeImage = "wlezzar/zoe-core:1.1", // TODO : make this not hard coded
+                        zoeImage = zoeImage,
                         cpu = kubeConfig.cpu,
                         memory = kubeConfig.memory,
                         deletePodsAfterCompletion = kubeConfig.deletePodAfterCompletion,

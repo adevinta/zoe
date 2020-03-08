@@ -13,10 +13,7 @@ import com.adevinta.oss.zoe.cli.commands.LambdaCommand.Companion.LambdaRoleNameO
 import com.adevinta.oss.zoe.cli.commands.LambdaCommand.Companion.ZoeTags
 import com.adevinta.oss.zoe.cli.config.EnvConfig
 import com.adevinta.oss.zoe.cli.config.resolve
-import com.adevinta.oss.zoe.cli.utils.cfClient
-import com.adevinta.oss.zoe.cli.utils.iamClient
-import com.adevinta.oss.zoe.cli.utils.retryUntilNotNull
-import com.adevinta.oss.zoe.cli.utils.zipEntries
+import com.adevinta.oss.zoe.cli.utils.*
 import com.adevinta.oss.zoe.core.Handler
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
@@ -145,13 +142,6 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
             ).toJsonNode()
         ) { echo(it) }
     }
-
-    private fun loadFileFromResources(path: String): String? =
-        Thread.currentThread()
-            .contextClassLoader
-            .getResourceAsStream(path)
-            ?.use { it.readBytes() }
-            ?.toString(Charsets.UTF_8)
 }
 
 @ExperimentalCoroutinesApi

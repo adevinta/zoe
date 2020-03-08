@@ -285,8 +285,12 @@ class ZoeService(
             val config = PollConfig(
                 topic,
                 props,
-                if (resumeFrom.isNotEmpty()) Subscription.AssignPartitions(resumeFrom.mapValues { it.value.from })
-                else subscription(from, partitions),
+                when {
+                    resumeFrom.isNotEmpty() ->
+                        Subscription.AssignPartitions(resumeFrom.mapValues { it.value.from }.toMap())
+
+                    else -> subscription(from, partitions)
+                },
                 filter,
                 query,
                 timeoutPerBatch,
@@ -386,8 +390,8 @@ sealed class ConsumeFrom {
     data class OffsetStepBack(val count: Long) : ConsumeFrom()
 }
 
-inline class TopicAliasOrRealName(val value: String)
-inline class GroupAliasOrRealName(val value: String)
+class TopicAliasOrRealName(val value: String)
+class GroupAliasOrRealName(val value: String)
 
 sealed class StopCondition {
     object Continuously : StopCondition()

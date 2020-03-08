@@ -104,7 +104,14 @@ data class KubernetesRunnerConfig(
     val deletePodAfterCompletion: Boolean = true,
     val cpu: String = "1",
     val memory: String = "512M",
-    val timeoutMs: Long = 300000
+    val timeoutMs: Long = 300000,
+    val image: DockerImageConfig = DockerImageConfig()
+)
+
+data class DockerImageConfig(
+    val registry: String = "docker.io",
+    val image: String = "adevinta/zoe-core",
+    val tag: String? = null
 )
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")

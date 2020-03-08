@@ -1,4 +1,6 @@
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import java.time.LocalDateTime
 
 plugins {
     application
@@ -44,19 +46,47 @@ dependencies {
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.8")
 }
 
-// setup the test task
-tasks.test {
-    useJUnitPlatform {
-        includeEngines("spek2")
+tasks {
+    val generateVersionFile by registering {
+        val output = buildDir.resolve("resources/main/version.json")
+        outputs.file(output)
+
+        doLast {
+            output.writeText(
+                ObjectMapper().writeValueAsString(
+                    mapOf(
+                        "projectVersion" to project.version,
+                        "buildTimestamp" to LocalDateTime.now().toString(),
+                        "createdBy" to "Gradle ${gradle.gradleVersion}",
+                        "buildJdk" to with(System.getProperties()) {
+                            "${get("java.version")} (${get("java.vendor")} ${get("java.vm.version")})"
+                        },
+                        "buildOS" to with(System.getProperties()) {
+                            "${get("os.name")} ${get("os.arch")} ${get("os.version")}"
+                        }
+                    )
+                )
+            )
+        }
     }
-}
 
-tasks.compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
+    compileKotlin {
+        dependsOn(generateVersionFile)
+    }
 
-tasks.compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    compileKotlin {
+        kotlinOptions.jvmTarget = "1.8"
+    }
+
+    compileTestKotlin {
+        kotlinOptions.jvmTarget = "1.8"
+    }
+
+    test {
+        useJUnitPlatform {
+            includeEngines("spek2")
+        }
+    }
 }
 
 sourceSets {

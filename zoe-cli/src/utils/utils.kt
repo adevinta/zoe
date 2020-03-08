@@ -8,7 +8,11 @@
 
 package com.adevinta.oss.zoe.cli.utils
 
+import com.adevinta.oss.zoe.cli.commands.ZoeCommandLine
 import com.adevinta.oss.zoe.core.utils.logger
+import com.adevinta.oss.zoe.core.utils.parseJson
+import com.adevinta.oss.zoe.core.utils.toJsonNode
+import com.adevinta.oss.zoe.core.utils.toJsonString
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.cloudformation.AmazonCloudFormation
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
@@ -32,7 +36,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.selects.whileSelect
-import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.Closeable
 import java.io.InputStream
@@ -240,3 +243,10 @@ private fun toTable(input: JsonNode, level: Int = 0): Table = table {
 }
 
 val globalTermColors = TermColors()
+
+fun loadFileFromResources(path: String): String? =
+    Thread.currentThread()
+        .contextClassLoader
+        .getResourceAsStream(path)
+        ?.use { it.readBytes() }
+        ?.toString(Charsets.UTF_8)

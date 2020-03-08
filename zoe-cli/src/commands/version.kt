@@ -8,8 +8,12 @@
 
 package com.adevinta.oss.zoe.cli.commands
 
+import com.adevinta.oss.zoe.cli.utils.loadFileFromResources
+import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.ZoeService
+import com.adevinta.oss.zoe.service.utils.userError
+import com.fasterxml.jackson.databind.node.TextNode
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.flag
@@ -22,6 +26,18 @@ import org.koin.core.inject
 
 class VersionCommand : CliktCommand(name = "version", help = "Zoe version info") {
     override fun run() {}
+}
+
+class VersionPrint : CliktCommand(name = "print", help = "Print current version"), KoinComponent {
+    private val ctx by inject<CliContext>()
+
+    override fun run() {
+        val output =
+            loadFileFromResources("version.json")?.toJsonNode() ?: userError("version manifest not found!")
+
+        ctx.term.output.format(output) { echo(it) }
+    }
+
 }
 
 @ExperimentalCoroutinesApi
@@ -42,5 +58,6 @@ class VersionCheck : CliktCommand(name = "check", help = "Check zoe client and r
 @FlowPreview
 @ExperimentalCoroutinesApi
 fun versionCommands() = VersionCommand().subcommands(
-    VersionCheck()
+    VersionCheck(),
+    VersionPrint()
 )
