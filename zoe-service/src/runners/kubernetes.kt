@@ -10,6 +10,7 @@ package com.adevinta.oss.zoe.service.runners
 
 import com.adevinta.oss.zoe.core.FailureResponse
 import com.adevinta.oss.zoe.core.utils.*
+import com.adevinta.oss.zoe.service.utils.loadFileFromResources
 import com.adevinta.oss.zoe.service.utils.userError
 import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.api.model.Quantity
@@ -203,10 +204,3 @@ class KubernetesRunner(
     }
 
 }
-
-private fun loadFileFromResources(path: String): String? =
-    Thread.currentThread()
-        .contextClassLoader
-        .getResourceAsStream(path)
-        ?.use { it.readBytes() }
-        ?.toString(Charsets.UTF_8)

@@ -208,20 +208,18 @@ fun mainModule(context: CliContext) = module {
             RunnerName.Kubernetes -> {
                 val kubeConfig = runnersSectionWithSecrets.config.kubernetes
                 val zoeImage = with(kubeConfig.image) {
-                    val version =
-                        loadFileFromResources("version.json")?.toJsonNode()?.get("projectVersion")?.asText()
+                    val actualTag = tag ?: kotlin.run {
+                        // if tag not given, infer the version that should be used.
+                        val version =
+                            loadFileFromResources("version.json")?.toJsonNode()?.get("projectVersion")?.asText()
 
-                    val actualTag = when (tag) {
-                        null -> {
-                            when (version) {
-                                null -> {
-                                    logger.warn("Couldn't find package version from resources... Using 'latest'")
-                                    "latest"
-                                }
-                                else -> version
+                        when (version) {
+                            null -> {
+                                logger.warn("Couldn't find package version from resources... Using 'latest'")
+                                "latest"
                             }
+                            else -> version
                         }
-                        else -> tag
                     }
 
                     "$registry/$image:$actualTag"

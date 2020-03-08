@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 plugins {
     application
     id("org.beryx.runtime") version "1.8.0"
+    id("com.google.cloud.tools.jib")
 }
 
 application {
@@ -16,6 +17,23 @@ application {
 
 runtime {
     addOptions("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages", "--strip-native-commands")
+}
+
+jib {
+
+    from {
+        image = "gcr.io/distroless/java:11"
+    }
+
+    to {
+        image = "docker.pkg.github.com/adevinta/zoe/zoe-cli"
+        tags = setOf(project.version.toString(), "latest")
+    }
+
+    container {
+        jvmFlags = listOf("-client")
+        mainClass = "com.adevinta.oss.zoe.cli.MainKt"
+    }
 }
 
 dependencies {

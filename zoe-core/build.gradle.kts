@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+
 plugins {
     id("com.google.cloud.tools.jib")
 }
@@ -35,37 +37,41 @@ tasks.test {
     }
 }
 
-tasks.compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
+tasks {
+    compileKotlin {
+        kotlinOptions.jvmTarget = "1.8"
+    }
 
-tasks.compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    compileTestKotlin {
+        kotlinOptions.jvmTarget = "1.8"
+    }
 }
 
 sourceSets {
     main {
         resources.srcDir("resources")
-        withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
+        withConvention(KotlinSourceSet::class) {
             kotlin.srcDir("src")
         }
     }
 
     test {
         resources.srcDir("testResources")
-        withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
+        withConvention(KotlinSourceSet::class) {
             kotlin.srcDir("test")
         }
     }
 }
 
 jib {
+
     to {
-        image = "wlezzar/zoe-core"
-        tags = setOf("1.1", "latest")
+        image = "docker.pkg.github.com/adevinta/zoe/zoe-core"
+        tags = setOf(project.version.toString(), "latest")
     }
+
     container {
-        jvmFlags = listOf("-Xms512m", "-client")
+        jvmFlags = listOf("-client")
         mainClass = "com.adevinta.oss.zoe.core.MainKt"
     }
 }
