@@ -5,14 +5,14 @@
 <h2 id="key-features">Key features</h2>
 <p>Zoe has a lot of selling points. Here are some of the most interesting features of zoe :</p>
 <ul>
+<li>Supports offloading consumption of data to lambda functions, kubernetes pods, etc. for parallelism (ex. adding <code>-r kubernetes</code> would offload all the requests to multiple pods in a configured kubernetes cluster).</li>
 <li>Consume kafka topics from a specific point in time (ex. using <code>--from 'PT5h</code> from the last 5 hours).</li>
 <li>Filter data based on content (ex. using <code>--filter "id == '12345'"</code> filters records with the selected id).</li>
-<li>Supports offloading consumption of data to multiple lambda functions, kubernetes pods, etc. for parallelism (ex. adding <code>-x kubernetes</code> would offload all the requests to a configured kubernetes cluster).</li>
 <li>Monitor consumer groups' offsets.</li>
 <li>Upload avro schemas from a <code>.avsc</code> or <code>.avdl</code> file using different naming strategies.</li>
 <li>... and more.</li>
 </ul>
-<p>Go to the install section for instructions on how to install the zoe CLI.</p>
+<p>Go to the <a href="install/overview/">install section</a> for instructions on how to install the zoe CLI.</p>
 <h2 id="sample-commands">Sample commands</h2>
 <p>Read 10 records from the <code>input</code> topic from the <code>local</code> kafka cluster (aliases for topics and clusters are set in the configuration) :</p>
 <div class="superfences-tabs">
@@ -70,7 +70,7 @@
     topics <span class="nb">read</span> <span class="se">\</span>
     -n <span class="m">10</span> <span class="se">\</span>
     --from <span class="s1">&#39;PT6h&#39;</span> <span class="se">\</span>
-    --filter <span class="s2">&quot;user.name.first == &#39;Kasimir&#39;</span>
+    --filter <span class="s2">&quot;user.name.first == &#39;Kasimir&#39;&quot;</span>
 </pre></div></div>
 <input name="__tabs_3" type="radio" id="__tab_3_1" />
 <label for="__tab_3_1">output</label>
@@ -101,8 +101,8 @@
     topics <span class="nb">read</span> <span class="se">\</span>
     -n <span class="m">10</span> <span class="se">\</span>
     --from <span class="s1">&#39;PT6h&#39;</span> <span class="se">\</span>
-    --filter <span class="s2">&quot;user.name.first == &#39;Kasimir&#39; \</span>
-<span class="s2">    --jobs 10</span>
+    --filter <span class="s2">&quot;user.name.first == &#39;Kasimir&#39;&quot;</span> <span class="se">\</span>
+    --jobs <span class="m">10</span>
 </pre></div></div>
 </div>
 <p>Display the offsets of my consumer group <code>my-group</code> :</p>

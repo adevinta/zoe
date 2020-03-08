@@ -8,18 +8,18 @@
   <span class="nt">popular_facts</span><span class="p">:</span> <span class="s">&quot;upvotes</span><span class="nv"> </span><span class="s">&gt;=</span><span class="nv"> </span><span class="s">`2`&quot;</span>
 </pre></div>
 
-<p>The example above shows one registered expression called <code>popular_facts</code> that represents the expression <code>upvotes &gt;= 2</code>. We can refer to this expression with <code>@popular_facts</code> when using zoe :</p>
+<p>The example above shows a registered expression aliased by <code>popular_facts</code> that represents the expression <code>upvotes &gt;= 2</code>. We can refer to this expression using <code>@popular_facts()</code> with zoe :</p>
 <div class="codehilite"><pre><span></span>zoe -v -c my-cluster topics consume --filter <span class="s1">&#39;@popular_facts()&#39;</span> 
 </pre></div>
 
 <p>Zoe will replace <code>@popular_facts()</code> by <code>upvotes &gt;= '2'</code> at runtime without having bash interfering with our expression.</p>
 <h2 id="registered-expressions-with-arguments">Registered expressions with arguments</h2>
-<p>Registered expressions can accept named arguments as well. Here is an example of an expression that expects a single argument:</p>
+<p>Registered expressions can accept named arguments. Here is an example of an expression that expects a single argument named <code>value</code>:</p>
 <div class="codehilite"><pre><span></span><span class="nt">expressions</span><span class="p">:</span>
   <span class="nt">short_id</span><span class="p">:</span> <span class="s">&quot;ends_with(id,</span><span class="nv"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">value</span><span class="nv"> </span><span class="s">}}&#39;)&quot;</span>
 </pre></div>
 
-<p>Notice the <code>{{ value }}</code> part. When referring to the expression with <code>@short_id</code>, zoe will expect an argument named <code>value</code> :</p>
+<p>Notice the <code>{{ value }}</code> part. When referring to the expression with <code>@short_id</code>, zoe will expect an argument named <code>value</code>:</p>
 <div class="codehilite"><pre><span></span>zoe -v -c my-cluster topics consume --filter <span class="s1">&#39;@short_id(value=22121)&#39;</span> 
 </pre></div>
 
@@ -27,5 +27,5 @@
 <p>It is also possible for a registered expression to accept multiple named arguments. They just need to be separated by a comma.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Registered expressions allow team members to share commonly used filters between them. A good tip would be to put these expressions in the <code>common.yml</code> config file so that expressions become available in all the environments.</p>
+<p>Registered expressions allow team members to share commonly used filters between them. A good practice is to put these expressions in the <code>common.yml</code> config file so that expressions become available in all the environments.</p>
 </div></article></div></div></main><footer class="md-footer"><div class="md-footer-nav"><nav class="md-footer-nav__inner md-grid"><a href="../avro/" title="Using avro and schema registry" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev"><div class="md-flex__cell md-flex__cell--shrink"><i class="md-icon md-icon--arrow-back md-footer-nav__button"></i></div><div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span class="md-flex__ellipsis"><span class="md-footer-nav__direction">Previous</span>Using avro and schema registry</span></div></a><a href="../secrets/overview/" title="Overview" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next"><div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span class="md-flex__ellipsis"><span class="md-footer-nav__direction">Next</span>Overview</span></div><div class="md-flex__cell md-flex__cell--shrink"><i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i></div></a></nav></div><div class="md-footer-meta md-typeset"><div class="md-footer-meta__inner md-grid"><div class="md-footer-copyright"><div class="md-footer-copyright__highlight">Copyright (c) 2020 Adevinta</div>powered by <a href="https://www.mkdocs.org">MkDocs</a> and <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a></div></div></div></footer></div><script src="../../assets/javascripts/application.b260a35d.js"></script><script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script></body></html>
