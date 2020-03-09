@@ -150,6 +150,16 @@ class KubernetesRunner(
                                     )
                                 )
 
+                            zoeState.waiting != null && zoeState.waiting.reason == "ImagePullBackOff" ->
+                                future.completeExceptionally(
+                                    ZoeRunnerException(
+                                        "Zoe image does not seem to be pullable. Pod :${resource.toJsonString()}",
+                                        cause = null,
+                                        runnerName = name,
+                                        remoteStacktrace = null
+                                    )
+                                )
+
                             zoeState.terminated != null ->
                                 try {
                                     val response =
