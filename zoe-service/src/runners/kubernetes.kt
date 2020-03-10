@@ -137,6 +137,18 @@ class KubernetesRunner(
                         val zoeState = resource?.status?.containerStatuses?.find { it.name == "zoe" }?.state
 
                         when {
+
+                            zoeState?.waiting?.reason == "ImagePullBackOff" ->
+                                // Means the container image is not pullable. Fail early !
+                                future.completeExceptionally(
+                                    ZoeRunnerException(
+                                        "Zoe image does not seem to be pullable. Pod :${resource.toJsonString()}",
+                                        cause = null,
+                                        runnerName = name,
+                                        remoteStacktrace = null
+                                    )
+                                )
+
                             podState == "Pending" -> {
                                 logger.debug("pod is spinning up...")
                             }
@@ -145,16 +157,6 @@ class KubernetesRunner(
                                 future.completeExceptionally(
                                     ZoeRunnerException(
                                         "State for container 'zoe' not found. Pod :${resource?.toJsonString()}",
-                                        cause = null,
-                                        runnerName = name,
-                                        remoteStacktrace = null
-                                    )
-                                )
-
-                            zoeState.waiting != null && zoeState.waiting.reason == "ImagePullBackOff" ->
-                                future.completeExceptionally(
-                                    ZoeRunnerException(
-                                        "Zoe image does not seem to be pullable. Pod :${resource.toJsonString()}",
                                         cause = null,
                                         runnerName = name,
                                         remoteStacktrace = null
