@@ -66,7 +66,7 @@ sourceSets {
 jib {
 
     to {
-        image = "docker.pkg.github.com/adevinta/zoe/zoe-core"
+        image = "adevinta/zoe-core"
         tags = setOf(project.version.toString(), "latest")
     }
 

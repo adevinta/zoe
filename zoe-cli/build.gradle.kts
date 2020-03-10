@@ -26,7 +26,7 @@ jib {
     }
 
     to {
-        image = "docker.pkg.github.com/adevinta/zoe/zoe-cli"
+        image = "adevinta/zoe-cli"
         tags = setOf(project.version.toString(), "latest")
     }
 

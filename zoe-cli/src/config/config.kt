@@ -110,7 +110,7 @@ data class KubernetesRunnerConfig(
 
 data class DockerImageConfig(
     val registry: String = "docker.pkg.github.com",
-    val image: String = "adevinta/zoe/zoe-core",
+    val image: String = "adevinta/zoe-core",
     val tag: String? = null
 )
 

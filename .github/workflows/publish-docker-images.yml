@@ -26,5 +26,5 @@ jobs:
 
       - name: publish zoe images
         run: |
-          ./gradlew zoe-core:jib -Djib.to.auth.username=${{ github.actor }} -Djib.to.auth.password="${{ secrets.GITHUB_TOKEN }}"
-          ./gradlew zoe-cli:jib -Djib.to.auth.username=${{ github.actor }} -Djib.to.auth.password="${{ secrets.GITHUB_TOKEN }}"
+          ./gradlew zoe-core:jib -Djib.to.auth.username=${{ secrets.DOCKER_REGISTRY_USERNAME }} -Djib.to.auth.password="${{ secrets.DOCKER_REGISTRY_ACCESS_TOKEN }}"
+          ./gradlew zoe-cli:jib -Djib.to.auth.username=${{ secrets.DOCKER_REGISTRY_USERNAME }} -Djib.to.auth.password="${{ secrets.DOCKER_REGISTRY_ACCESS_TOKEN }}"
