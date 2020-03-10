@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  labels:
+    service: zookeeper
+    context: zoe-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: zookeeper
+  template:
+    metadata:
+      labels:
+        service: zookeeper
+    spec:
+      containers:
+        - env:
+            - name: ZOOKEEPER_CLIENT_PORT
+              value: "2181"
+            - name: ZOOKEEPER_TICK_TIME
+              value: "2000"
+          image: confluentinc/cp-zookeeper:5.0.0
+          name: zookeeper
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 2181
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "1G"
+      hostname: zookeeper
+      restartPolicy: Always

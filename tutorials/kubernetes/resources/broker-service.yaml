@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker
+  labels:
+    service: broker
+    context: zoe-demo
+spec:
+  ports:
+    - name: "9092"
+      port: 9092
+      targetPort: 9092
+    - name: "29092"
+      port: 29092
+      targetPort: 29092
+  selector:
+    service: broker
