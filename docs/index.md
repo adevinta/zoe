@@ -1,4 +1,4 @@
-# Zoe - The Kafka companion
+# Zoe - The Kafka Companion
 
 Zoe is a command line tool to interact with kafka in an easy and intuitive way. Wanna see this in action ? check out this demo...
 
@@ -10,7 +10,7 @@ Zoe really shines when it comes to interacting with cloud hosted kafka clusters 
 
 Here are some of the most interesting features of zoe :
 
-- Supports offloading consumption of data to lambda functions, kubernetes pods, etc. for parallelism (ex. adding `-r kubernetes` would offload all the requests to multiple pods in a configured kubernetes cluster).
+- Supports [offloading consumption of data](advanced/runners/overview.md) to lambda functions, kubernetes pods, etc. for parallelism (ex. adding `-r kubernetes` would offload all the requests to multiple pods in a configured kubernetes cluster).
 - Consume kafka topics from a specific point in time (ex. using `--from 'PT5h` from the last 5 hours).
 - Filter data based on content (ex. using `--filter "id == '12345'"` filters records with the selected id).
 - Monitor consumer groups' offsets.

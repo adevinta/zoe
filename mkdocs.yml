@@ -48,4 +48,8 @@ nav:
           - 'Local': advanced/runners/local.md
           - 'Lambda': advanced/runners/lambda.md
           - 'Kubernetes': advanced/runners/kubernetes.md
-  - 'Tutorials': tutorials.md
+  - 'Tutorials':
+      - 'Overview': tutorials/overview.md
+      - 'Simple': tutorials/simple.md
+      - 'Zoe with Avro': tutorials/avro.md
+      - 'Zoe with Kubernetes': tutorials/kubernetes.md

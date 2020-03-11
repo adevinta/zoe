@@ -17,4 +17,4 @@ clusters:
       value.serializer: "org.apache.kafka.common.serialization.ByteArraySerializer"
 
 runners:
-  default: "local"
+  default: "kubernetes"
