@@ -33,6 +33,7 @@ nav:
       - 'Operations': basics/operations.md
   - 'Configuration':
       - 'Overview': configuration/overview.md
+      - 'Config initialization': configuration/init.md
       - 'Environments': configuration/environments.md
       - 'Configuration loading chain': configuration/chain.md
       - 'Reference': configuration/reference.md

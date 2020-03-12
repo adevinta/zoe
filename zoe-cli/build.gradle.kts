@@ -50,6 +50,7 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.7")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:5.7.0.202003090808-r")
 
     implementation("org.koin:koin-core:2.0.1")
     implementation("com.jakewharton.picnic:picnic:0.2.0")
