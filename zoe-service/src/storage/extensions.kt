@@ -12,7 +12,7 @@ import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonBytes
 
 fun <T : KeyValueStore> T.withNamespace(namespace: String): T {
-    inNamespace(namespace)
+    useNamespace(namespace)
     return this
 }
 

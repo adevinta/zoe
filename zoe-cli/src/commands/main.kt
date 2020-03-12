@@ -15,7 +15,7 @@ import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.ZoeService
 import com.adevinta.oss.zoe.service.config.InMemoryConfigStore
-import com.adevinta.oss.zoe.service.config.RegisteredExpression
+import com.adevinta.oss.zoe.service.expressions.RegisteredExpression
 import com.adevinta.oss.zoe.service.runners.KubernetesRunner
 import com.adevinta.oss.zoe.service.runners.LambdaZoeRunner
 import com.adevinta.oss.zoe.service.runners.LocalZoeRunner
@@ -150,8 +150,7 @@ fun mainModule(context: CliContext) = module {
 
     singleCloseable<KeyValueStore> {
         LocalFsKeyValueStore(
-            namespace = "${context.home}/storage/${context.env}",
-            executor = get(named("io"))
+            root = File("${context.home}/storage/${context.env}")
         )
     }
 

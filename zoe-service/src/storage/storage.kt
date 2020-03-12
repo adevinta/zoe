@@ -12,49 +12,60 @@ import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.service.config.s3
 import kotlinx.coroutines.future.await
 import java.io.Closeable
+import java.io.File
 import java.nio.file.Files
-import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.function.Supplier
-import kotlin.streams.asSequence
 
 interface KeyValueStore : Closeable {
-    fun inNamespace(namespace: String)
+    fun useNamespace(namespace: String)
     suspend fun get(key: String): ByteArray?
     suspend fun put(key: String, value: ByteArray)
     suspend fun listKeys(): Iterable<String>
     override fun close() {}
 }
 
-class LocalFsKeyValueStore(private var namespace: String, private val executor: ExecutorService) : KeyValueStore {
+class LocalFsKeyValueStore(private var root: File) : KeyValueStore {
+
+    private val executor = Executors.newSingleThreadExecutor()
 
     private suspend fun <T> submit(block: () -> T): T =
         CompletableFuture.supplyAsync(Supplier { block() }, executor).await()
 
     override suspend fun get(key: String): ByteArray? = submit {
-        val path = Path.of("$namespace/$key")
-        if (path.toFile().exists()) Files.readAllBytes(path) else null
+        root.resolve(key).takeIf { it.exists() }?.readBytes()
     }
 
     override suspend fun put(key: String, value: ByteArray) = submit {
-        val path = Path.of("$namespace/$key")
-        if (!path.parent.toFile().exists()) {
-            Files.createDirectories(path.parent)
-        }
-        Files.newOutputStream(path).use { it.write(value) }
+        root
+            .resolve(key)
+            .also {
+                val parent = it.parentFile
+                if (!parent.exists()) {
+                    Files.createDirectories(parent.toPath())
+                }
+            }
+            .outputStream()
+            .use { it.write(value) }
     }
 
     override suspend fun listKeys(): Iterable<String> = submit {
-        Files
-            .list(Path.of(namespace))
-            .asSequence()
-            .map { it.fileName.toString() }
-            .toList()
+        root
+            .listFiles()
+            ?.asSequence()
+            ?.map { it.name.toString() }
+            ?.toList()
+            ?: emptyList()
     }
 
-    override fun inNamespace(namespace: String) {
-        this.namespace = "${this.namespace}/$namespace"
+    override fun useNamespace(namespace: String) {
+        this.root = root.resolve(namespace)
+    }
+
+    override fun close() {
+        executor.shutdown()
     }
 }
 
@@ -90,7 +101,7 @@ class AwsFsKeyValueStore(
         s3.listObjectsV2(bucket, root).objectSummaries.map { it.key.replaceFirst(root, "") }
     }
 
-    override fun inNamespace(namespace: String) {
+    override fun useNamespace(namespace: String) {
         this.prefix = "${this.prefix}/$namespace"
     }
 

@@ -8,6 +8,7 @@
 
 package com.adevinta.oss.zoe.service.config
 
+import com.adevinta.oss.zoe.service.expressions.RegisteredExpression
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import java.util.concurrent.CompletableFuture

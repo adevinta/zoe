@@ -14,6 +14,8 @@ import com.adevinta.oss.zoe.core.functions.SubjectNameStrategy.TopicRecordNameSt
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.now
 import com.adevinta.oss.zoe.service.config.*
+import com.adevinta.oss.zoe.service.expressions.CalledExpression
+import com.adevinta.oss.zoe.service.expressions.call
 import com.adevinta.oss.zoe.service.runners.*
 import com.adevinta.oss.zoe.service.secrets.SecretsProvider
 import com.adevinta.oss.zoe.service.secrets.resolveSecrets
