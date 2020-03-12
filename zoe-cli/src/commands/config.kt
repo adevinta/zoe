@@ -9,6 +9,7 @@
 package com.adevinta.oss.zoe.cli.commands
 
 import com.adevinta.oss.zoe.cli.config.*
+import com.adevinta.oss.zoe.cli.utils.globalTermColors
 import com.adevinta.oss.zoe.cli.utils.yaml
 import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.logger
@@ -17,11 +18,17 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.parameters.groups.OptionGroup
+import com.github.ajalt.clikt.parameters.groups.groupChoice
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import java.io.File
@@ -35,7 +42,31 @@ class ConfigCommand : CliktCommand(name = "config", help = "Initialize zoe") {
 
 @ExperimentalCoroutinesApi
 @FlowPreview
-class ConfigInit : CliktCommand(name = "init", help = "Initialize zoe config"), KoinComponent {
+class ConfigInit : CliktCommand(
+    name = "init",
+    help = "Initialize zoe config",
+    epilog = with(globalTermColors) {
+        """```
+        |Examples:
+        |
+        |  Init config with a default configuration file:
+        |  > ${bold("zoe config init")}
+        |
+        |  Load config from a local directory:
+        |  > ${bold("""zoe config init --from local --path /path/to/existing/config""")}
+        |
+        |  Load config from a git repository:
+        |  > ${bold("""zoe config init --from git --url 'https://github.com/adevinta/zoe.git' --dir tutorials/simple/config""")}
+        |
+        |  Load config from a git repository with authentication:
+        |  > ${bold("""zoe config init --from git --url 'https://github.company.com/example/config.git' --dir zoe-config --username user --password pass""")}
+        |
+        |  You can also use a github token as a username:
+        |  > ${bold("""zoe config init --from git --url 'https://github.company.com/example/config.git' --dir zoe-config --username gh-token""")}
+        |
+        |```""".trimMargin()
+    }
+), KoinComponent {
 
     private val ctx by inject<CliContext>()
 
@@ -47,15 +78,14 @@ class ConfigInit : CliktCommand(name = "init", help = "Initialize zoe config"), 
         default = false
     )
 
-    private val from: File? by option("--from", help = "Import from an existing configuration folder").file(
-        mustExist = true,
-        canBeDir = true,
-        mustBeReadable = true
+    private val from by option("--from", help = "Import from an existing configuration folder").groupChoice(
+        "local" to LoadFrom.Local(),
+        "git" to LoadFrom.Git()
     )
 
     override fun run() {
         val configDir = ctx.configDir
-        val fromDir = from
+        val fromDir = from?.getSourceDir()
 
         if (recreate && configDir.exists()) {
             logger.info("deleting existing config directory : ${configDir.absolutePath}")
@@ -122,6 +152,45 @@ class ConfigInit : CliktCommand(name = "init", help = "Initialize zoe config"), 
                     .writeValue(target, jsonValue)
             }
         }
+    }
+}
+
+sealed class LoadFrom(name: String) : OptionGroup(name) {
+    class Local : LoadFrom("Options to load from local") {
+        val path: File
+                by option("--path")
+                    .file(mustExist = true, canBeDir = true, mustBeReadable = true)
+                    .required()
+    }
+
+    class Git : LoadFrom("Options to load from git") {
+        val url: String by option("--url", help = "remote url of the repository").required()
+        val dir: String by option("--dir", help = "path to the config inside the repo").default(".")
+        val username: String? by option("-u", "--username")
+        val password: String? by option("--password")
+    }
+}
+
+fun LoadFrom.getSourceDir(): File = when (this) {
+    is LoadFrom.Local -> path
+
+    is LoadFrom.Git -> {
+        val temp = Files.createTempDirectory("tmp-zoe-config-init").toFile().also { it.deleteOnExit() }
+
+        Git
+            .cloneRepository()
+            .setURI(url)
+            .let {
+                if (password != null || username != null) it.setCredentialsProvider(
+                    UsernamePasswordCredentialsProvider(username ?: "", password ?: "")
+                ) else {
+                    it
+                }
+            }
+            .setDirectory(temp)
+            .call()
+
+        temp.resolve(dir)
     }
 }
 
