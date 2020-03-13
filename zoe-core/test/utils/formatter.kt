@@ -11,5 +11,4 @@ package com.adevinta.oss.zoe.core.utils
 import org.spekframework.spek2.Spek
 
 object FormatterTest : Spek({
-
 })

@@ -44,7 +44,6 @@ data class CalledExpression(val name: String, val args: Map<String, String>) {
     }
 }
 
-
 data class RegisteredExpression(val name: String, val expression: String) {
 
     val params: Set<Param> by lazy {
@@ -56,7 +55,6 @@ data class RegisteredExpression(val name: String, val expression: String) {
             }
             .toSet()
     }
-
 }
 
 fun RegisteredExpression.call(args: Map<String, String>): String {
@@ -65,4 +63,3 @@ fun RegisteredExpression.call(args: Map<String, String>): String {
         acc.replace(param.original, value)
     }
 }
-

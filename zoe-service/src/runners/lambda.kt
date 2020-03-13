@@ -82,6 +82,4 @@ class LambdaZoeRunner(
             runnerName = name,
             remoteStacktrace = stackTrace
         )
-
-
 }

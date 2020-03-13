@@ -110,7 +110,6 @@ class StrongboxProvider(
             .getStringSecret(secretName)
             .orElseThrow { IllegalArgumentException("'$secretName' not found") }
     }
-
 }
 
 class EnvVarsSecretProvider(private val append: String, private val prepend: String) : SecretsProvider {
@@ -124,5 +123,4 @@ class EnvVarsSecretProvider(private val append: String, private val prepend: Str
         val completedSecretName = "$prepend$secretName$append"
         return System.getenv(completedSecretName) ?: userError("secret not found in env : $completedSecretName")
     }
-
 }

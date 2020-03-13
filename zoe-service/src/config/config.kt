@@ -44,5 +44,3 @@ data class ConsumerGroup(val name: String)
 
 typealias TopicAlias = String
 typealias GroupAlias = String
-
-

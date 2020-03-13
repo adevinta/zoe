@@ -11,13 +11,11 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("io.confluent:kafka-avro-serializer:5.2.2")
 
-
     implementation("org.slf4j:slf4j-log4j12:1.7.26")
     implementation("log4j:log4j:1.2.17")
     implementation("org.apache.kafka:kafka-clients:2.3.1")
     implementation("org.apache.avro:avro-compiler:1.8.2")
     implementation("com.google.guava:guava:28.0-jre")
-
 
     implementation(group = "io.burt", name = "jmespath-jackson", version = "0.2.0")
 

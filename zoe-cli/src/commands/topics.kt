@@ -42,7 +42,6 @@ import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.roundToInt
 
-
 @ExperimentalCoroutinesApi
 @FlowPreview
 class TopicsCommand : CliktCommand(
@@ -84,7 +83,6 @@ class TopicsDescribe : CliktCommand(name = "describe", help = "describe a topic"
         val response = service.describeTopic(cluster, topic) ?: userError("topic not found : ${topic.value}")
         ctx.term.output.format(response.toJsonNode()) { echo(it) }
     }
-
 }
 
 @FlowPreview
@@ -204,7 +202,6 @@ class TopicsConsume : CliktCommand(
         val percent = ((currentOffset - startOffset) / (latestOffset - startOffset).toDouble() * 100)
         if (percent.isNaN()) -1 else percent.roundToInt()
     }
-
 }
 
 @FlowPreview

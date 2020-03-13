@@ -104,5 +104,4 @@ class AwsFsKeyValueStore(
     override fun useNamespace(namespace: String) {
         this.prefix = "${this.prefix}/$namespace"
     }
-
 }

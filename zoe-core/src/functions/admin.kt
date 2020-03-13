@@ -281,7 +281,7 @@ fun SchemaContent.parsed(): Schema = when (this) {
     is SchemaContent.AvscSchema -> Schema.Parser().parse(content)
     is SchemaContent.AvdlSchema -> {
         val protocol = Idl(content.byteInputStream(Charsets.UTF_8)).CompilationUnit()
-        val fqdn = "${protocol.namespace}.${name}"
-        protocol.getType(fqdn) ?: throw IllegalArgumentException("schema '${name}' not found in avdl")
+        val fqdn = "${protocol.namespace}.$name"
+        protocol.getType(fqdn) ?: throw IllegalArgumentException("schema '$name' not found in avdl")
     }
 }

@@ -40,10 +40,8 @@ fun loadFileFromResources(path: String): String? =
         ?.use { it.readBytes() }
         ?.toString(Charsets.UTF_8)
 
-
 class CloseableExecutorService(private val wrapped: ExecutorService) : ExecutorService by wrapped, Closeable {
     override fun close() {
         wrapped.shutdown()
     }
-
 }

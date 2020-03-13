@@ -85,7 +85,6 @@ private fun Dejsonifier.Companion.fromConfig(config: DejsonifierConfig): Dejsoni
     is DejsonifierConfig.Raw -> JsonNodeToBytes
 }
 
-
 data class ProduceConfig(
     val topic: String,
     val dejsonifier: DejsonifierConfig,
@@ -106,7 +105,6 @@ sealed class DejsonifierConfig {
     data class Avro(val registry: String, val subject: String) : DejsonifierConfig()
     object Raw : DejsonifierConfig()
 }
-
 
 data class SkippedRecord(
     val key: String,

@@ -70,7 +70,6 @@ class DescribeLambda : CliktCommand(name = "describe", help = "Describe the curr
 
         ctx.term.output.format(response) { echo(it) }
     }
-
 }
 
 @ExperimentalCoroutinesApi
@@ -324,7 +323,6 @@ internal fun AmazonCloudFormation.createOrUpdateStack(
         logger.info("stack updated : $newStack")
 
         return StackCreationResult.ActualRun(current = newStack, previous = current, changes = changeSet.changes)
-
     } else {
         return StackCreationResult.DryRun(current = current, changes = changeSet.changes)
     }

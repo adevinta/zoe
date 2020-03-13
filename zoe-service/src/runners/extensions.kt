@@ -15,7 +15,7 @@ import com.adevinta.oss.zoe.core.utils.toJsonString
 import kotlinx.coroutines.future.await
 
 suspend fun <T : Any> ZoeRunner.launchAwait(function: String, payload: T): String {
-    logger.debug("launching function '${function}'")
+    logger.debug("launching function '$function'")
     return launch(function, payload.toJsonString()).await()
 }
 

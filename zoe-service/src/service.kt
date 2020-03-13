@@ -221,7 +221,6 @@ class ZoeService(
                 }
                 .getOrNull()
 
-
         val result = RunnerVersionData(
             clientVersion = versionCheckRequest.clientVersion,
             remoteVersion = versionCheckResponse?.remoteVersion,
@@ -233,7 +232,6 @@ class ZoeService(
 
         return result
     }
-
 
     private suspend fun resolveExpression(expression: String): String =
         if (CalledExpression.isCandidate(expression)) {
@@ -310,7 +308,6 @@ class ZoeService(
             }
 
             emit(RecordOrProgress.Progress(globalProgress.values))
-
         } while (resumeFrom.isNotEmpty())
     }
 
@@ -363,7 +360,6 @@ class ZoeService(
                 }
                 StopCondition.Continuously -> {
                 }
-
             }
         }
     }

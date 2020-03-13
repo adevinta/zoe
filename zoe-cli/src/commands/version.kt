@@ -9,11 +9,9 @@
 package com.adevinta.oss.zoe.cli.commands
 
 import com.adevinta.oss.zoe.cli.utils.loadFileFromResources
-import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.ZoeService
 import com.adevinta.oss.zoe.service.utils.userError
-import com.fasterxml.jackson.databind.node.TextNode
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.flag
@@ -37,7 +35,6 @@ class VersionPrint : CliktCommand(name = "print", help = "Print current version"
 
         ctx.term.output.format(output) { echo(it) }
     }
-
 }
 
 @ExperimentalCoroutinesApi

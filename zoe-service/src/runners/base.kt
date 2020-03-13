@@ -38,4 +38,3 @@ fun ZoeRunnerException.Companion.fromRunFailureResponse(
     runnerName = runnerName,
     remoteStacktrace = error.stackTrace
 )
-

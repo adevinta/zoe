@@ -8,10 +8,8 @@ dependencies {
     implementation("com.amazonaws:aws-java-sdk-lambda:1.11.580")
     implementation("com.schibsted.security:strongbox-sdk:0.2.13")
 
-
     implementation("org.slf4j:slf4j-log4j12:1.7.26")
     implementation("log4j:log4j:1.2.17")
-
 
     implementation("io.fabric8:kubernetes-client:4.7.1")
 

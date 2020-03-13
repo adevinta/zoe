@@ -107,7 +107,7 @@ class ConfigInit : CliktCommand(
                     val options = if (overwrite) arrayOf(StandardCopyOption.REPLACE_EXISTING) else emptyArray()
 
                     try {
-                        logger.info("copying '${source}' to '${target}'")
+                        logger.info("copying '$source' to '$target'")
                         Files.copy(file.toPath(), target, *options)
                     } catch (exists: FileAlreadyExistsException) {
                         userError("file already exists : ${exists.message} (use --overwrite)")

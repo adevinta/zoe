@@ -82,7 +82,6 @@ class KubernetesRunner(
                         .delete()
                 }
             }
-
     }
 
     override fun close() {
@@ -190,7 +189,6 @@ class KubernetesRunner(
                                                 }
                                         )
                                     }
-
                                 } catch (err: Throwable) {
                                     future.completeExceptionally(err)
                                 }
@@ -204,5 +202,4 @@ class KubernetesRunner(
             .let { if (timeoutMs != null) it.orTimeout(timeoutMs, TimeUnit.MILLISECONDS) else it }
             .whenComplete { _, _ -> watch.close() }
     }
-
 }

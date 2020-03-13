@@ -8,11 +8,7 @@
 
 package com.adevinta.oss.zoe.cli.utils
 
-import com.adevinta.oss.zoe.cli.commands.ZoeCommandLine
 import com.adevinta.oss.zoe.core.utils.logger
-import com.adevinta.oss.zoe.core.utils.parseJson
-import com.adevinta.oss.zoe.core.utils.toJsonNode
-import com.adevinta.oss.zoe.core.utils.toJsonString
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.cloudformation.AmazonCloudFormation
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
@@ -84,7 +80,6 @@ fun <T> retryUntilNotNull(timeoutMs: Long, onTimeoutMsg: String?, block: () -> T
         }
 
         Thread.sleep(3000)
-
     } while (System.currentTimeMillis() - start < timeoutMs)
 
     throw TimeoutException(onTimeoutMsg)

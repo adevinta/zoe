@@ -63,7 +63,6 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
                         topic = it.topic(),
                         formatted = it.value()?.let { rec -> jsonifier.format(rec) } ?: NullNode.getInstance()
                     )
-
                 }
                 .filter { it.formatted.match(filters) }
                 .map { if (query == null) it else it.copy(formatted = query.search(it.formatted)) }
@@ -76,7 +75,6 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
         )
     }
 }
-
 
 data class PollResponse(
     val records: Iterable<PolledRecord>,
@@ -151,7 +149,8 @@ private class ProgressListener(val consumer: Consumer<*, *>) {
 
     private data class ConsumedRecords(
         val first: ConsumerRecord<*, *>,
-        val last: ConsumerRecord<*, *>, val count: Long
+        val last: ConsumerRecord<*, *>,
+        val count: Long
     )
 
     private val consumed: MutableMap<TopicPartition, ConsumedRecords?> = mutableMapOf()
