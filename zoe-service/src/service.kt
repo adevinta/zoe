@@ -354,7 +354,7 @@ class ZoeService(
             // remove completed partitions
             when (stopCondition) {
                 StopCondition.TopicEnd -> {
-                    if (currentOffset >= resumePosition.until - 1) {
+                    if (currentOffset >= resumePosition.until) {
                         remove(partition)
                     }
                 }
