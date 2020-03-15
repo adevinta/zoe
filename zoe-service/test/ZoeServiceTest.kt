@@ -1,5 +1,7 @@
 package com.adevinta.oss.zoe.service
 
+import com.adevinta.oss.zoe.core.functions.OffsetQueriesResponse
+import com.adevinta.oss.zoe.core.functions.TopicPartitionOffset
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.config.Cluster
 import com.adevinta.oss.zoe.service.config.InMemoryConfigStore
@@ -25,10 +27,12 @@ object ZoeServiceTest : Spek({
             simulator(readSpeedPerPoll = 2) {
                 cluster("local") {
                     topic(name = "input", partitions = 5) {
-                        message(partition = 0, timestamp = 1, content = """{"id": 1}""".toJsonNode())
-                        message(partition = 0, timestamp = 2, content = """{"id": 2}""".toJsonNode())
-                        message(partition = 0, timestamp = 3, content = """{"id": 3}""".toJsonNode())
-                        message(partition = 1, timestamp = 1, content = """{"id": 5}""".toJsonNode())
+                        message(partition = 0, offset = 0, timestamp = 0, content = """{"id": 1}""".toJsonNode())
+                        message(partition = 0, offset = 1, timestamp = 1, content = """{"id": 2}""".toJsonNode())
+                        message(partition = 0, offset = 2, timestamp = 3, content = """{"id": 3}""".toJsonNode())
+                        message(partition = 1, offset = 0, timestamp = 1, content = """{"id": 5}""".toJsonNode())
+                        message(partition = 1, offset = 1, timestamp = 2, content = """{"id": 6}""".toJsonNode())
+                        message(partition = 2, offset = 0, timestamp = 1, content = """{"id": 6}""".toJsonNode())
                     }
                 }
             }
@@ -62,7 +66,11 @@ object ZoeServiceTest : Spek({
             }
 
             it("receives all the records") {
-                Assert.assertEquals(4, readResponse.filterIsInstance<RecordOrProgress.Record>().size)
+                Assert.assertEquals(
+                    "didn't receive all records (${readResponse.size}): $readResponse",
+                    6,
+                    readResponse.filterIsInstance<RecordOrProgress.Record>().size
+                )
             }
 
             it("receives a partition progress") {
@@ -111,6 +119,38 @@ object ZoeServiceTest : Spek({
             it("receives one message per partition") {
                 Assert.assertEquals(2, readResponse.filterIsInstance<RecordOrProgress.Record>().size)
             }
+        }
+
+        describe("Can request offsets from timestamps") {
+            val ts = 2L
+            val topic = "input"
+
+            lateinit var response: List<TopicPartitionOffset>
+
+            beforeEachTest {
+                runBlocking {
+                    response = service.offsetsFromTimestamp(
+                        cluster = "cluster",
+                        topic = TopicAliasOrRealName(topic),
+                        timestamp = ts
+                    )
+                }
+            }
+
+            it("receives correct response") {
+                Assert.assertEquals(
+                    setOf(
+                        TopicPartitionOffset(topic = topic, partition = 0, offset = 2),
+                        TopicPartitionOffset(topic = topic, partition = 1, offset = 1),
+                        TopicPartitionOffset(topic = topic, partition = 2, offset = null),
+                        TopicPartitionOffset(topic = topic, partition = 3, offset = null),
+                        TopicPartitionOffset(topic = topic, partition = 4, offset = null),
+                        TopicPartitionOffset(topic = topic, partition = 5, offset = null)
+                    ),
+                    response.toSet()
+                )
+            }
+
         }
 
     }

@@ -8,18 +8,19 @@
 
 package com.adevinta.oss.zoe.core.functions
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.annotation.JsonValue
-import com.fasterxml.jackson.databind.JsonNode
-import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import com.adevinta.oss.zoe.core.functions.DeploySchemaResponse.ActualRunResponse
 import com.adevinta.oss.zoe.core.functions.DeploySchemaResponse.DryRunResponse
 import com.adevinta.oss.zoe.core.utils.admin
 import com.adevinta.oss.zoe.core.utils.consumer
 import com.adevinta.oss.zoe.core.utils.json
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonValue
+import com.fasterxml.jackson.databind.JsonNode
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import org.apache.avro.Schema
 import org.apache.avro.compiler.idl.Idl
+import org.apache.kafka.common.TopicPartition as KafkaTopicPartition
 
 /**
  * Lambda function to list the kafka topics
@@ -36,6 +37,60 @@ val listTopics = zoeFunction<AdminConfig, ListTopicsResponse>(name = "topics") {
                     topic.partitions().map { it.partition() })
             }
             .let { ListTopicsResponse(it) }
+    }
+}
+
+/**
+ * Get offsets from a specific timestamp
+ */
+val queryOffsets = zoeFunction<OffsetQueriesRequest, OffsetQueriesResponse>(name = "queryOffsets") { config ->
+    consumer(config.props).use { cons ->
+        val partitions = cons.partitionsFor(config.topic).map { KafkaTopicPartition(it.topic(), it.partition()) }
+        val responses = config.queries.map { query ->
+            val response = when (query) {
+                is OffsetQuery.Timestamp ->
+                    cons
+                        .offsetsForTimes(
+                            partitions
+                                .asSequence()
+                                .map { it to query.ts }
+                                .toMap()
+                        )
+                        .map {
+                            TopicPartitionOffset(
+                                it.key.topic(),
+                                it.key.partition(),
+                                it.value?.offset()
+                            )
+                        }
+
+                is OffsetQuery.End ->
+                    cons
+                        .endOffsets(partitions)
+                        .map {
+                            TopicPartitionOffset(
+                                it.key.topic(),
+                                it.key.partition(),
+                                it.value
+                            )
+                        }
+
+                is OffsetQuery.Beginning ->
+                    cons
+                        .beginningOffsets(partitions)
+                        .map {
+                            TopicPartitionOffset(
+                                it.key.topic(),
+                                it.key.partition(),
+                                it.value
+                            )
+                        }
+            }
+
+            query.id to response
+        }
+
+        OffsetQueriesResponse(responses = responses.toMap())
     }
 }
 
@@ -238,6 +293,36 @@ data class TopicDescription(
 
 data class ListTopicsResponse(
     val topics: List<TopicDescription>
+)
+
+data class OffsetQueriesRequest(
+    val props: Map<String, String>,
+    val topic: String,
+    val queries: List<OffsetQuery>
+)
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes(
+    JsonSubTypes.Type(value = OffsetQuery.Timestamp::class, name = "timestamp"),
+    JsonSubTypes.Type(value = OffsetQuery.End::class, name = "end"),
+    JsonSubTypes.Type(value = OffsetQuery.Beginning::class, name = "beginning")
+)
+sealed class OffsetQuery {
+    abstract val id: String
+
+    data class Timestamp(val ts: Long, override val id: String) : OffsetQuery()
+    data class End(override val id: String) : OffsetQuery()
+    data class Beginning(override val id: String) : OffsetQuery()
+}
+
+data class OffsetQueriesResponse(
+    val responses: Map<String, List<TopicPartitionOffset>>
+)
+
+data class TopicPartitionOffset(
+    val topic: String,
+    val partition: Int,
+    val offset: Long?
 )
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")

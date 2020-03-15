@@ -49,6 +49,11 @@ suspend fun ZoeRunner.offsets(config: GroupConfig): GroupOffsetsResponse {
     return launchAwait(offsets.name(), config).parseJson()
 }
 
+suspend fun ZoeRunner.queryOffsets(config: OffsetQueriesRequest): OffsetQueriesResponse {
+    logger.info("querying offsets : $config")
+    return launchAwait(queryOffsets.name(), config).parseJson()
+}
+
 suspend fun ZoeRunner.deploySchema(config: DeploySchemaConfig): DeploySchemaResponse {
     return launchAwait(deploySchema.name(), config).parseJson()
 }

@@ -13,7 +13,9 @@ import com.adevinta.oss.zoe.core.functions.SubjectNameStrategy.TopicNameStrategy
 import com.adevinta.oss.zoe.core.functions.SubjectNameStrategy.TopicRecordNameStrategy
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.now
-import com.adevinta.oss.zoe.service.config.*
+import com.adevinta.oss.zoe.service.config.Cluster
+import com.adevinta.oss.zoe.service.config.ConfigStore
+import com.adevinta.oss.zoe.service.config.Topic
 import com.adevinta.oss.zoe.service.expressions.CalledExpression
 import com.adevinta.oss.zoe.service.expressions.call
 import com.adevinta.oss.zoe.service.runners.*
@@ -101,6 +103,7 @@ class ZoeService(
         val clusterConfig = getCluster(cluster)
         val topicName = clusterConfig.getTopicConfig(topic, subjectOverride = null).name
         val completedProps = clusterConfig.getCompletedProps()
+
         val resolvedFilters = filters.map { resolveExpression(it) }
         val resolvedQuery = query?.let { resolveExpression(it) }
 
@@ -181,6 +184,26 @@ class ZoeService(
     }
 
     /**
+     * Offsets for timestamp
+     */
+    suspend fun offsetsFromTimestamp(
+        cluster: String,
+        topic: TopicAliasOrRealName,
+        timestamp: Long
+    ): List<TopicPartitionOffset> {
+        val clusterConfig = getCluster(cluster)
+        val props = clusterConfig.getCompletedProps()
+        val topicName = clusterConfig.getTopicConfig(topic, subjectOverride = null).name
+
+        val query = OffsetQuery.Timestamp(timestamp, id = "query")
+
+        return runner
+            .queryOffsets(OffsetQueriesRequest(props, topicName, queries = listOf(query)))
+            .responses[query.id]
+            ?: throw IllegalStateException("response not found for query '$query'")
+    }
+
+    /**
      * List consumer groups
      */
     suspend fun listGroups(cluster: String, groups: List<GroupAliasOrRealName>): ListGroupsResponse {
@@ -233,18 +256,19 @@ class ZoeService(
         return result
     }
 
-    private suspend fun resolveExpression(expression: String): String =
-        if (CalledExpression.isCandidate(expression)) {
-            val called = CalledExpression.parse(expression)
-            val registered =
-                configStore.expression(called.name).await()
-                    ?: userError("expression not registered : ${called.name}")
-            val result = registered.call(called.args)
-            logger.info("resolved expression : $expression -> $result")
-            result
-        } else {
-            expression
+    private suspend fun resolveExpression(expression: String): String {
+        if (!CalledExpression.isCandidate(expression)) {
+            return expression
         }
+
+        val parsed = CalledExpression.parse(expression)
+        val registered = configStore.expression(parsed.name).await()
+            ?: userError("expression not registered : ${parsed.name}")
+
+        val result = registered.call(parsed.args)
+        logger.info("resolved expression : $expression -> $result")
+        return result
+    }
 
     private suspend fun getCluster(name: String): Cluster =
         requireNotNull(configStore.cluster(name).await()) { "cluster config not found : $name" }
