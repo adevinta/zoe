@@ -1,6 +1,5 @@
 package com.adevinta.oss.zoe.service
 
-import com.adevinta.oss.zoe.core.functions.OffsetQueriesResponse
 import com.adevinta.oss.zoe.core.functions.TopicPartitionOffset
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.config.Cluster
@@ -27,12 +26,12 @@ object ZoeServiceTest : Spek({
             simulator(readSpeedPerPoll = 2) {
                 cluster("local") {
                     topic(name = "input", partitions = 5) {
-                        message(partition = 0, offset = 0, timestamp = 0, content = """{"id": 1}""".toJsonNode())
-                        message(partition = 0, offset = 1, timestamp = 1, content = """{"id": 2}""".toJsonNode())
-                        message(partition = 0, offset = 2, timestamp = 3, content = """{"id": 3}""".toJsonNode())
-                        message(partition = 1, offset = 0, timestamp = 1, content = """{"id": 5}""".toJsonNode())
-                        message(partition = 1, offset = 1, timestamp = 2, content = """{"id": 6}""".toJsonNode())
-                        message(partition = 2, offset = 0, timestamp = 1, content = """{"id": 6}""".toJsonNode())
+                        message("""{"id": 1}""".toJsonNode(), key = "0-0", partition = 0, offset = 0, timestamp = 0)
+                        message("""{"id": 2}""".toJsonNode(), key = "0-1", partition = 0, offset = 1, timestamp = 1)
+                        message("""{"id": 3}""".toJsonNode(), key = "0-2", partition = 0, offset = 2, timestamp = 3)
+                        message("""{"id": 5}""".toJsonNode(), key = "1-0", partition = 1, offset = 0, timestamp = 1)
+                        message("""{"id": 6}""".toJsonNode(), key = "1-1", partition = 1, offset = 1, timestamp = 2)
+                        message("""{"id": 6}""".toJsonNode(), key = "2-0", partition = 2, offset = 0, timestamp = 1)
                     }
                 }
             }
@@ -67,7 +66,10 @@ object ZoeServiceTest : Spek({
 
             it("receives all the records") {
                 Assert.assertEquals(
-                    "didn't receive all records (${readResponse.size}): $readResponse",
+                    """didn't receive the right number of records:
+                        | - received: $readResponse
+                        | - expected: ${runner.state.clusters.first().topics.first().messages.values}
+                    """.trimMargin(),
                     6,
                     readResponse.filterIsInstance<RecordOrProgress.Record>().size
                 )
@@ -96,27 +98,6 @@ object ZoeServiceTest : Spek({
             }
 
             it("receives only records new than the requested timestamp") {
-                Assert.assertEquals(2, readResponse.filterIsInstance<RecordOrProgress.Record>().size)
-            }
-        }
-
-        describe("Can read from an offset stepback") {
-            lateinit var readResponse: List<RecordOrProgress>
-
-            beforeEachTest {
-                runBlocking {
-                    readResponse =
-                        service
-                            .readWithDefaultValues(
-                                cluster = "cluster",
-                                topic = "input",
-                                from = ConsumeFrom.OffsetStepBack(1)
-                            )
-                            .toList()
-                }
-            }
-
-            it("receives one message per partition") {
                 Assert.assertEquals(2, readResponse.filterIsInstance<RecordOrProgress.Record>().size)
             }
         }

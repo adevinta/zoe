@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import java.util.concurrent.CompletableFuture
 import kotlin.math.min
 
-class ZoeRunnerSimulator(private val state: RunnerState) : ZoeRunner {
+class ZoeRunnerSimulator(val state: RunnerState) : ZoeRunner {
 
     override val name: String = "simulator"
 
@@ -48,23 +48,10 @@ class ZoeRunnerSimulator(private val state: RunnerState) : ZoeRunner {
 
             val candidates = when (val subscription = payload.subscription) {
 
-                is Subscription.FromBeginning ->
-                    topic.messagesForPartitions(subscription.partitions ?: topic.partitions)
-
                 is Subscription.AssignPartitions ->
                     topic
                         .messagesForPartitions(subscription.partitions.keys)
                         .filter { it.offset >= subscription.partitions.getValue(it.partition) }
-
-                is Subscription.FromTimestamp ->
-                    topic
-                        .messagesForPartitions(subscription.partitions ?: topic.partitions)
-                        .filter { it.timestamp >= subscription.ts }
-
-                is Subscription.OffsetStepBack ->
-                    topic
-                        .messagesForPartitions(subscription.partitions ?: topic.partitions)
-                        .filter { it.offset >= topic.latestOffset(it.partition)!! - subscription.offsetsBack }
 
                 is Subscription.WithGroupId ->
                     throw IllegalArgumentException("subscription not supported: $subscription")
@@ -89,9 +76,8 @@ class ZoeRunnerSimulator(private val state: RunnerState) : ZoeRunner {
                 .toList(),
 
             progress = records
-                .groupBy { (topic.name to it.partition) }
-                .map { (topicPartition, partitionRecords) ->
-                    val (_, partition) = topicPartition
+                .groupBy { it.partition }
+                .map { (partition, partitionRecords) ->
                     PartitionProgress(
                         topic = topic.name,
                         partition = partition,

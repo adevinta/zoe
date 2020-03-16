@@ -8,14 +8,14 @@
 
 package com.adevinta.oss.zoe.core.functions
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
 import com.adevinta.oss.zoe.core.utils.consumer
 import com.adevinta.oss.zoe.core.utils.jmespath
 import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.match
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.EncoderFactory
@@ -25,7 +25,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import java.io.ByteArrayOutputStream
 import java.time.Duration
-import kotlin.math.max
 
 /**
  * Polls records from kafka
@@ -90,43 +89,17 @@ data class PolledRecord(
     val formatted: JsonNode
 )
 
-private fun Consumer<*, *>.subscribe(topic: String, subscription: Subscription) {
-
-    val partitions = partitionsFor(topic).map { TopicPartition(it.topic(), it.partition()) }
-    val endOffsets = endOffsets(partitions)
-    val startOffsets = beginningOffsets(partitions)
-
-    when (subscription) {
-        is Subscription.FromBeginning -> {
-            val effectivePartitions = subscription.partitions?.map { TopicPartition(topic, it) } ?: partitions
-            assign(effectivePartitions)
-            startOffsets.filter { it.key in effectivePartitions }.forEach { (partition, startOffset) ->
-                seek(partition, startOffset)
-            }
+private fun Consumer<*, *>.subscribe(topic: String, subscription: Subscription) = when (subscription) {
+    is Subscription.AssignPartitions -> {
+        assign(subscription.partitions.map { TopicPartition(topic, it.key) })
+        subscription.partitions.forEach { (partition, offset) ->
+            seek(TopicPartition(topic, partition), offset)
         }
-        is Subscription.FromTimestamp -> {
-            val effectivePartitions = subscription.partitions?.map { TopicPartition(topic, it) } ?: partitions
-            assign(effectivePartitions)
-            offsetsForTimes(effectivePartitions.map { it to subscription.ts }.toMap()).forEach { (partition, offset) ->
-                seek(partition, offset?.offset() ?: endOffsets[partition]!!)
-            }
-        }
-        is Subscription.OffsetStepBack -> {
-            val effectivePartitions = subscription.partitions?.map { TopicPartition(topic, it) } ?: partitions
-            assign(effectivePartitions)
-            endOffsets.filter { it.key in effectivePartitions }.forEach { (partition, endOffset) ->
-                seek(partition, max(endOffset - subscription.offsetsBack, startOffsets[partition]!!))
-            }
-        }
-        is Subscription.AssignPartitions -> {
-            assign(subscription.partitions.map { TopicPartition(topic, it.key) })
-            subscription.partitions.forEach { (partition, offset) ->
-                seek(TopicPartition(topic, partition), offset)
-            }
-        }
-        is Subscription.WithGroupId -> subscribe(listOf(topic))
     }
+
+    is Subscription.WithGroupId -> subscribe(listOf(topic))
 }
+
 
 private fun <K, V> Consumer<K, V>.pollAsSequence(timeoutMs: Long): Pair<Sequence<ConsumerRecord<K, V>>, ProgressListener> {
     val progressListener = ProgressListener(this)
@@ -254,8 +227,8 @@ data class Progress(
 
 data class PollConfig(
     val topic: String,
+    val subscription: Subscription,
     val props: Map<String, String> = mapOf(),
-    val subscription: Subscription = Subscription.OffsetStepBack(10, null),
     val filter: List<String> = listOf(),
     val query: String? = null,
     val timeoutMs: Long = 10000,
@@ -266,15 +239,9 @@ data class PollConfig(
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
     JsonSubTypes.Type(value = Subscription.WithGroupId::class, name = "withGroupId"),
-    JsonSubTypes.Type(value = Subscription.FromTimestamp::class, name = "fromTimestamp"),
-    JsonSubTypes.Type(value = Subscription.OffsetStepBack::class, name = "offsetStepBack"),
-    JsonSubTypes.Type(value = Subscription.AssignPartitions::class, name = "assignPartitions"),
-    JsonSubTypes.Type(value = Subscription.FromBeginning::class, name = "fromBeginning")
+    JsonSubTypes.Type(value = Subscription.AssignPartitions::class, name = "assignPartitions")
 )
 sealed class Subscription {
     object WithGroupId : Subscription()
-    data class FromBeginning(val partitions: Set<Int>?) : Subscription()
-    data class FromTimestamp(val ts: Long, val partitions: Set<Int>?) : Subscription()
-    data class OffsetStepBack(val offsetsBack: Long, val partitions: Set<Int>?) : Subscription()
     data class AssignPartitions(val partitions: Map<Int, Long>) : Subscription()
 }

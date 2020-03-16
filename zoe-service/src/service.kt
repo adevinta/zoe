@@ -156,7 +156,7 @@ class ZoeService(
             OffsetQueriesRequest(
                 props = props,
                 topic = topic,
-                queries = listOfNotNull(endQuery, startQuery)
+                queries = listOfNotNull(endQuery, startQuery, topicEndQuery)
             )
         )
 
@@ -176,7 +176,17 @@ class ZoeService(
                         ?: throw IllegalStateException("topic end offset (part: $partition) not found in: $responses")
                 }
 
-                ConsumptionRange(partition, from = nonNullStartOffset, until = endOffset?.offset)
+                ConsumptionRange(
+                    partition,
+                    from = nonNullStartOffset,
+                    until = endOffset?.offset,
+                    progress = ConsumptionProgress(
+                        currentOffset = null,
+                        nextOffset = nonNullStartOffset,
+                        currentTimestamp = null,
+                        numberOfRecords = 0
+                    )
+                )
             }
         }
 
@@ -354,69 +364,58 @@ class ZoeService(
         formatter: String
     ): Flow<RecordOrProgress> = flow {
 
-        var globalProgress = emptyMap<Int, PartitionProgress>()
         var currentRange = range
 
         do {
 
             val config = PollConfig(
-                topic,
-                props,
-                Subscription.AssignPartitions(currentRange.map { it.partition to it.from }.toMap<Int, Long>()),
-                filter,
-                query,
-                timeoutPerBatch,
+                topic = topic,
+                subscription = Subscription.AssignPartitions(
+                    currentRange.map { it.partition to it.progress.nextOffset }.toMap()
+                ),
+                props = props,
+                filter = filter,
+                query = query,
+                timeoutMs = timeoutPerBatch,
                 numberOfRecords = recordsPerBatch,
                 jsonifier = formatter
             )
 
             val (records, progress) = runner.poll(config)
 
-            currentRange = updateConsumptionRange(currentRange = currentRange, progress = progress)
-            globalProgress = updatedGlobalProgress(progress, currentGlobalProgress = globalProgress)
-
             for (record in records) {
                 emit(RecordOrProgress.Record(record))
             }
 
-            emit(RecordOrProgress.Progress(globalProgress.values))
+            currentRange = updateConsumptionRange(currentRange = currentRange, progress = progress)
+
+            emit(RecordOrProgress.Progress(currentRange))
 
         } while (currentRange.isNotEmpty())
 
-    }
-
-
-    private fun updatedGlobalProgress(
-        progress: Iterable<PartitionProgress>,
-        currentGlobalProgress: Map<Int, PartitionProgress>
-    ) = currentGlobalProgress.toMutableMap().apply {
-        progress.forEach { newPartitionProgress ->
-            val (_, partition, _, _, newProgress) = newPartitionProgress
-            this[partition] =
-                this[partition]
-                    ?.let { previousPartitionProgress ->
-                        val (_, _, _, _, previousProgress) = previousPartitionProgress
-                        previousPartitionProgress.copy(
-                            progress = Progress(
-                                startOffset = previousProgress.startOffset,
-                                currentOffset = newProgress.currentOffset,
-                                currentTimestamp = newProgress.currentTimestamp,
-                                recordsCount = newProgress.recordsCount + previousProgress.recordsCount
-                            )
-                        )
-                    }
-                    ?: newPartitionProgress
-        }
     }
 
     private fun updateConsumptionRange(
         progress: Iterable<PartitionProgress>,
         currentRange: List<ConsumptionRange>
     ): List<ConsumptionRange> {
-        val currentOffsets = progress.map { it.partition to it.progress.currentOffset }.toMap()
+        val currentOffsets = progress.map { it.partition to it.progress }.toMap()
         return currentRange
-            .map { it.copy(from = currentOffsets[it.partition] ?: it.from) }
-            .filter { it.until == null || it.from >= it.until }
+            .map {
+                it.copy(
+                    progress = currentOffsets[it.partition]
+                        ?.let { lastProgress ->
+                            ConsumptionProgress(
+                                currentOffset = lastProgress.currentOffset,
+                                nextOffset = lastProgress.currentOffset + 1,
+                                currentTimestamp = lastProgress.currentTimestamp,
+                                numberOfRecords = lastProgress.recordsCount + it.progress.numberOfRecords
+                            )
+                        }
+                        ?: it.progress
+                )
+            }
+            .filter { it.until == null || it.progress.nextOffset <= it.until }
     }
 }
 
@@ -425,7 +424,7 @@ private fun <T> Iterable<T>.splitIntoGroupsBy(count: Int, by: (T) -> Int): Colle
 
 sealed class RecordOrProgress {
     data class Record(val record: PolledRecord) : RecordOrProgress()
-    data class Progress(val progress: Iterable<PartitionProgress>) : RecordOrProgress()
+    data class Progress(val range: Iterable<ConsumptionRange>) : RecordOrProgress()
 }
 
 sealed class ConsumeFrom {
@@ -438,7 +437,15 @@ sealed class ConsumeFrom {
 data class ConsumptionRange(
     val partition: Int,
     val from: Long,
-    val until: Long?
+    val until: Long?,
+    val progress: ConsumptionProgress
+)
+
+data class ConsumptionProgress(
+    val currentOffset: Long?,
+    val nextOffset: Long,
+    val currentTimestamp: Long?,
+    val numberOfRecords: Long
 )
 
 class TopicAliasOrRealName(val value: String)

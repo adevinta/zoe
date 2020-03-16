@@ -12,7 +12,6 @@ import com.adevinta.oss.zoe.cli.config.Format
 import com.adevinta.oss.zoe.cli.utils.batches
 import com.adevinta.oss.zoe.cli.utils.fetch
 import com.adevinta.oss.zoe.cli.utils.globalTermColors
-import com.adevinta.oss.zoe.core.functions.PartitionProgress
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.*
@@ -174,7 +173,7 @@ class TopicsConsume : CliktCommand(
                     formatter,
                     stop
                 )
-                .onEach { if (it is RecordOrProgress.Progress && !continuously) log(it.progress) }
+                .onEach { if (it is RecordOrProgress.Progress && !continuously) log(it.range) }
                 .filter { it is RecordOrProgress.Record }
                 .map { it as RecordOrProgress.Record }
                 .map { if (verbose) it.record.toJsonNode() else it.record.formatted }
@@ -183,21 +182,24 @@ class TopicsConsume : CliktCommand(
         ctx.term.output.format(records) { echo(it) }
     }
 
-    private fun log(progress: Iterable<PartitionProgress>) = progress.forEach {
+    private fun log(progress: Iterable<ConsumptionRange>) = progress.forEach {
         it.progress.run {
             val message =
                 "progress on partition ${String.format("%02d", it.partition)}\t" +
                         "timestamp -> ${currentTimestamp?.let { ts -> dateFmt.format(Date(ts)) }}\t" +
-                        "consumed -> $recordsCount / ${it.latestOffset - startOffset} (${it.percent()}%)"
+                        "consumed -> $numberOfRecords / ${it.until?.let { until -> until - it.from } ?: "Inf"} " +
+                        "(${it.percent()}%)"
 
             logger.info(ctx.term.colors.yellow(message))
         }
     }
 
     private val dateFmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    private fun PartitionProgress.percent(): Int = with(progress) {
-        val percent = ((currentOffset - startOffset) / (latestOffset - startOffset).toDouble() * 100)
-        if (percent.isNaN()) -1 else percent.roundToInt()
+
+    private fun ConsumptionRange.percent(): Int {
+        val percent =
+            until?.let { until -> ((progress.currentOffset ?: from - from) / (until - from).toDouble() * 100) }
+        return percent?.roundToInt() ?: -1
     }
 }
 
