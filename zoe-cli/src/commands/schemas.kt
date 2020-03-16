@@ -55,8 +55,7 @@ class ListSchemas : CliktCommand(name = "list"), KoinComponent {
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val cluster = ctx.requireCluster()
-        val subjects = service.listSchemas(cluster).subjects.map { it.subject }
+        val subjects = service.listSchemas(ctx.cluster).subjects.map { it.subject }
         ctx.term.output.format(mapOf("subjects" to subjects).toJsonNode()) { echo(it) }
     }
 }
@@ -70,8 +69,7 @@ class DescribeSchema : CliktCommand(name = "describe"), KoinComponent {
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val cluster = ctx.requireCluster()
-        val subject = service.listSchemas(cluster).subjects.find { it.subject == subject }
+        val subject = service.listSchemas(ctx.cluster).subjects.find { it.subject == subject }
             ?: userError("subject not found : $subject")
 
         ctx.term.output.format(subject.toJsonNode()) { echo(it) }
@@ -176,8 +174,7 @@ class DeploySchema : CliktCommand(
             }
         }
 
-        val cluster = ctx.requireCluster()
-        val subject = service.deploySchema(cluster, schema, strategy, dryRun)
+        val subject = service.deploySchema(ctx.cluster, schema, strategy, dryRun)
 
         ctx.term.output.format(subject.toJsonNode()) { echo(it) }
     }

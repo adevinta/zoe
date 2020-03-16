@@ -63,8 +63,7 @@ class TopicsList : CliktCommand(name = "list", help = "list topics"), KoinCompon
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val cluster = ctx.requireCluster()
-        val response = service.listTopics(cluster, userTopicsOnly = !all)
+        val response = service.listTopics(ctx.cluster, userTopicsOnly = !all)
         ctx.term.output.format(response.topics.map { it.topic }.toJsonNode()) { echo(it) }
     }
 }
@@ -79,8 +78,7 @@ class TopicsDescribe : CliktCommand(name = "describe", help = "describe a topic"
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val cluster = ctx.requireCluster()
-        val response = service.describeTopic(cluster, topic) ?: userError("topic not found : ${topic.value}")
+        val response = service.describeTopic(ctx.cluster, topic) ?: userError("topic not found : ${topic.value}")
         ctx.term.output.format(response.toJsonNode()) { echo(it) }
     }
 }
@@ -157,7 +155,6 @@ class TopicsConsume : CliktCommand(
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val cluster = ctx.requireCluster()
         val from = ConsumeFrom.Timestamp(ts = ZonedDateTime.now().minus(from).toEpochSecond() * 1000)
         val stop = if (continuously) StopCondition.Continuously else StopCondition.TopicEnd
         val maxRecords = maxRecords ?: (if (continuously) MAX_VALUE else 5)
@@ -166,7 +163,7 @@ class TopicsConsume : CliktCommand(
         val records =
             service
                 .read(
-                    cluster,
+                    ctx.cluster,
                     topic,
                     from,
                     filters,
@@ -255,7 +252,6 @@ class TopicsProduce : CliktCommand(
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val cluster = ctx.requireCluster()
         val input: InputStream = when {
             fromStdin -> System.`in`
             fromFile != null -> fromFile!!.inputStream()
@@ -278,7 +274,7 @@ class TopicsProduce : CliktCommand(
                 .filter { it.isNotEmpty() }
                 .collect { batch ->
                     val response = service.produce(
-                        cluster = cluster,
+                        cluster = ctx.cluster,
                         topic = topic,
                         subject = subject,
                         messages = batch,

@@ -42,8 +42,7 @@ class ListGroupsCommand : CliktCommand(name = "list"), KoinComponent {
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val cluster = ctx.requireCluster()
-        ctx.term.output.format(service.listGroups(cluster, groups = emptyList()).toJsonNode()) { echo(it) }
+        ctx.term.output.format(service.listGroups(ctx.cluster, groups = emptyList()).toJsonNode()) { echo(it) }
     }
 }
 
@@ -56,9 +55,8 @@ class DescribeGroupCommand : CliktCommand(name = "describe"), KoinComponent {
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val cluster = ctx.requireCluster()
         val group =
-            service.listGroups(cluster, listOf(group)).groups.firstOrNull() ?: userError("group not found : $group")
+            service.listGroups(ctx.cluster, listOf(group)).groups.firstOrNull() ?: userError("group not found : $group")
 
         ctx.term.output.format(group.toJsonNode().apply { (this as ObjectNode).remove("members") }) { echo(it) }
     }
@@ -73,9 +71,8 @@ class GroupMembersCommand : CliktCommand(name = "members"), KoinComponent {
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val cluster = ctx.requireCluster()
         val group =
-            service.listGroups(cluster, listOf(group)).groups.firstOrNull() ?: userError("group not found : $group")
+            service.listGroups(ctx.cluster, listOf(group)).groups.firstOrNull() ?: userError("group not found : $group")
 
         ctx.term.output.format(group.members.toJsonNode()) { echo(it) }
     }
@@ -90,8 +87,7 @@ class GroupOffsetsCommand : CliktCommand(name = "offsets"), KoinComponent {
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val cluster = ctx.requireCluster()
-        val offsets = service.groupOffsets(cluster, group).offsets
+        val offsets = service.groupOffsets(ctx.cluster, group).offsets
         ctx.term.output.format(offsets.toJsonNode()) { echo(it) }
     }
 }

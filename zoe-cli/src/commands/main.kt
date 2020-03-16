@@ -49,7 +49,13 @@ import java.util.concurrent.Executors
 class ZoeCommandLine : CliktCommand(name = "zoe") {
     private val home by lazy { "${System.getenv("HOME") ?: userError("HOME not found")}/.zoe" }
     private val env: String by option("--env", "-e", help = "Environment to use", envvar = "ZOE_ENV").default("default")
-    private val cluster: String? by option("--cluster", "-c", help = "Target cluster", envvar = "ZOE_CLUSTER")
+    private val cluster: String by option(
+        "--cluster",
+        "-c",
+        help = "Target cluster",
+        envvar = "ZOE_CLUSTER"
+    ).default("default")
+
     private val runner: RunnerName?
             by option("--runner", "-r", help = "Runner to use").choice(
                 RunnerName.Lambda.code to RunnerName.Lambda,
@@ -76,7 +82,7 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
     private val verbosity: Int
             by option("-v", help = "verbose mode (can be set multiple times)").counted()
 
-    val term by lazy {
+    private val term by lazy {
         TermConfig(
             output = outputFormat,
             colors = TermColors(if (colorize) TermColors.Level.ANSI16 else TerminalCapabilities.detectANSISupport())
@@ -266,8 +272,6 @@ data class CliContext(
     val term: TermConfig,
     val configDir: File,
     val env: String,
-    val cluster: String?,
+    val cluster: String,
     val runner: RunnerName?
 )
-
-fun CliContext.requireCluster(): String = cluster ?: userError("you must select a cluster !")
