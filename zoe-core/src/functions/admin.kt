@@ -13,6 +13,7 @@ import com.adevinta.oss.zoe.core.functions.DeploySchemaResponse.DryRunResponse
 import com.adevinta.oss.zoe.core.utils.admin
 import com.adevinta.oss.zoe.core.utils.consumer
 import com.adevinta.oss.zoe.core.utils.json
+import com.adevinta.oss.zoe.core.utils.uuid
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonValue
@@ -310,9 +311,9 @@ data class OffsetQueriesRequest(
 sealed class OffsetQuery {
     abstract val id: String
 
-    data class Timestamp(val ts: Long, override val id: String) : OffsetQuery()
-    data class End(override val id: String) : OffsetQuery()
-    data class Beginning(override val id: String) : OffsetQuery()
+    data class Timestamp(val ts: Long, override val id: String = uuid()) : OffsetQuery()
+    data class End(override val id: String = uuid()) : OffsetQuery()
+    data class Beginning(override val id: String = uuid()) : OffsetQuery()
 }
 
 data class OffsetQueriesResponse(

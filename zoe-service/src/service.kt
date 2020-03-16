@@ -107,24 +107,79 @@ class ZoeService(
         val resolvedFilters = filters.map { resolveExpression(it) }
         val resolvedQuery = query?.let { resolveExpression(it) }
 
-        val partitionGroups = fetchPartitions(topicName, completedProps).splitIntoGroups(parallelism)
+        val partitionGroups: Collection<List<ConsumptionRange>> =
+            determineConsumptionRange(
+                topicName,
+                completedProps,
+                from,
+                stopCondition
+            ).splitIntoGroupsBy(parallelism) { it.partition }
 
         val recordFlows = partitionGroups.map { group ->
-            readUntilEnd(
+            readRanges(
                 completedProps,
                 topicName,
                 resolvedFilters,
                 resolvedQuery,
-                from,
                 group,
-                formatter = formatter,
                 recordsPerBatch = numberOfRecordsPerBatch,
                 timeoutPerBatch = timeoutPerBatch,
-                stopCondition = stopCondition
+                formatter = formatter
             )
         }
 
         emitAll(flowOf(*recordFlows.toTypedArray()).flattenMerge(concurrency = 100))
+    }
+
+    private suspend fun determineConsumptionRange(
+        topic: String,
+        props: Map<String, String>,
+        from: ConsumeFrom,
+        stopCondition: StopCondition
+    ): List<ConsumptionRange> {
+
+        val topicEndQuery = OffsetQuery.End()
+
+        val endQuery = when (stopCondition) {
+            StopCondition.Continuously -> null
+            StopCondition.TopicEnd -> OffsetQuery.End()
+        }
+
+        val startQuery = when (from) {
+            is ConsumeFrom.Earliest -> OffsetQuery.Beginning()
+            is ConsumeFrom.Latest -> OffsetQuery.End()
+            is ConsumeFrom.Timestamp -> OffsetQuery.Timestamp(from.ts)
+            is ConsumeFrom.OffsetStepBack -> userError("not yet supported: $from")
+        }
+
+        val responses = runner.queryOffsets(
+            OffsetQueriesRequest(
+                props = props,
+                topic = topic,
+                queries = listOfNotNull(endQuery, startQuery)
+            )
+        )
+
+        val startOffsets = responses.responses[startQuery.id]
+            ?: throw IllegalStateException("query result (query: '$startQuery') not found in response: $responses")
+
+        val endOffsets = endQuery?.let { responses.responses[it.id] }?.map { it.partition to it }?.toMap()
+
+        val topicEndOffsets = responses.responses[topicEndQuery.id]?.map { it.partition to it }?.toMap()
+            ?: throw IllegalStateException("query result (query: '$endQuery') not found in response: $responses")
+
+        return startOffsets.mapNotNull { (_: String, partition: Int, startOffset: Long?) ->
+            startOffset?.let { nonNullStartOffset ->
+                val endOffset = endOffsets?.let {
+                    it[partition]
+                        ?: topicEndOffsets[partition]
+                        ?: throw IllegalStateException("topic end offset (part: $partition) not found in: $responses")
+                }
+
+                ConsumptionRange(partition, from = nonNullStartOffset, until = endOffset?.offset)
+            }
+        }
+
     }
 
     /**
@@ -288,33 +343,26 @@ class ZoeService(
     private fun Cluster.getConsumerGroup(aliasOrRealName: GroupAliasOrRealName): String =
         groups[aliasOrRealName.value]?.name ?: aliasOrRealName.value
 
-    private fun readUntilEnd(
+    private fun readRanges(
         props: Map<String, String>,
         topic: String,
         filter: List<String>,
         query: String?,
-        from: ConsumeFrom,
-        partitions: List<Int>?,
+        range: List<ConsumptionRange>,
         recordsPerBatch: Int,
         timeoutPerBatch: Long,
-        formatter: String,
-        stopCondition: StopCondition
+        formatter: String
     ): Flow<RecordOrProgress> = flow {
 
         var globalProgress = emptyMap<Int, PartitionProgress>()
-        var resumeFrom = emptyMap<Int, ResumeFrom>()
+        var currentRange = range
 
         do {
 
             val config = PollConfig(
                 topic,
                 props,
-                when {
-                    resumeFrom.isNotEmpty() ->
-                        Subscription.AssignPartitions(resumeFrom.mapValues { it.value.from }.toMap())
-
-                    else -> subscription(from, partitions)
-                },
+                Subscription.AssignPartitions(currentRange.map { it.partition to it.from }.toMap<Int, Long>()),
                 filter,
                 query,
                 timeoutPerBatch,
@@ -324,7 +372,7 @@ class ZoeService(
 
             val (records, progress) = runner.poll(config)
 
-            resumeFrom = updatedResumePositions(progress, currentResumeFrom = resumeFrom, stopCondition = stopCondition)
+            currentRange = updateConsumptionRange(currentRange = currentRange, progress = progress)
             globalProgress = updatedGlobalProgress(progress, currentGlobalProgress = globalProgress)
 
             for (record in records) {
@@ -332,8 +380,11 @@ class ZoeService(
             }
 
             emit(RecordOrProgress.Progress(globalProgress.values))
-        } while (resumeFrom.isNotEmpty())
+
+        } while (currentRange.isNotEmpty())
+
     }
+
 
     private fun updatedGlobalProgress(
         progress: Iterable<PartitionProgress>,
@@ -358,47 +409,19 @@ class ZoeService(
         }
     }
 
-    private fun updatedResumePositions(
+    private fun updateConsumptionRange(
         progress: Iterable<PartitionProgress>,
-        currentResumeFrom: Map<Int, ResumeFrom>,
-        stopCondition: StopCondition
-    ) = currentResumeFrom.toMutableMap().apply {
-        progress.forEach { (_, partition, _, latestOffset, progress) ->
-
-            val currentOffset = progress.currentOffset
-
-            val resumePosition =
-                currentResumeFrom[partition]
-                    ?.copy(from = currentOffset)
-                    ?: ResumeFrom(from = currentOffset, until = latestOffset)
-
-            // save position for next poll
-            this[partition] = resumePosition
-
-            // remove completed partitions
-            when (stopCondition) {
-                StopCondition.TopicEnd -> {
-                    if (currentOffset >= resumePosition.until) {
-                        remove(partition)
-                    }
-                }
-                StopCondition.Continuously -> {
-                }
-            }
-        }
+        currentRange: List<ConsumptionRange>
+    ): List<ConsumptionRange> {
+        val currentOffsets = progress.map { it.partition to it.progress.currentOffset }.toMap()
+        return currentRange
+            .map { it.copy(from = currentOffsets[it.partition] ?: it.from) }
+            .filter { it.until == null || it.from >= it.until }
     }
-
-    private suspend fun fetchPartitions(topic: String, props: Map<String, String>): Iterable<Int> =
-        runner
-            .topics(AdminConfig(props))
-            .let { resp -> resp.topics.find { it.topic == topic }?.partitions }
-            ?: throw IllegalArgumentException("Topic not found : $topic")
 }
 
-private fun Iterable<Int>.splitIntoGroups(count: Int): Collection<List<Int>> =
-    if (count <= 1) listOf(this.toList()) else groupBy { it % (count - 1) }.values
-
-data class ResumeFrom(val from: Long, val until: Long)
+private fun <T> Iterable<T>.splitIntoGroupsBy(count: Int, by: (T) -> Int): Collection<List<T>> =
+    if (count <= 1) listOf(this.toList()) else groupBy { by(it) % (count - 1) }.values
 
 sealed class RecordOrProgress {
     data class Record(val record: PolledRecord) : RecordOrProgress()
@@ -412,19 +435,18 @@ sealed class ConsumeFrom {
     data class OffsetStepBack(val count: Long) : ConsumeFrom()
 }
 
+data class ConsumptionRange(
+    val partition: Int,
+    val from: Long,
+    val until: Long?
+)
+
 class TopicAliasOrRealName(val value: String)
 class GroupAliasOrRealName(val value: String)
 
 sealed class StopCondition {
     object Continuously : StopCondition()
     object TopicEnd : StopCondition()
-}
-
-fun subscription(from: ConsumeFrom, partitions: List<Int>?): Subscription = when (from) {
-    ConsumeFrom.Earliest -> Subscription.FromBeginning(partitions?.toSet())
-    ConsumeFrom.Latest -> Subscription.OffsetStepBack(0, partitions?.toSet())
-    is ConsumeFrom.Timestamp -> Subscription.FromTimestamp(from.ts, partitions?.toSet())
-    is ConsumeFrom.OffsetStepBack -> Subscription.OffsetStepBack(from.count, partitions?.toSet())
 }
 
 data class RunnerVersionData(
