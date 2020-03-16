@@ -86,7 +86,20 @@ class KubernetesRunner(
 
     override fun close() {
         if (closeClientAtShutdown) {
-            client.close()
+            client.use { doClose() }
+        } else {
+            doClose()
+        }
+    }
+
+    private fun doClose() {
+        // remove any dangling pod
+        if (configuration.deletePodsAfterCompletion) {
+            client
+                .pods()
+                .withLabels(labels)
+                .withGracePeriod(0)
+                .delete()
         }
     }
 
