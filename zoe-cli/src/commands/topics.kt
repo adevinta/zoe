@@ -198,7 +198,7 @@ class TopicsConsume : CliktCommand(
 
     private fun ConsumptionRange.percent(): Int {
         val percent =
-            until?.let { until -> ((progress.currentOffset ?: from - from) / (until - from).toDouble() * 100) }
+            until?.let { until -> (((progress.currentOffset ?: from) - from) / (until - from).toDouble()) * 100 }
         return percent?.roundToInt() ?: -1
     }
 }
