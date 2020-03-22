@@ -89,7 +89,7 @@ tasks {
         }
     }
 
-    compileKotlin {
+    val processResources by getting(ProcessResources::class) {
         dependsOn(generateVersionFile)
     }
 

@@ -27,6 +27,7 @@ import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.*
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
@@ -36,7 +37,9 @@ import kotlinx.coroutines.FlowPreview
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import java.io.File
+import java.net.URL
 import java.nio.ByteBuffer
+import java.nio.file.Files
 
 class LambdaCommand : CliktCommand(name = "lambda", help = "Manage zoe lambda function") {
     companion object {
@@ -79,9 +82,9 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
     private val ctx by inject<CliContext>()
     private val environment by inject<EnvConfig>()
 
-    private val jar
-            by option("--jar", help = "Path to the zoe jar file", hidden = true, envvar = "ZOE_JAR_PATH")
-                .file(mustExist = true, canBeFile = true, mustBeReadable = true)
+    private val jarUrl
+            by option("--jar-url", help = "Url to the zoe jar file", hidden = true, envvar = "ZOE_JAR_URL")
+                .convert { URL(it) }
                 .required()
 
     private val dryRun: Boolean by option("--dry-run", help = "Dry run mode").flag(default = false)
@@ -117,6 +120,17 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
 
         val deployConfig =
             environment.runners.config.lambda.deploy ?: userError("you must specify a deploy config !")
+
+        val jar = kotlin.run {
+            val file =
+                Files
+                    .createTempFile("zoe-jar", null)
+                    .toFile()
+                    .also(File::deleteOnExit)
+
+            file.outputStream().use { out -> jarUrl.openStream().use { inp -> inp.copyTo(out) } }
+            file
+        }
 
         val lambda = aws.lambda.createOrUpdateLambda(
             name = LambdaZoeRunner.LambdaFunctionName,
