@@ -10,14 +10,13 @@ package com.adevinta.oss.zoe.service.runners
 
 import com.adevinta.oss.zoe.core.FailureResponse
 import java.io.Closeable
-import java.util.concurrent.CompletableFuture
 
 /**
  * ZoeRunner is the client is responsible to call zoe core functions by their names and passing a payload to them.
  */
 interface ZoeRunner : Closeable {
     val name: String
-    fun launch(function: String, payload: String): CompletableFuture<String>
+    suspend fun launch(function: String, payload: String): String
 }
 
 class ZoeRunnerException(

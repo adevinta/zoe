@@ -9,12 +9,13 @@
 package com.adevinta.oss.zoe.service.runners
 
 import com.adevinta.oss.zoe.core.FunctionsRegistry
+import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.function.Supplier
 
 class LocalZoeRunner(override val name: String, private val executor: ExecutorService) : ZoeRunner {
-    override fun launch(function: String, payload: String): CompletableFuture<String> =
+    override suspend fun launch(function: String, payload: String): String =
         CompletableFuture.supplyAsync(
             Supplier {
                 FunctionsRegistry
@@ -22,7 +23,7 @@ class LocalZoeRunner(override val name: String, private val executor: ExecutorSe
                     .getOrElse { throw ZoeRunnerException(null, it, name, null) }
             },
             executor
-        )
+        ).await()
 
     override fun close() {}
 }

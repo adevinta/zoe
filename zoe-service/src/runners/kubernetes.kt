@@ -10,23 +10,36 @@ package com.adevinta.oss.zoe.service.runners
 
 import com.adevinta.oss.zoe.core.FailureResponse
 import com.adevinta.oss.zoe.core.utils.*
+import com.adevinta.oss.zoe.service.utils.doAsync
 import com.adevinta.oss.zoe.service.utils.loadFileFromResources
 import com.adevinta.oss.zoe.service.utils.userError
 import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.api.model.Quantity
-import io.fabric8.kubernetes.client.*
+import io.fabric8.kubernetes.client.DefaultKubernetesClient
+import io.fabric8.kubernetes.client.KubernetesClientException
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient
+import io.fabric8.kubernetes.client.Watcher
+import kotlinx.coroutines.future.await
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 
 class KubernetesRunner(
     override val name: String,
     private val client: NamespacedKubernetesClient,
+    private val executor: ExecutorService,
     private val closeClientAtShutdown: Boolean,
     private val configuration: Config
 ) : ZoeRunner {
 
-    constructor(name: String, configuration: Config, namespace: String, context: String?) : this(
+    constructor(
+        name: String,
+        configuration: Config,
+        namespace: String,
+        context: String?,
+        executor: ExecutorService
+    ) : this(
         name = name,
         client = kotlin.run {
             val client =
@@ -35,6 +48,7 @@ class KubernetesRunner(
 
             client.inNamespace(namespace)
         },
+        executor = executor,
         closeClientAtShutdown = true,
         configuration = configuration
     )
@@ -53,28 +67,25 @@ class KubernetesRunner(
         "runnerId" to uuid()
     )
 
-    private val watches = mutableMapOf<String, Watch>()
-
-    override fun launch(function: String, payload: String): CompletableFuture<String> {
+    override suspend fun launch(function: String, payload: String): String {
         val pod = generatePodObject(
             image = configuration.zoeImage,
             args = listOf(
-                json.writeValueAsString(
-                    mapOf(
-                        "function" to function,
-                        "payload" to payload.toJsonNode()
-                    )
-                ),
+                mapOf(
+                    "function" to function,
+                    "payload" to payload.toJsonNode()
+                ).toJsonString(),
                 responseFile
             )
         )
 
-        return client
-            .pods()
-            .create(pod)
-            .waitForResponse(timeoutMs = configuration.timeoutMs)
-            .whenComplete { _, _ ->
-                if (configuration.deletePodsAfterCompletion) {
+        return try {
+            executor
+                .doAsync { client.pods().create(pod) }
+                .waitForResponse(timeoutMs = configuration.timeoutMs)
+        } finally {
+            if (configuration.deletePodsAfterCompletion) {
+                executor.doAsync {
                     client
                         .pods()
                         .withName(pod.metadata.name)
@@ -82,6 +93,7 @@ class KubernetesRunner(
                         .delete()
                 }
             }
+        }
     }
 
     override fun close() {
@@ -93,9 +105,6 @@ class KubernetesRunner(
     }
 
     private fun doClose() {
-        // close any remaining watches
-        watches.values.forEach { it.close() }
-
         // remove any dangling pod
         if (configuration.deletePodsAfterCompletion) {
             logger.debug("deleting potentially dangling pods...")
@@ -125,9 +134,9 @@ class KubernetesRunner(
         }
     }
 
-    private fun Pod.waitForResponse(timeoutMs: Long?): CompletableFuture<String> {
+    private suspend fun Pod.waitForResponse(timeoutMs: Long?): String {
         val future = CompletableFuture<String>()
-        val watch =
+        val watch = executor.doAsync {
             client
                 .pods()
                 .withName(metadata.name)
@@ -214,14 +223,12 @@ class KubernetesRunner(
                         }
                     }
                 })
+        }
 
-        watches[metadata.name] = watch
-
-        return future
-            .let { if (timeoutMs != null) it.orTimeout(timeoutMs, TimeUnit.MILLISECONDS) else it }
-            .whenComplete { _, _ ->
-                watch.close()
-                watches.remove(metadata.name)
-            }
+        return watch.use {
+            future
+                .let { if (timeoutMs != null) it.orTimeout(timeoutMs, TimeUnit.MILLISECONDS) else it }
+                .await()
+        }
     }
 }

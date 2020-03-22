@@ -12,8 +12,11 @@ import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.AWSLambdaClientBuilder
+import kotlinx.coroutines.future.await
 import java.io.Closeable
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
+import java.util.function.Supplier
 
 const val Timeout = 60 * 5 * 1000
 
@@ -40,8 +43,5 @@ fun loadFileFromResources(path: String): String? =
         ?.use { it.readBytes() }
         ?.toString(Charsets.UTF_8)
 
-class CloseableExecutorService(private val wrapped: ExecutorService) : ExecutorService by wrapped, Closeable {
-    override fun close() {
-        wrapped.shutdown()
-    }
-}
+suspend fun <T> ExecutorService.doAsync(action: () -> T): T =
+    CompletableFuture.supplyAsync(Supplier { action() }, this).await()

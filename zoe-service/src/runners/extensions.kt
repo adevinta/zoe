@@ -12,53 +12,47 @@ import com.adevinta.oss.zoe.core.functions.*
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonString
-import kotlinx.coroutines.future.await
-
-suspend fun <T : Any> ZoeRunner.launchAwait(function: String, payload: T): String {
-    logger.debug("launching function '$function'")
-    return launch(function, payload.toJsonString()).await()
-}
 
 suspend fun ZoeRunner.topics(config: AdminConfig): ListTopicsResponse {
     logger.info("requesting topics...")
-    return launchAwait(listTopics.name(), config).parseJson()
+    return launch(listTopics.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.poll(config: PollConfig): PollResponse {
     logger.info("polling topic '${config.topic}' (subscription : ${config.subscription})")
-    return launchAwait(poll.name(), config).parseJson()
+    return launch(poll.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.schemas(config: ListSchemasConfig): ListSchemasResponse {
     logger.info("requesting schemas...")
-    return launchAwait(listSchemas.name(), config).parseJson()
+    return launch(listSchemas.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.produce(config: ProduceConfig): ProduceResponse {
     logger.info("producing '${config.data.size}' records to topic '${config.topic}'")
-    return launchAwait(produce.name(), config).parseJson()
+    return launch(produce.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.groups(config: GroupsConfig): ListGroupsResponse {
     logger.info("requesting groups : '${config.groups}'")
-    return launchAwait(listGroups.name(), config).parseJson()
+    return launch(listGroups.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.offsets(config: GroupConfig): GroupOffsetsResponse {
     logger.info("requesting offsets for group : ${config.group}")
-    return launchAwait(offsets.name(), config).parseJson()
+    return launch(offsets.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.queryOffsets(config: OffsetQueriesRequest): OffsetQueriesResponse {
     logger.info("querying offsets...")
-    return launchAwait(queryOffsets.name(), config).parseJson()
+    return launch(queryOffsets.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.deploySchema(config: DeploySchemaConfig): DeploySchemaResponse {
-    return launchAwait(deploySchema.name(), config).parseJson()
+    return launch(deploySchema.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.version(config: VersionCheckRequest): VersionCheckResponse {
     logger.info("checking zoe remote version...")
-    return launchAwait(version.name(), config).parseJson()
+    return launch(version.name(), config.toJsonString()).parseJson()
 }

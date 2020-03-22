@@ -171,7 +171,7 @@ fun mainModule(context: CliContext) = module {
     }
 
     singleCloseable<ZoeRunner> {
-        val pool = get<ExecutorService>(named("io"))
+        val ioPool = get<ExecutorService>(named("io"))
 
         val runnersSectionWithSecrets =
             get<SecretsProvider>().resolveSecretsInJsonSerializable(get<EnvConfig>().runners)
@@ -180,7 +180,7 @@ fun mainModule(context: CliContext) = module {
             RunnerName.Lambda -> with(runnersSectionWithSecrets.config.lambda) {
                 LambdaZoeRunner(
                     name = RunnerName.Lambda.code,
-                    executor = pool,
+                    executor = ioPool,
                     awsCredentials = credentials.resolve(),
                     awsRegion = awsRegion
                 )
@@ -188,7 +188,7 @@ fun mainModule(context: CliContext) = module {
 
             RunnerName.Local -> LocalZoeRunner(
                 name = RunnerName.Local.code,
-                executor = pool
+                executor = ioPool
             )
 
             RunnerName.Kubernetes -> {
@@ -220,6 +220,7 @@ fun mainModule(context: CliContext) = module {
                         deletePodsAfterCompletion = kubeConfig.deletePodAfterCompletion,
                         timeoutMs = kubeConfig.timeoutMs
                     ),
+                    executor = ioPool,
                     namespace = kubeConfig.namespace,
                     context = kubeConfig.context
                 )

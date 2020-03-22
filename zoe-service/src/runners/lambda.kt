@@ -15,6 +15,7 @@ import com.adevinta.oss.zoe.service.utils.lambdaClient
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.InvokeRequest
+import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.function.Supplier
@@ -40,7 +41,7 @@ class LambdaZoeRunner(
         client = lambdaClient(awsCredentials, awsRegion)
     )
 
-    override fun launch(function: String, payload: String): CompletableFuture<String> = CompletableFuture.supplyAsync(
+    override suspend fun launch(function: String, payload: String): String = CompletableFuture.supplyAsync(
         Supplier {
             val response = client.invoke(
                 InvokeRequest().apply {
@@ -64,7 +65,7 @@ class LambdaZoeRunner(
             parsed
         },
         executor
-    )
+    ).await()
 
     override fun close() {}
 
