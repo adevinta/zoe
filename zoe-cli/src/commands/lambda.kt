@@ -124,9 +124,11 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
         val jar = kotlin.run {
             val file =
                 Files
-                    .createTempFile("zoe-jar", null)
+                    .createTempFile("zoe-jar-", null)
                     .toFile()
                     .also(File::deleteOnExit)
+
+            logger.info("copying zoe jar from '${jarUrl}' into '${file.path}")
 
             file.outputStream().use { out -> jarUrl.openStream().use { inp -> inp.copyTo(out) } }
             file
