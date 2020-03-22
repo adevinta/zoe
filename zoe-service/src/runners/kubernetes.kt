@@ -14,10 +14,7 @@ import com.adevinta.oss.zoe.service.utils.loadFileFromResources
 import com.adevinta.oss.zoe.service.utils.userError
 import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.api.model.Quantity
-import io.fabric8.kubernetes.client.DefaultKubernetesClient
-import io.fabric8.kubernetes.client.KubernetesClientException
-import io.fabric8.kubernetes.client.NamespacedKubernetesClient
-import io.fabric8.kubernetes.client.Watcher
+import io.fabric8.kubernetes.client.*
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -52,8 +49,11 @@ class KubernetesRunner(
 
     private val responseFile = "/output/response.txt"
     private val labels = mapOf(
-        "owner" to "zoe"
+        "owner" to "zoe",
+        "runnerId" to uuid()
     )
+
+    private val watches = mutableMapOf<String, Watch>()
 
     override fun launch(function: String, payload: String): CompletableFuture<String> {
         val pod = generatePodObject(
@@ -93,8 +93,12 @@ class KubernetesRunner(
     }
 
     private fun doClose() {
+        // close any remaining watches
+        watches.values.forEach { it.close() }
+
         // remove any dangling pod
         if (configuration.deletePodsAfterCompletion) {
+            logger.debug("deleting potentially dangling pods...")
             client
                 .pods()
                 .withLabels(labels)
@@ -211,8 +215,13 @@ class KubernetesRunner(
                     }
                 })
 
+        watches[metadata.name] = watch
+
         return future
             .let { if (timeoutMs != null) it.orTimeout(timeoutMs, TimeUnit.MILLISECONDS) else it }
-            .whenComplete { _, _ -> watch.close() }
+            .whenComplete { _, _ ->
+                watch.close()
+                watches.remove(metadata.name)
+            }
     }
 }

@@ -109,19 +109,19 @@ class ZoeService(
 
         val partitionGroups: Collection<List<ConsumptionRange>> =
             determineConsumptionRange(
-                topicName,
-                completedProps,
-                from,
-                stopCondition
-            ).splitIntoGroupsBy(parallelism) { it.partition }
+                topic = topicName,
+                props = completedProps,
+                from = from,
+                stopCondition = stopCondition
+            ).splitIntoGroups(count = parallelism, by = { it.partition })
 
-        val recordFlows = partitionGroups.map { group ->
-            readRanges(
-                completedProps,
-                topicName,
-                resolvedFilters,
-                resolvedQuery,
-                group,
+        val recordFlows = partitionGroups.map { rangeGroup ->
+            readRange(
+                props = completedProps,
+                topic = topicName,
+                filter = resolvedFilters,
+                query = resolvedQuery,
+                range = rangeGroup,
                 recordsPerBatch = numberOfRecordsPerBatch,
                 timeoutPerBatch = timeoutPerBatch,
                 formatter = formatter
@@ -353,7 +353,7 @@ class ZoeService(
     private fun Cluster.getConsumerGroup(aliasOrRealName: GroupAliasOrRealName): String =
         groups[aliasOrRealName.value]?.name ?: aliasOrRealName.value
 
-    private fun readRanges(
+    private fun readRange(
         props: Map<String, String>,
         topic: String,
         filter: List<String>,
@@ -366,7 +366,7 @@ class ZoeService(
 
         var currentRange = range
 
-        do {
+        while (currentRange.isNotEmpty()) {
 
             val config = PollConfig(
                 topic = topic,
@@ -391,7 +391,7 @@ class ZoeService(
 
             emit(RecordOrProgress.Progress(currentRange))
 
-        } while (currentRange.isNotEmpty())
+        }
 
     }
 
@@ -419,7 +419,7 @@ class ZoeService(
     }
 }
 
-private fun <T> Iterable<T>.splitIntoGroupsBy(count: Int, by: (T) -> Int): Collection<List<T>> =
+private fun <T> Iterable<T>.splitIntoGroups(count: Int, by: (T) -> Int): Collection<List<T>> =
     if (count <= 1) listOf(this.toList()) else groupBy { by(it) % (count - 1) }.values
 
 sealed class RecordOrProgress {

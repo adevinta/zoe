@@ -50,7 +50,7 @@ suspend fun ZoeRunner.offsets(config: GroupConfig): GroupOffsetsResponse {
 }
 
 suspend fun ZoeRunner.queryOffsets(config: OffsetQueriesRequest): OffsetQueriesResponse {
-    logger.info("querying offsets : ${config.queries}")
+    logger.info("querying offsets...")
     return launchAwait(queryOffsets.name(), config).parseJson()
 }
 

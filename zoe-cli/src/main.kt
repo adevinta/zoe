@@ -19,22 +19,23 @@ import kotlin.system.exitProcess
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-fun main(args: Array<String>): Unit = useResource(resource = startKoin { }, onClose = KoinApplication::close) {
+fun main(args: Array<String>) {
+    val returnCode = useResource(resource = startKoin { }, onClose = KoinApplication::close) {
 
-    val command = ZoeCommandLine().subcommands(
-        topicsCommand(),
-        schemasCommand(),
-        groupsCommands(),
-        configCommands(),
-        lambdaCommands(),
-        versionCommands()
-    )
+        val command = ZoeCommandLine().subcommands(
+            topicsCommand(),
+            schemasCommand(),
+            groupsCommands(),
+            configCommands(),
+            lambdaCommands(),
+            versionCommands()
+        )
 
-    val code =
         command
             .runCatching { main(args) }
             .onFailure { command.printErr(it) }
             .fold(onSuccess = { 0 }, onFailure = { 1 })
+    }
 
-    exitProcess(code)
+    exitProcess(returnCode)
 }
