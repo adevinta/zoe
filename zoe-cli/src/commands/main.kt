@@ -152,41 +152,22 @@ fun mainModule(context: CliContext) = module {
         ).createConfig(context.env)
     }
 
-    single<ExecutorService>(named("io")) { Executors.newCachedThreadPool() } onClose { it?.shutdown() }
-
-    singleCloseable<KeyValueStore> {
-        LocalFsKeyValueStore(
-            root = File("${context.home}/storage/${context.env}")
-        )
-    }
-
-    singleCloseable<SecretsProvider> {
+    single<ZoeService> {
         val config = get<EnvConfig>()
-        val storage = get<KeyValueStore>()
-
-        val provider = when (val secrets = config.secrets) {
-            null -> NoopSecretsProvider
-
-            is SecretsProviderConfig.Strongbox -> StrongboxProvider(
-                credentials = secrets.credentials.resolve(),
-                region = secrets.region,
-                defaultGroup = secrets.group
-            )
-
-            is SecretsProviderConfig.EnvVars -> EnvVarsSecretProvider(
-                append = secrets.append ?: "",
-                prepend = secrets.prepend ?: ""
-            )
-
-            else -> userError("no secrets provider matched : $secrets")
-        }
-
-        provider
-            .withCaching(
-                store = storage.withNamespace("secrets"),
-                ttl = Duration.ofDays(1)
-            )
-            .withLogging()
+        ZoeService(
+            configStore = InMemoryConfigStore(
+                clusters = config.clusters.mapValues { it.value.toDomain() },
+                filters = config.expressions.mapValues {
+                    RegisteredExpression(
+                        it.key,
+                        it.value
+                    )
+                }
+            ),
+            runner = get(),
+            storage = get(),
+            secrets = get()
+        )
     }
 
     singleCloseable<ZoeRunner> {
@@ -246,23 +227,42 @@ fun mainModule(context: CliContext) = module {
         }
     }
 
-    single<ZoeService> {
+    singleCloseable<SecretsProvider> {
         val config = get<EnvConfig>()
-        ZoeService(
-            configStore = InMemoryConfigStore(
-                clusters = config.clusters.mapValues { it.value.toDomain() },
-                filters = config.expressions.mapValues {
-                    RegisteredExpression(
-                        it.key,
-                        it.value
-                    )
-                }
-            ),
-            runner = get(),
-            storage = get(),
-            secrets = get()
+        val storage = get<KeyValueStore>()
+
+        val provider = when (val secrets = config.secrets) {
+            null -> NoopSecretsProvider
+
+            is SecretsProviderConfig.Strongbox -> StrongboxProvider(
+                credentials = secrets.credentials.resolve(),
+                region = secrets.region,
+                defaultGroup = secrets.group
+            )
+
+            is SecretsProviderConfig.EnvVars -> EnvVarsSecretProvider(
+                append = secrets.append ?: "",
+                prepend = secrets.prepend ?: ""
+            )
+
+            else -> userError("no secrets provider matched : $secrets")
+        }
+
+        provider
+            .withCaching(
+                store = storage.withNamespace("secrets"),
+                ttl = Duration.ofDays(1)
+            )
+            .withLogging()
+    }
+
+    singleCloseable<KeyValueStore> {
+        LocalFsKeyValueStore(
+            root = File("${context.home}/storage/${context.env}")
         )
     }
+
+    single<ExecutorService>(named("io")) { Executors.newCachedThreadPool() } onClose { it?.shutdown() }
 }
 
 data class TermConfig(val output: Format, val colors: TermColors)

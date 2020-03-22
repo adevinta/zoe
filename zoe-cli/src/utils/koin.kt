@@ -8,6 +8,7 @@
 
 package com.adevinta.oss.zoe.cli.utils
 
+import com.adevinta.oss.zoe.core.utils.logger
 import org.koin.core.definition.Definition
 import org.koin.core.module.Module
 import org.koin.core.qualifier.Qualifier
@@ -19,4 +20,7 @@ inline fun <reified T : Closeable?> Module.singleCloseable(
     createdAtStart: Boolean = false,
     override: Boolean = false,
     noinline definition: Definition<T>
-) = single(qualifier, createdAtStart, override, definition) onClose { it?.close() }
+) = single(qualifier, createdAtStart, override, definition) onClose {
+    logger.debug("closing: $it")
+    it?.close()
+}
