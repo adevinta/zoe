@@ -30,12 +30,9 @@ jobs:
           architecture: x64
 
       - name: Build
-        run: ./gradlew clean zoe-core:shadowJar
-
-      - name: Package
-        id: package
+        id: build
         run: |
-          ./dev/scripts/packages-without-runtime.sh
+          ./gradlew clean zoe-core:shadowJar
 
           # retrieve jar
           zoe_jar_path=$(ls -t zoe-core/build/libs/zoe-core-*.jar | head -n 1)
@@ -53,8 +50,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
-          asset_path: ${{ steps.package.outputs.zoe_jar_path }}
-          asset_name: ${{ steps.package.outputs.zoe_jar_name }}
+          asset_path: ${{ steps.build.outputs.zoe_jar_path }}
+          asset_name: ${{ steps.build.outputs.zoe_jar_name }}
           asset_content_type: application/zip
 
   release-runtimeless:
