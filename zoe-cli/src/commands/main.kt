@@ -105,7 +105,12 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
                     cluster = cluster,
                     configDir = configDir,
                     env = env,
-                    term = term
+                    term = term,
+                    version = loadFileFromResources("version.json")?.toJsonNode()?.get("projectVersion")?.asText()
+                        ?: kotlin.run {
+                            logger.warn("Couldn't find version from resources. Using 'latest'")
+                            "latest"
+                        }
                 )
             )
         )
@@ -171,6 +176,7 @@ fun mainModule(context: CliContext) = module {
     }
 
     singleCloseable<ZoeRunner> {
+        val ctx = get<CliContext>()
         val ioPool = get<ExecutorService>(named("io"))
 
         val runnersSectionWithSecrets =
@@ -193,28 +199,11 @@ fun mainModule(context: CliContext) = module {
 
             RunnerName.Kubernetes -> {
                 val kubeConfig = runnersSectionWithSecrets.config.kubernetes
-                val zoeImage = with(kubeConfig.image) {
-                    val actualTag = tag ?: kotlin.run {
-                        // if tag not given, infer the version that should be used.
-                        val version =
-                            loadFileFromResources("version.json")?.toJsonNode()?.get("projectVersion")?.asText()
-
-                        when (version) {
-                            null -> {
-                                logger.warn("Couldn't find package version from resources... Using 'latest'")
-                                "latest"
-                            }
-                            else -> version
-                        }
-                    }
-
-                    "$registry/$image:$actualTag"
-                }
 
                 KubernetesRunner(
                     name = RunnerName.Kubernetes.code,
                     configuration = KubernetesRunner.Config(
-                        zoeImage = zoeImage,
+                        zoeImage = with(kubeConfig.image) { "$registry/$image:${tag ?: ctx.version}" },
                         cpu = kubeConfig.cpu,
                         memory = kubeConfig.memory,
                         deletePodsAfterCompletion = kubeConfig.deletePodAfterCompletion,
@@ -274,5 +263,6 @@ data class CliContext(
     val configDir: File,
     val env: String,
     val cluster: String,
-    val runner: RunnerName?
+    val runner: RunnerName?,
+    val version: String
 )

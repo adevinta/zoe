@@ -27,10 +27,7 @@ import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.*
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
-import com.github.ajalt.clikt.parameters.options.convert
-import com.github.ajalt.clikt.parameters.options.flag
-import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.required
+import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.file
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -82,10 +79,13 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
     private val ctx by inject<CliContext>()
     private val environment by inject<EnvConfig>()
 
-    private val jarUrl
+    private val jarUrl: URL
             by option("--jar-url", help = "Url to the zoe jar file", hidden = true, envvar = "ZOE_JAR_URL")
                 .convert { URL(it) }
-                .required()
+                .defaultLazy {
+                    val baseUrl = "https://github.com/adevinta/zoe/releases/download"
+                    URL("$baseUrl/v${ctx.version}/zoe-core-${ctx.version}.jar")
+                }
 
     private val dryRun: Boolean by option("--dry-run", help = "Dry run mode").flag(default = false)
 
