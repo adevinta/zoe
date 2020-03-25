@@ -32,15 +32,7 @@ jobs:
       - name: Build
         id: build
         run: |
-          ./gradlew clean zoe-core:shadowJar
-
-          # retrieve jar
-          zoe_jar_path=$(ls -t zoe-core/build/libs/zoe-core-*.jar | head -n 1)
-
-          # ensure jar is generated
-          [[ -z "${zoe_jar_path}" ]] && \
-            { echo "zoe core jar not found : ${zoe_jar_path}"; exit 1; }
-
+          zoe_jar_path=$(./dev/scripts/build-zoe-core-shadow-jar.sh)
           echo "::set-output name=zoe_jar_path::${zoe_jar_path}"
           echo "::set-output name=zoe_jar_name::$(basename ${zoe_jar_path})"
 
@@ -54,8 +46,8 @@ jobs:
           asset_name: ${{ steps.build.outputs.zoe_jar_name }}
           asset_content_type: application/zip
 
-  release-runtimeless:
-    name: Publish packages without runtime
+  release-assets-without-jdk:
+    name: Publish packages without JDK
 
     runs-on: ubuntu-latest
 
@@ -77,28 +69,19 @@ jobs:
           java-package: jdk
           architecture: x64
 
-      - name: Build
+      - name: Package zip
+        id: package_zip
         run: |
-          ./dev/scripts/clean.sh
-          ./dev/scripts/build.sh
+          package=$(./dev/scripts/build-zoe-cli-archive-without-jdk.sh zip)
+          echo "::set-output name=package_path::${package}"
+          echo "::set-output name=package_name::$(basename ${package})"
 
-      - name: Package
-        id: package
+      - name: Package tar
+        id: package_tar
         run: |
-          ./dev/scripts/packages-without-runtime.sh
-
-          # retrieve packages
-          zip_package=$(ls -t packages/zoe-*.zip | head -n 1)
-          tar_package=$(ls -t packages/zoe-*.tar.gz | head -n 1)
-
-          # ensure packages are generated
-          [[ -z "${zip_package}" || -z "${tar_package}" ]] && \
-            { echo "one of the packages not found : (zip: ${tar_package} | tar: ${tar_package})"; exit 1; }
-
-          echo "::set-output name=zip_package_path::${zip_package}"
-          echo "::set-output name=zip_package_name::$(basename ${zip_package})"
-          echo "::set-output name=tar_package_path::${tar_package}"
-          echo "::set-output name=tar_package_name::$(basename ${tar_package})"
+          package=$(./dev/scripts/build-zoe-cli-archive-without-jdk.sh tar)
+          echo "::set-output name=package_path::${package}"
+          echo "::set-output name=package_name::$(basename ${package})"
 
       - name: Upload zip package
         uses: actions/upload-release-asset@v1
@@ -106,8 +89,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
-          asset_path: ${{ steps.package.outputs.zip_package_path }}
-          asset_name: ${{ steps.package.outputs.zip_package_name }}
+          asset_path: ${{ steps.package_zip.outputs.package_path }}
+          asset_name: ${{ steps.package_zip.outputs.package_name }}
           asset_content_type: application/zip
 
       - name: Upload tar package
@@ -116,13 +99,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
-          asset_path: ${{ steps.package.outputs.tar_package_path }}
-          asset_name: ${{ steps.package.outputs.tar_package_name }}
+          asset_path: ${{ steps.package_tar.outputs.package_path }}
+          asset_name: ${{ steps.package_tar.outputs.package_name }}
           asset_content_type: application/zip
 
-  release-runtimefull:
+  release-installers-with-jdk:
 
-    name: Publish packages with runtime
+    name: Publish packages with JDK
 
     strategy:
       matrix:
@@ -149,32 +132,16 @@ jobs:
       - name: Setup Java JDK
         uses: actions/setup-java@v1.3.0
         with:
-          java-version: 11
-          java-package: jdk
-          architecture: x64
-
-      - name: Build
-        run: |
-          ./dev/scripts/clean.sh
-          ./dev/scripts/build.sh
-
-      - name: Setup Java JDK
-        uses: actions/setup-java@v1.3.0
-        with:
-          java-version: 14-ea
+          java-version: 14
           java-package: jdk
           architecture: x64
 
       - name: Package
         id: package
         run: |
-          ./dev/scripts/packages-with-runtime.sh ${target}
-
-          package_path=$(ls -t packages/zoe*.${target} | head -n 1)
-          package_name=$(basename "$package_path")
-
-          echo "::set-output name=package_path::$package_path"
-          echo "::set-output name=package_name::$package_name"
+          package=$(./dev/scripts/build-zoe-cli-installer-with-jdk.sh ${target})
+          echo "::set-output name=package_path::${package}"
+          echo "::set-output name=package_name::$(basename ${package})"
 
       - name: Upload package
         uses: actions/upload-release-asset@v1

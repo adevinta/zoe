@@ -9,4 +9,20 @@
 
 set -ex
 
-exec ./gradlew clean
+archive_type="$1"
+
+if [[ -z "$archive_type" ]]; then
+  echo "usage: $0 <archive_type>" >&2
+  exit 1
+fi
+
+# build distribution
+package_dir=$(mktemp -d --suffix "_zoe")
+./gradlew zoe-cli:"${archive_type}DistWithoutJdk" -PdistWithoutJdk.outputDir="${package_dir}" >&2
+
+package=$(find "${package_dir}" -maxdepth 1 -name 'zoe*.'${archive_type})
+
+[[ -z "${package}" ]] && \
+  { echo "package not found in: ${package_dir}" >&2; exit 1; }
+
+echo ${package}

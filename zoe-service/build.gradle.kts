@@ -14,6 +14,8 @@ dependencies {
     implementation("io.fabric8:kubernetes-client:4.7.1")
 
     testImplementation(group = "junit", name = "junit", version = "4.12")
+    testImplementation("org.testcontainers:testcontainers:1.13.0")
+    testImplementation("org.testcontainers:kafka:1.13.0")
 
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.8")
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.8")

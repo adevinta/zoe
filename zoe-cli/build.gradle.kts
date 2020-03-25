@@ -1,4 +1,5 @@
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.beryx.runtime.JPackageImageTask
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.time.LocalDateTime
 
@@ -10,13 +11,57 @@ plugins {
 
 application {
     mainClassName = "com.adevinta.oss.zoe.cli.MainKt"
-    executableDir = "zoe-cli"
     applicationDefaultJvmArgs = listOf("-client")
     applicationName = "zoe"
 }
 
+mapOf(
+    "zip" to Zip::class,
+    "tar" to Tar::class
+).forEach { (archiveType, archiveClass) ->
+    tasks.register("${archiveType}DistWithoutJdk", archiveClass) {
+        val installDistTask = tasks.getByName<Sync>("installDist")
+
+        val outputDir = findProperty("distWithoutJdk.outputDir") ?: "$buildDir/distWithoutJdk"
+
+        dependsOn(installDistTask)
+        from(installDistTask.destinationDir)
+
+        archiveFileName.set("zoe-${project.version}.${archiveType}")
+        destinationDirectory.set(file(outputDir))
+
+        into("zoe")
+    }
+}
+
+tasks.register<Zip>("zipJpackageImage") {
+    val jPackageImageTask = tasks.getByName<JPackageImageTask>("jpackageImage")
+
+    val outputDir = findProperty("$name.outputDir") ?: "$buildDir/jpackageImageZip"
+    val suffix = findProperty("$name.suffix") ?: ""
+
+    dependsOn(jPackageImageTask)
+    from(jPackageImageTask.distDir.asFile)
+
+    archiveFileName.set("zoe-${project.version}-with-jdk${suffix}.zip")
+    destinationDirectory.set(file(outputDir))
+
+    into("zoe")
+}
+
 runtime {
-    addOptions("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages", "--strip-native-commands")
+    jpackage {
+        imageName = "zoe"
+
+        findProperty("jpackage.installerType")?.toString()?.run {
+            installerType = this
+        }
+
+        findProperty("jpackage.output")?.let { file(it.toString()) }?.run {
+            imageOutputDir = this
+            installerOutputDir = this
+        }
+    }
 }
 
 jib {

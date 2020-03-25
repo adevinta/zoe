@@ -14,7 +14,7 @@ buildscript {
 
 plugins {
     java
-    kotlin("jvm") version "1.3.70" apply false
+    kotlin("jvm") version "1.3.71" apply false
     id("com.github.johnrengelman.shadow") version "4.0.4" apply false
     id("com.google.cloud.tools.jib") version "2.1.0" apply false
     id("com.palantir.git-version") version "0.12.2"
@@ -41,7 +41,6 @@ allprojects {
 
 subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
-    apply(plugin = "com.github.johnrengelman.shadow")
     apply(plugin = "maven-publish")
 
     java {

@@ -9,4 +9,14 @@
 
 set -ex
 
-./gradlew zoe-cli:installShadowDist
+package_dir=$(mktemp -d --suffix "_zoe")
+./gradlew zoe-cli:zipJpackageImage \
+  -PzipJpackageImage.outputDir="${package_dir}" \
+  -PzipJpackageImage.suffix="_$(arch)" >&2
+
+package=$(find "${package_dir}" -maxdepth 1 -name 'zoe*.zip')
+
+[[ -z "${package}" ]] && \
+  { echo "package not found in: ${package_dir}" >&2; exit 1; }
+
+echo "${package}"

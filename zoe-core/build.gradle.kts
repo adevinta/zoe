@@ -2,6 +2,20 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 plugins {
     id("com.google.cloud.tools.jib")
+    id("com.github.johnrengelman.shadow")
+}
+
+jib {
+
+    to {
+        image = "adevinta/zoe-core"
+        tags = setOf(project.version.toString(), "latest")
+    }
+
+    container {
+        jvmFlags = listOf("-client")
+        mainClass = "com.adevinta.oss.zoe.core.MainKt"
+    }
 }
 
 dependencies {
@@ -58,18 +72,5 @@ sourceSets {
         withConvention(KotlinSourceSet::class) {
             kotlin.srcDir("test")
         }
-    }
-}
-
-jib {
-
-    to {
-        image = "adevinta/zoe-core"
-        tags = setOf(project.version.toString(), "latest")
-    }
-
-    container {
-        jvmFlags = listOf("-client")
-        mainClass = "com.adevinta.oss.zoe.core.MainKt"
     }
 }
