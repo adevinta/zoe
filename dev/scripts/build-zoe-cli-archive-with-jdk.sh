@@ -9,10 +9,10 @@
 
 set -ex
 
-package_dir=$(mktemp -d --suffix "_zoe")
+package_dir=$(mktemp -d)
 ./gradlew zoe-cli:zipJpackageImage \
   -PzipJpackageImage.outputDir="${package_dir}" \
-  -PzipJpackageImage.suffix="_$(arch)" >&2
+  -PzipJpackageImage.suffix="_$(uname -s)" >&2
 
 package=$(find "${package_dir}" -maxdepth 1 -name 'zoe*.zip')
 

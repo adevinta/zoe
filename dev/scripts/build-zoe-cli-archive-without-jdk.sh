@@ -17,7 +17,7 @@ if [[ -z "$archive_type" ]]; then
 fi
 
 # build distribution
-package_dir=$(mktemp -d --suffix "_zoe")
+package_dir=$(mktemp -d)
 ./gradlew zoe-cli:"${archive_type}DistWithoutJdk" -PdistWithoutJdk.outputDir="${package_dir}" >&2
 
 package=$(find "${package_dir}" -maxdepth 1 -name 'zoe*.'${archive_type})

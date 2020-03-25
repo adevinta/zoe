@@ -152,3 +152,48 @@ jobs:
           asset_path: ${{ steps.package.outputs.package_path }}
           asset_name: ${{ steps.package.outputs.package_name }}
           asset_content_type: application/zip
+
+  release-archives-with-jdk:
+
+    name: Publish packages with JDK
+
+    strategy:
+      matrix:
+        os:
+          - "ubuntu-latest"
+          - "macos-latest"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: set upload url
+        id: fetch_release_data
+        run: |
+          UPLOAD_URL=$(jq -r '.release.upload_url' ${GITHUB_EVENT_PATH})
+          echo "::set-output name=upload_url::$UPLOAD_URL"
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v1.3.0
+        with:
+          java-version: 14
+          java-package: jdk
+          architecture: x64
+
+      - name: Package
+        id: package
+        run: |
+          package=$(./dev/scripts/build-zoe-cli-archive-with-jdk.sh)
+          echo "::set-output name=package_path::${package}"
+          echo "::set-output name=package_name::$(basename ${package})"
+
+      - name: Upload package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
+          asset_path: ${{ steps.package.outputs.package_path }}
+          asset_name: ${{ steps.package.outputs.package_name }}
+          asset_content_type: application/zip

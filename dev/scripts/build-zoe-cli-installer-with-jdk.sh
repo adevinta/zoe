@@ -15,7 +15,7 @@ if [[ -z "$installer_type" ]]; then
   exit 1
 fi
 
-package_dir=$(mktemp -d --suffix "_zoe")
+package_dir=$(mktemp -d)
 ./gradlew zoe-cli:jpackage -Pjpackage.output="${package_dir}" -Pjpackage.installerType="${installer_type}" >&2
 
 package=$(find "${package_dir}" -maxdepth 1 -name 'zoe*.'${installer_type})
