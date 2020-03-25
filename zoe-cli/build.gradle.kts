@@ -52,6 +52,7 @@ tasks.register<Zip>("zipJpackageImage") {
 runtime {
     jpackage {
         imageName = "zoe"
+        installerName = "zoe"
 
         findProperty("jpackage.installerType")?.toString()?.run {
             installerType = this
