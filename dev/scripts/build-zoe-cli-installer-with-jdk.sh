@@ -21,6 +21,6 @@ package_dir=$(mktemp -d)
 package=$(find "${package_dir}" -maxdepth 1 -name 'zoe*.'${installer_type})
 
 [[ -z "${package}" ]] && \
-  { echo "package not found in: ${package_dir}" >&2; exit 1; }
+  { echo "package not found in: ${package_dir} (files: $(ls ${package_dir}))" >&2; exit 1; }
 
 echo "$package"
