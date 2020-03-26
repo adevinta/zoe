@@ -19,6 +19,8 @@ mapOf(
     "zip" to Zip::class,
     "tar" to Tar::class
 ).forEach { (archiveType, archiveClass) ->
+
+    // Archive application without JDK into zip/tar package
     tasks.register("${archiveType}DistWithoutJdk", archiveClass) {
         val installDistTask = tasks.getByName<Sync>("installDist")
 
@@ -32,21 +34,24 @@ mapOf(
 
         into("zoe")
     }
-}
 
-tasks.register<Zip>("zipJpackageImage") {
-    val jPackageImageTask = tasks.getByName<JPackageImageTask>("jpackageImage")
+    // Archive application with JDK into zip/tar package
+    tasks.register("${archiveType}JpackageImage", archiveClass) {
+        val jPackageImageTask = tasks.getByName<JPackageImageTask>("jpackageImage")
 
-    val outputDir = findProperty("$name.outputDir") ?: "$buildDir/jpackageImageZip"
-    val suffix = findProperty("$name.suffix") ?: ""
+        val sourceDir = with(jPackageImageTask.jpackageData) { "$imageOutputDir/$imageName" }
+        val outputDir = findProperty("$name.outputDir") ?: "$buildDir/jpackageImageArchive"
+        val suffix = findProperty("$name.suffix") ?: ""
 
-    dependsOn(jPackageImageTask)
-    from(jPackageImageTask.distDir.asFile)
+        dependsOn(jPackageImageTask)
+        from(sourceDir)
 
-    archiveFileName.set("zoe-${project.version}-with-jdk${suffix}.zip")
-    destinationDirectory.set(file(outputDir))
+        archiveFileName.set("zoe-${project.version}-with-jdk${suffix}.${archiveType}")
+        destinationDirectory.set(file(outputDir))
 
-    into("zoe")
+        into("zoe")
+    }
+
 }
 
 runtime {
