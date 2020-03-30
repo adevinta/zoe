@@ -73,7 +73,7 @@ runtime {
 jib {
 
     from {
-        image = "gcr.io/distroless/java:11"
+        image = "openjdk:11-jre-slim"
     }
 
     to {
