@@ -52,34 +52,16 @@ class SecretsProviderWithCache(
     private data class CachedValue(val value: String, val timestamp: Long)
 
     private val fieldName = "secrets"
-    private val cached = runBlocking {
-        store.getAsJson(fieldName) ?: CachedSecrets(
-            mutableMapOf()
-        )
+    private val secrets = runBlocking {
+        val cached = store.getAsJson(fieldName) ?: CachedSecrets(mutableMapOf())
+        cached.secrets.filter { now() - it.value.timestamp <= ttl.toMillis() }.toMutableMap()
     }
 
-    private val secrets = cached.secrets.filter { now() - it.value.timestamp <= ttl.toMillis() }.toMutableMap()
-
-    override fun decipher(secret: String): String =
-        secrets.computeIfAbsent(secret) {
-            CachedValue(
-                wrapped.decipher(secret),
-                now()
-            )
-        }.value
-
-    override fun close() {
-        if (secrets != cached.secrets) {
-            logger.debug("caching secrets...")
-            runBlocking {
-                store.putAsJson(
-                    fieldName,
-                    CachedSecrets(secrets)
-                )
-            }
-        }
-
-        super.close()
+    override fun decipher(secret: String): String = runBlocking {
+        secrets
+            .computeIfAbsent(secret) { CachedValue(wrapped.decipher(secret), now()) }
+            .value
+            .also { store.putAsJson(fieldName, CachedSecrets(secrets)) }
     }
 }
 

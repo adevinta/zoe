@@ -11,6 +11,8 @@ package com.adevinta.oss.zoe.service.storage
 import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonBytes
 
+fun KeyValueStore.withInMemoryBuffer(): KeyValueStore = BufferedKeyValueStore(wrapped = this)
+
 fun <T : KeyValueStore> T.withNamespace(namespace: String): T {
     useNamespace(namespace)
     return this

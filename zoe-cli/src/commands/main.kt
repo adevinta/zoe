@@ -23,6 +23,7 @@ import com.adevinta.oss.zoe.service.runners.ZoeRunner
 import com.adevinta.oss.zoe.service.secrets.*
 import com.adevinta.oss.zoe.service.storage.KeyValueStore
 import com.adevinta.oss.zoe.service.storage.LocalFsKeyValueStore
+import com.adevinta.oss.zoe.service.storage.withInMemoryBuffer
 import com.adevinta.oss.zoe.service.storage.withNamespace
 import com.adevinta.oss.zoe.service.utils.userError
 import com.github.ajalt.clikt.core.CliktCommand
@@ -249,7 +250,7 @@ fun mainModule(context: CliContext) = module {
     singleCloseable<KeyValueStore> {
         LocalFsKeyValueStore(
             root = File("${context.home}/storage/${context.env}")
-        )
+        ).withInMemoryBuffer()
     }
 
     single<ExecutorService>(named("io")) { Executors.newCachedThreadPool() } onClose { it?.shutdown() }

@@ -11,6 +11,7 @@ package com.adevinta.oss.zoe.service.storage
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.service.config.s3
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.runBlocking
 import java.io.Closeable
 import java.io.File
 import java.nio.file.Files
@@ -23,8 +24,56 @@ interface KeyValueStore : Closeable {
     fun useNamespace(namespace: String)
     suspend fun get(key: String): ByteArray?
     suspend fun put(key: String, value: ByteArray)
+    suspend fun delete(key: String): ByteArray?
     suspend fun listKeys(): Iterable<String>
     override fun close() {}
+}
+
+class BufferedKeyValueStore(private val wrapped: KeyValueStore) : KeyValueStore {
+
+    internal sealed class EntryState {
+        class Present(val data: ByteArray) : EntryState()
+        object Deleted : EntryState()
+    }
+
+    private val inMemoryBuffer = mutableMapOf<String, EntryState>()
+
+    override fun useNamespace(namespace: String) {
+        wrapped.useNamespace(namespace)
+    }
+
+    override suspend fun get(key: String): ByteArray? {
+        val found = inMemoryBuffer[key] ?: wrapped.get(key)?.let { EntryState.Present(it) }
+        return (found as? EntryState.Present)?.data
+    }
+
+    override suspend fun put(key: String, value: ByteArray) {
+        inMemoryBuffer[key] = EntryState.Present(data = value)
+    }
+
+    override suspend fun delete(key: String): ByteArray? {
+        val existing = inMemoryBuffer[key] as? EntryState.Present
+        inMemoryBuffer[key] = EntryState.Deleted
+        return existing?.data
+    }
+
+    override suspend fun listKeys(): Iterable<String> {
+        val deletedKeys = inMemoryBuffer.filterValues { it == EntryState.Deleted }.keys
+        val inMemoryKeys = inMemoryBuffer.filterValues { it is EntryState.Present }.keys
+        val persistedKeys = wrapped.listKeys()
+
+        return inMemoryKeys.union(persistedKeys).minus(deletedKeys)
+    }
+
+    override fun close() = runBlocking {
+        inMemoryBuffer.forEach { (key, value) ->
+            when (value) {
+                is EntryState.Present -> wrapped.put(key, value.data)
+                EntryState.Deleted -> wrapped.delete(key)
+            }
+        }
+        wrapped.close()
+    }
 }
 
 class LocalFsKeyValueStore(private var root: File) : KeyValueStore {
@@ -51,6 +100,13 @@ class LocalFsKeyValueStore(private var root: File) : KeyValueStore {
             .use { it.write(value) }
     }
 
+    override suspend fun delete(key: String): ByteArray? = submit {
+        val file = root.resolve(key).takeIf { it.exists() }
+        val existing = file?.readBytes()
+        file?.deleteRecursively()
+        existing
+    }
+
     override suspend fun listKeys(): Iterable<String> = submit {
         root
             .listFiles()
@@ -75,25 +131,26 @@ class AwsFsKeyValueStore(
     private val executor: ExecutorService
 ) : KeyValueStore {
 
-    private val cache: MutableMap<String, ByteArray?> = HashMap()
-
     private suspend fun <T> submit(block: () -> T): T =
         CompletableFuture.supplyAsync(Supplier { block() }, executor).await()
 
     override suspend fun put(key: String, value: ByteArray): Unit = submit {
-        cache.remove("$prefix/$key")
         s3.putObject(bucket, "$prefix/$key", String(value))
     }
 
+    override suspend fun delete(key: String): ByteArray? = submit {
+        val existing = runBlocking { get(key) }
+        s3.deleteObject(bucket, "$prefix/$key")
+        existing
+    }
+
     override suspend fun get(key: String): ByteArray? = submit {
-        cache.getOrPut("$prefix/$key") {
-            s3
-                .runCatching { getObject(bucket, "$prefix/$key").objectContent.use { it.readBytes() } }
-                .getOrElse {
-                    logger.warn("couldn't fetch key '$key' in namespace '$prefix' : '${it.message}'")
-                    null
-                }
-        }
+        s3
+            .runCatching { getObject(bucket, "$prefix/$key").objectContent.use { it.readBytes() } }
+            .getOrElse {
+                logger.warn("couldn't fetch key '$key' in namespace '$prefix' : '${it.message}'")
+                null
+            }
     }
 
     override suspend fun listKeys(): Iterable<String> = submit {
