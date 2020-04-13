@@ -46,7 +46,7 @@ jobs:
           asset_name: ${{ steps.build.outputs.zoe_jar_name }}
           asset_content_type: application/zip
 
-  release-assets-without-jdk:
+  release-assets-without-runtime:
     name: Publish packages without JDK
 
     runs-on: ubuntu-latest
@@ -72,14 +72,77 @@ jobs:
       - name: Package zip
         id: package_zip
         run: |
-          package=$(./dev/scripts/build-zoe-cli-archive-without-jdk.sh zip)
+          package=$(./dev/scripts/build-zoe-cli-archive-without-runtime.sh zip)
           echo "::set-output name=package_path::${package}"
           echo "::set-output name=package_name::$(basename ${package})"
 
       - name: Package tar
         id: package_tar
         run: |
-          package=$(./dev/scripts/build-zoe-cli-archive-without-jdk.sh tar)
+          package=$(./dev/scripts/build-zoe-cli-archive-without-runtime.sh tar)
+          echo "::set-output name=package_path::${package}"
+          echo "::set-output name=package_name::$(basename ${package})"
+
+      - name: Upload zip package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
+          asset_path: ${{ steps.package_zip.outputs.package_path }}
+          asset_name: ${{ steps.package_zip.outputs.package_name }}
+          asset_content_type: application/zip
+
+      - name: Upload tar package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
+          asset_path: ${{ steps.package_tar.outputs.package_path }}
+          asset_name: ${{ steps.package_tar.outputs.package_name }}
+          asset_content_type: application/zip
+
+  release-assets-with-runtime:
+    name: Publish packages with runtime
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: '100'
+
+      - name: set upload url
+        id: fetch_release_data
+        run: |
+          UPLOAD_URL=$(jq -r '.release.upload_url' ${GITHUB_EVENT_PATH})
+          echo "::set-output name=upload_url::$UPLOAD_URL"
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v1.3.0
+        with:
+          java-version: 11
+          java-package: jdk
+          architecture: x64
+
+      - name: Package zip
+        id: package_zip
+        run: |
+          suffix="-with-runtime-$(uname -s)-$(uname -p)"
+          package=$(./dev/scripts/build-zoe-cli-archive-with-runtime.sh zip "$suffix")
+          echo "::set-output name=package_path::${package}"
+          echo "::set-output name=package_name::$(basename ${package})"
+
+      - name: Package tar
+        id: package_tar
+        run: |
+          suffix="-with-runtime-$(uname -s)-$(uname -p)"
+          package=$(./dev/scripts/build-zoe-cli-archive-with-runtime.sh tar "$suffix")
           echo "::set-output name=package_path::${package}"
           echo "::set-output name=package_name::$(basename ${package})"
 
@@ -140,52 +203,6 @@ jobs:
         id: package
         run: |
           package=$(./dev/scripts/build-zoe-cli-installer-with-jdk.sh ${target})
-          echo "::set-output name=package_path::${package}"
-          echo "::set-output name=package_name::$(basename ${package})"
-
-      - name: Upload package
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.fetch_release_data.outputs.upload_url }}
-          asset_path: ${{ steps.package.outputs.package_path }}
-          asset_name: ${{ steps.package.outputs.package_name }}
-          asset_content_type: application/zip
-
-  release-archives-with-jdk:
-
-    name: Publish packages with JDK
-
-    strategy:
-      matrix:
-        os:
-          - "ubuntu-latest"
-          # TODO: fix mac installer package
-          # - "macos-latest"
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: set upload url
-        id: fetch_release_data
-        run: |
-          UPLOAD_URL=$(jq -r '.release.upload_url' ${GITHUB_EVENT_PATH})
-          echo "::set-output name=upload_url::$UPLOAD_URL"
-
-      - name: Setup Java JDK
-        uses: actions/setup-java@v1.3.0
-        with:
-          java-version: 14
-          java-package: jdk
-          architecture: x64
-
-      - name: Package
-        id: package
-        run: |
-          package=$(./dev/scripts/build-zoe-cli-archive-with-jdk.sh)
           echo "::set-output name=package_path::${package}"
           echo "::set-output name=package_name::$(basename ${package})"
 

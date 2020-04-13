@@ -23,9 +23,9 @@ import kotlin.system.exitProcess
 /**
  * Main entrypoint when executing as a standalone program or in a remote container
  *
- * We may give 2 arguments :
- * 1. the payload (mandatory)
- * 2. a file path (optional) : if given, results are written to the file pointed out by the path.
+ * It accepts 2 arguments:
+ * 1. The payload (mandatory)
+ * 2. A file path (optional) : if given, results are written to the file pointed out by the path.
  *    Otherwise, results are written to output stream.
  */
 fun main(args: Array<String>) {

@@ -1,0 +1,75 @@
+package com.adevinta.oss.gradle.plugins
+
+import org.gradle.api.GradleException
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.distribution.DistributionContainer
+import org.gradle.api.internal.plugins.DefaultTemplateBasedStartScriptGenerator
+import org.gradle.api.resources.TextResource
+import org.gradle.api.tasks.application.CreateStartScripts
+import java.net.URL
+
+open class DistributionWithRuntimePlugin : Plugin<Project> {
+
+    override fun apply(project: Project) {
+        // TODO: apply the application plugin
+
+        val extension = project.extensions.create(
+            "distributionWithRuntime",
+            DistributionWithRuntimeExtension::class.java
+        )
+
+        val distributions = project.extensions.getByName("distributions") as DistributionContainer
+
+        distributions.create("withRuntime") {
+            it.distributionBaseName.convention("zoe-with-runtime")
+            it.contents { content ->
+                content.from(extension.jreDir) { jre -> jre.into("runtime") }
+                content.with(distributions.getByName("main").contents)
+                content.exclude("**/*.bat")
+            }
+        }
+
+        val runtimeDistribTasks =
+            sequenceOf(
+                "installWithRuntimeDist",
+                "withRuntimeDistTar",
+                "withRuntimeDistZip",
+                "assembleWithRuntimeDist"
+            ).map { project.tasks.getByName(it) }
+
+        runtimeDistribTasks.forEach { task ->
+            task.doFirst { project.delete(it.outputs.files) }
+        }
+
+        project.afterEvaluate {
+            runtimeDistribTasks.forEach {
+                it.inputs.dir(extension.jreDir)
+                extension.dependencies.get().forEach { dep -> it.dependsOn(dep) }
+            }
+        }
+
+        project.gradle.taskGraph.whenReady { taskGraph ->
+            val isRuntimeDistrib =
+                runtimeDistribTasks.filter { taskGraph.hasTask(it) }.firstOrNull() != null
+
+            project.tasks.withType(CreateStartScripts::class.java) {
+                it.inputs.property("isStartScriptWithRuntime", isRuntimeDistrib)
+                if (isRuntimeDistrib) {
+                    (it.unixStartScriptGenerator as DefaultTemplateBasedStartScriptGenerator).template =
+                        project.getTextResource("/unixStartScript.txt")
+                    (it.windowsStartScriptGenerator as DefaultTemplateBasedStartScriptGenerator).template =
+                        project.getTextResource("/windowsStartScript.txt")
+                }
+            }
+        }
+    }
+
+    private fun Project.getTextResource(path: String): TextResource {
+        val template: URL =
+            DistributionWithRuntimePlugin::class.java.getResource(path)
+                ?: throw GradleException("Resource $path not found.")
+
+        return resources.text.fromString(template.readText(Charsets.UTF_8))
+    }
+}

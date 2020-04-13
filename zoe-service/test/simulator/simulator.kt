@@ -13,15 +13,14 @@ import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonString
 import com.adevinta.oss.zoe.service.runners.ZoeRunner
 import com.fasterxml.jackson.databind.JsonNode
-import java.util.concurrent.CompletableFuture
 import kotlin.math.min
 
 class ZoeRunnerSimulator(val state: RunnerState) : ZoeRunner {
 
     override val name: String = "simulator"
 
-    override fun launch(function: String, payload: String): CompletableFuture<String> =
-        CompletableFuture.completedFuture(handle(function, payload).toJsonString())
+    override suspend fun launch(function: String, payload: String): String =
+        handle(function, payload).toJsonString()
 
     private fun handle(function: String, payload: String): Any = when (function) {
         "topics" -> handleTopicList(payload.parseJson())

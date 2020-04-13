@@ -9,14 +9,24 @@
 
 set -ex
 
-package_dir=$(mktemp -d)
-./gradlew zoe-cli:zipJpackageImage \
-  -PzipJpackageImage.outputDir="${package_dir}" \
-  -PzipJpackageImage.suffix="_$(uname -s)" >&2
+archive_type="$1"
+suffix="$2"
 
-package=$(find "${package_dir}" -maxdepth 1 -name 'zoe*.zip')
+if [[ -z "$archive_type" ]]; then
+  echo "usage: $0 <archive_type>" >&2
+  exit 1
+fi
+
+# build distribution
+package_dir=$(mktemp -d)
+
+./gradlew zoe-cli:"${archive_type}DistWithoutRuntime" \
+  -PzipDistWithoutRuntime.outputDir="${package_dir}" \
+  -PzipDistWithoutRuntime.suffix="${suffix}" >&2
+
+package=$(find "${package_dir}" -maxdepth 1 -name 'zoe*.'${archive_type})
 
 [[ -z "${package}" ]] && \
   { echo "package not found in: ${package_dir} (files: $(ls ${package_dir}))" >&2; exit 1; }
 
-echo "${package}"
+echo ${package}

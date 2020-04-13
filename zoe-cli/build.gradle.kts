@@ -6,8 +6,9 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import com.adevinta.oss.gradle.plugins.DistributionWithRuntimeExtension
+import com.adevinta.oss.gradle.plugins.DistributionWithRuntimePlugin
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.beryx.runtime.JPackageImageTask
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.time.LocalDateTime
 
@@ -17,10 +18,18 @@ plugins {
     id("com.google.cloud.tools.jib")
 }
 
+apply<DistributionWithRuntimePlugin>()
+
 application {
     mainClassName = "com.adevinta.oss.zoe.cli.MainKt"
     applicationDefaultJvmArgs = listOf("-client")
     applicationName = "zoe"
+}
+
+configure<DistributionWithRuntimeExtension> {
+    val jre by tasks.getting(org.beryx.runtime.JreTask::class)
+    dependencies.set(listOf(jre))
+    jreDir.set(provider { jre.jreDir })
 }
 
 mapOf(
@@ -28,41 +37,28 @@ mapOf(
     "tar" to Tar::class
 ).forEach { (archiveType, archiveClass) ->
 
-    // Archive application without JDK into zip/tar package
-    tasks.register("${archiveType}DistWithoutJdk", archiveClass) {
-        val installDistTask = tasks.getByName<Sync>("installDist")
+    mapOf(
+        "WithRuntime" to tasks.getByName<Sync>("installWithRuntimeDist"),
+        "WithoutRuntime" to tasks.getByName<Sync>("installDist")
+    ).forEach { (alias, installTask) ->
+        tasks.register("${archiveType}Dist${alias}", archiveClass) {
+            val outputDir = findProperty("${name}.outputDir") ?: "$buildDir/dist${alias}"
+            val suffix = findProperty("${name}.suffix") ?: alias
 
-        val outputDir = findProperty("distWithoutJdk.outputDir") ?: "$buildDir/distWithoutJdk"
+            from(installTask.outputs.files)
 
-        dependsOn(installDistTask)
-        from(installDistTask.destinationDir)
+            archiveFileName.set("zoe${suffix}-${project.version}.${archiveType}")
+            destinationDirectory.set(file(outputDir))
 
-        archiveFileName.set("zoe-${project.version}.${archiveType}")
-        destinationDirectory.set(file(outputDir))
+            into("zoe")
+        }
 
-        into("zoe")
-    }
-
-    // Archive application with JDK into zip/tar package
-    tasks.register("${archiveType}JpackageImage", archiveClass) {
-        val jPackageImageTask = tasks.getByName<JPackageImageTask>("jpackageImage")
-
-        val sourceDir = with(jPackageImageTask.jpackageData) { "$imageOutputDir/$imageName" }
-        val outputDir = findProperty("$name.outputDir") ?: "$buildDir/jpackageImageArchive"
-        val suffix = findProperty("$name.suffix") ?: ""
-
-        dependsOn(jPackageImageTask)
-        from(sourceDir)
-
-        archiveFileName.set("zoe-${project.version}-with-jdk${suffix}.${archiveType}")
-        destinationDirectory.set(file(outputDir))
-
-        into("zoe")
     }
 
 }
 
 runtime {
+    addOptions("--strip-debug", "--no-header-files", "--no-man-pages")
     jpackage {
         imageName = "zoe"
         installerName = "zoe"
@@ -93,35 +89,6 @@ jib {
         jvmFlags = listOf("-client")
         mainClass = "com.adevinta.oss.zoe.cli.MainKt"
     }
-}
-
-dependencies {
-    implementation(project(":zoe-service"))
-    implementation(project(":zoe-core"))
-
-    implementation("com.amazonaws:aws-java-sdk-lambda:1.11.580")
-    implementation("com.amazonaws:aws-java-sdk-iam:1.11.580")
-    implementation("com.amazonaws:aws-java-sdk-cloudformation:1.11.580")
-
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.2")
-
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.7")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.7.0.202003090808-r")
-
-    implementation("org.koin:koin-core:2.0.1")
-    implementation("com.jakewharton.picnic:picnic:0.2.0")
-    implementation("com.github.ajalt:clikt:2.5.0")
-    implementation("com.github.ajalt:mordant:1.2.1")
-    implementation("org.slf4j:slf4j-log4j12:1.7.26")
-    implementation("log4j:log4j:1.2.17")
-
-    testImplementation(group = "junit", name = "junit", version = "4.12")
-
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.8")
-    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.8")
 }
 
 tasks {
@@ -181,4 +148,33 @@ sourceSets {
             kotlin.srcDir("test")
         }
     }
+}
+
+dependencies {
+    implementation(project(":zoe-service"))
+    implementation(project(":zoe-core"))
+
+    implementation("com.amazonaws:aws-java-sdk-lambda:1.11.580")
+    implementation("com.amazonaws:aws-java-sdk-iam:1.11.580")
+    implementation("com.amazonaws:aws-java-sdk-cloudformation:1.11.580")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.2")
+
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.7")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:5.7.0.202003090808-r")
+
+    implementation("org.koin:koin-core:2.0.1")
+    implementation("com.jakewharton.picnic:picnic:0.2.0")
+    implementation("com.github.ajalt:clikt:2.5.0")
+    implementation("com.github.ajalt:mordant:1.2.1")
+    implementation("org.slf4j:slf4j-log4j12:1.7.26")
+    implementation("log4j:log4j:1.2.17")
+
+    testImplementation(group = "junit", name = "junit", version = "4.12")
+
+    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.8")
+    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.8")
 }

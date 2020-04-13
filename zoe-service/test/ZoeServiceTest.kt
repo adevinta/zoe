@@ -15,7 +15,6 @@ import com.adevinta.oss.zoe.service.config.InMemoryConfigStore
 import com.adevinta.oss.zoe.service.secrets.NoopSecretsProvider
 import com.adevinta.oss.zoe.service.simulator.simulator
 import com.adevinta.oss.zoe.service.storage.LocalFsKeyValueStore
-import com.google.common.io.Files
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.toList
@@ -23,6 +22,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -30,7 +30,7 @@ object ZoeServiceTest : Spek({
 
     describe("Service can read data using several subscription strategies") {
 
-        val runner by memoized {
+        val kafkaSimulator by memoized {
             simulator(readSpeedPerPoll = 2) {
                 cluster("local") {
                     topic(name = "input", partitions = 5) {
@@ -53,8 +53,8 @@ object ZoeServiceTest : Spek({
                         "cluster" to Cluster(registry = null, props = mapOf("bootstrap.servers" to "local"))
                     )
                 ),
-                runner = runner,
-                storage = LocalFsKeyValueStore(Files.createTempDir()),
+                runner = kafkaSimulator,
+                storage = LocalFsKeyValueStore(Files.createTempDirectory(null).toFile()),
                 secrets = NoopSecretsProvider
             )
         }
@@ -76,7 +76,7 @@ object ZoeServiceTest : Spek({
                 Assert.assertEquals(
                     """didn't receive the right number of records:
                         | - received: $readResponse
-                        | - expected: ${runner.state.clusters.first().topics.first().messages.values}
+                        | - expected: ${kafkaSimulator.state.clusters.first().topics.first().messages.values}
                     """.trimMargin(),
                     6,
                     readResponse.filterIsInstance<RecordOrProgress.Record>().size
