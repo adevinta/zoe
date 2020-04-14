@@ -166,9 +166,9 @@ jobs:
           asset_name: ${{ steps.package_tar.outputs.package_name }}
           asset_content_type: application/zip
 
-  release-installers-with-jdk:
+  release-installers-with-runtime:
 
-    name: Publish packages with JDK
+    name: Publish installers with runtime
 
     strategy:
       matrix:
@@ -202,7 +202,7 @@ jobs:
       - name: Package
         id: package
         run: |
-          package=$(./dev/scripts/build-zoe-cli-installer-with-jdk.sh ${target})
+          package=$(./dev/scripts/build-zoe-cli-installer-with-runtime.sh ${target})
           echo "::set-output name=package_path::${package}"
           echo "::set-output name=package_name::$(basename ${package})"
 

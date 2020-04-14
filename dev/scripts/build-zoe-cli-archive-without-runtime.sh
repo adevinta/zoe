@@ -21,8 +21,8 @@ fi
 package_dir=$(mktemp -d)
 
 ./gradlew zoe-cli:"${archive_type}DistWithoutRuntime" \
-  -PzipDistWithoutRuntime.outputDir="${package_dir}" \
-  -PzipDistWithoutRuntime.suffix="${suffix}" >&2
+  -P${archive_type}DistWithoutRuntime.outputDir="${package_dir}" \
+  -P${archive_type}DistWithoutRuntime.suffix="${suffix}" >&2
 
 package=$(find "${package_dir}" -maxdepth 1 -name 'zoe*.'${archive_type})
 
