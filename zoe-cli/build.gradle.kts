@@ -16,6 +16,7 @@ plugins {
     application
     id("org.beryx.runtime") version "1.8.0"
     id("com.google.cloud.tools.jib")
+    id("com.github.johnrengelman.shadow")
 }
 
 apply<DistributionWithRuntimePlugin>()

@@ -12,7 +12,7 @@ import java.net.URL
 open class DistributionWithRuntimePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
-        // TODO: apply the application plugin
+        // TODO: apply the application plugin and the shadow jar plugin
 
         val extension = project.extensions.create(
             "distributionWithRuntime",
@@ -25,7 +25,7 @@ open class DistributionWithRuntimePlugin : Plugin<Project> {
             it.distributionBaseName.convention("zoe-with-runtime")
             it.contents { content ->
                 content.from(extension.jreDir) { jre -> jre.into("runtime") }
-                content.with(distributions.getByName("main").contents)
+                content.with(distributions.getByName("shadow").contents)
                 content.exclude("**/*.bat")
             }
         }
