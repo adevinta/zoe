@@ -21,13 +21,8 @@ open class DistributionWithRuntimePlugin : Plugin<Project> {
 
         val distributions = project.extensions.getByName("distributions") as DistributionContainer
 
-        distributions.create("withRuntime") {
+        val withRuntimeDistribution = distributions.create("withRuntime") {
             it.distributionBaseName.convention("zoe-with-runtime")
-            it.contents { content ->
-                content.from(extension.jreDir) { jre -> jre.into("runtime") }
-                content.with(distributions.getByName("shadow").contents)
-                content.exclude("**/*.bat")
-            }
         }
 
         val runtimeDistribTasks =
@@ -43,8 +38,13 @@ open class DistributionWithRuntimePlugin : Plugin<Project> {
         }
 
         project.afterEvaluate {
+            withRuntimeDistribution.contents { content ->
+                content.from(extension.jreDir) { jre -> jre.into("runtime") }
+                content.with(distributions.getByName(extension.baseDistribution.get()).contents)
+                content.exclude("**/*.bat")
+            }
+
             runtimeDistribTasks.forEach {
-                it.inputs.dir(extension.jreDir)
                 extension.dependencies.get().forEach { dep -> it.dependsOn(dep) }
             }
         }

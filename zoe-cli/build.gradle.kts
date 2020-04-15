@@ -28,9 +28,12 @@ application {
 }
 
 configure<DistributionWithRuntimeExtension> {
-    val jre by tasks.getting(org.beryx.runtime.JreTask::class)
-    dependencies.set(listOf(jre))
-    jreDir.set(provider { jre.jreDir })
+    jreDir.set(
+        tasks
+            .named("jre")
+            .map { (it as org.beryx.runtime.JreTask).jreDir }
+    )
+    baseDistribution.set("shadow")
 }
 
 mapOf(

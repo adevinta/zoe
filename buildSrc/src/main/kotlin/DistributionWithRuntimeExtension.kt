@@ -10,4 +10,5 @@ import javax.inject.Inject
 open class DistributionWithRuntimeExtension @Inject constructor(objects: ObjectFactory) {
     val dependencies: ListProperty<Task> = objects.listProperty(Task::class.java)
     val jreDir: DirectoryProperty = objects.directoryProperty()
+    val baseDistribution: Property<String> = objects.property(String::class.java).convention("main")
 }
