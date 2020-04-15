@@ -66,6 +66,7 @@ runtime {
     jpackage {
         imageName = "zoe"
         installerName = "zoe"
+        mainJar = tasks.jar.flatMap { it.archiveFileName }.get()
 
         findProperty("jpackage.installerType")?.toString()?.run {
             installerType = this
