@@ -108,9 +108,9 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        runtime_os: [Linux, MacOs]
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -132,9 +132,11 @@ jobs:
 
       - name: Package zip
         id: package_zip
+        env:
+          RUNTIME_OS: ${{ matrix.runtime_os }}
         run: |
-          suffix="-with-runtime-$(uname -s)-$(uname -p)"
-          package=$(./dev/scripts/build-zoe-cli-archive-with-runtime.sh zip "$suffix")
+          suffix="-with-runtime-$RUNTIME_OS"
+          package=$(./dev/scripts/build-zoe-cli-archive-with-runtime.sh zip "$RUNTIME_OS" "$suffix")
           echo "::set-output name=package_path::${package}"
           echo "::set-output name=package_name::$(basename ${package})"
 

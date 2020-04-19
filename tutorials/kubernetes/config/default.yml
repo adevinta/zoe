@@ -8,7 +8,7 @@
 
 ---
 clusters:
-  kafka-in-k8s:
+  default:
     props:
       bootstrap.servers: "broker:9092"
       key.deserializer: "org.apache.kafka.common.serialization.StringDeserializer"

@@ -17,7 +17,8 @@ fi
 
 package_dir=$(mktemp -d)
 
-./gradlew zoe-cli:jpackage \
+./gradlew \
+  zoe-cli:jpackage \
   -Pjpackage.output="${package_dir}" \
   -Pjpackage.installerType="${installer_type}" >&2
 

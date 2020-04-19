@@ -6,15 +6,14 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import com.adevinta.oss.gradle.plugins.DistributionWithRuntimeExtension
-import com.adevinta.oss.gradle.plugins.DistributionWithRuntimePlugin
+import com.adevinta.oss.gradle.plugins.*
+import com.adevinta.oss.gradle.plugins.Platform
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.time.LocalDateTime
 
 plugins {
     application
-    id("org.beryx.runtime") version "1.8.0"
     id("com.google.cloud.tools.jib")
     id("com.github.johnrengelman.shadow")
 }
@@ -28,13 +27,44 @@ application {
 }
 
 configure<DistributionWithRuntimeExtension> {
-    jreDir.set(
-        tasks
-            .named("jre")
-            .map { (it as org.beryx.runtime.JreTask).jreDir }
-    )
-    baseDistribution.set("shadow")
+
+    distribution {
+        base = "shadow"
+    }
+
+    runtime {
+        version = "11"
+        distribution = "AdoptOpenJDK"
+        platform = findProperty("runtime.os")?.let(Any::toString)?.let(Platform::valueOf) ?: Platform.Linux
+    }
 }
+
+tasks.register("jpackage", JPackageTask::class.java) {
+    imageName.set("zoe")
+    installerName.set("zoe")
+    mainClass.set("com.adevinta.oss.zoe.cli.MainKt")
+    mainJar.set(tasks.jar.flatMap { it.archiveFileName })
+    appVersion.set(project.version.toString())
+
+    libs.set(
+        tasks
+            .named("installDist")
+            .map { it.outputs.files.singleFile.resolve("lib").absolutePath }
+    )
+
+    output.set(
+        findProperty("jpackage.output")
+            ?.let { file(it.toString()) }
+            ?: buildDir.resolve("jpackageOutput")
+    )
+
+    installType.set(
+        findProperty("jpackage.installerType")
+            ?.toString()
+            ?: "app-image"
+    )
+}
+
 
 mapOf(
     "zip" to Zip::class,
@@ -42,14 +72,14 @@ mapOf(
 ).forEach { (archiveType, archiveClass) ->
 
     mapOf(
-        "WithRuntime" to tasks.getByName<Sync>("installWithRuntimeDist"),
-        "WithoutRuntime" to tasks.getByName<Sync>("installDist")
+        "WithRuntime" to tasks.named<Sync>("installWithRuntimeDist"),
+        "WithoutRuntime" to tasks.named<Sync>("installDist")
     ).forEach { (alias, installTask) ->
         tasks.register("${archiveType}Dist${alias}", archiveClass) {
             val outputDir = findProperty("${name}.outputDir") ?: "$buildDir/dist${alias}"
             val suffix = findProperty("${name}.suffix") ?: alias
 
-            from(installTask.outputs.files)
+            from(installTask)
 
             archiveFileName.set("zoe${suffix}-${project.version}.${archiveType}")
             destinationDirectory.set(file(outputDir))
@@ -58,26 +88,24 @@ mapOf(
         }
 
     }
-
 }
 
-runtime {
-    addOptions("--strip-debug", "--no-header-files", "--no-man-pages")
-    jpackage {
-        imageName = "zoe"
-        installerName = "zoe"
-        mainJar = tasks.jar.flatMap { it.archiveFileName }.get()
-
-        findProperty("jpackage.installerType")?.toString()?.run {
-            installerType = this
-        }
-
-        findProperty("jpackage.output")?.let { file(it.toString()) }?.run {
-            imageOutputDir = this
-            installerOutputDir = this
-        }
-    }
-}
+//runtime {
+//    jpackage {
+//        imageName = "zoe"
+//        installerName = "zoe"
+//        mainJar = tasks.jar.flatMap { it.archiveFileName }.get()
+//
+//        findProperty("jpackage.installerType")?.toString()?.run {
+//            installerType = this
+//        }
+//
+//        findProperty("jpackage.output")?.let { file(it.toString()) }?.run {
+//            imageOutputDir = this
+//            installerOutputDir = this
+//        }
+//    }
+//}
 
 jib {
 

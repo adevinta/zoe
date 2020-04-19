@@ -20,7 +20,8 @@ fi
 # build distribution
 package_dir=$(mktemp -d)
 
-./gradlew zoe-cli:"${archive_type}DistWithoutRuntime" \
+./gradlew \
+  zoe-cli:"${archive_type}DistWithoutRuntime" \
   -P${archive_type}DistWithoutRuntime.outputDir="${package_dir}" \
   -P${archive_type}DistWithoutRuntime.suffix="${suffix}" >&2
 

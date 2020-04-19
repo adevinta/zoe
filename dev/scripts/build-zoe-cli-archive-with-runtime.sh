@@ -10,10 +10,11 @@
 set -ex
 
 archive_type="$1"
-suffix="$2"
+runtime_os="$2"
+suffix="$3"
 
-if [[ -z "$archive_type" ]]; then
-  echo "usage: $0 <archive_type>" >&2
+if [[ -z "$archive_type" || -z "$runtime_os" ]]; then
+  echo "usage: $0 <archive_type> <runtime_os> <suffix>" >&2
   exit 1
 fi
 
@@ -21,14 +22,17 @@ fi
 package_dir=$(mktemp -d)
 
 ./gradlew \
-  zoe-service:build \
   zoe-cli:"${archive_type}DistWithRuntime" \
+  -Pruntime.os="${runtime_os}" \
   -P${archive_type}DistWithRuntime.outputDir="${package_dir}" \
   -P${archive_type}DistWithRuntime.suffix="${suffix}" >&2
 
 package=$(find "${package_dir}" -maxdepth 1 -name 'zoe*.'${archive_type})
 
-[[ -z "${package}" ]] && \
-  { echo "package not found in: ${package_dir} (files: $(ls ${package_dir}))" >&2; exit 1; }
+[[ -z "${package}" ]] &&
+  {
+    echo "package not found in: ${package_dir} (files: $(ls ${package_dir}))" >&2
+    exit 1
+  }
 
 echo ${package}

@@ -1,0 +1,19 @@
+{
+  "runtimes": [
+    {
+      "version": "11",
+      "platform": "MacOs",
+      "distributions": {
+        "AdoptOpenJDK": "https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.7%2B10_openj9-0.20.0/OpenJDK11U-jre_x64_mac_openj9_11.0.7_10_openj9-0.20.0.tar.gz"
+      }
+    },
+    {
+      "version": "11",
+      "platform": "Linux",
+      "distributions": {
+        "AdoptOpenJDK": "https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.7%2B10_openj9-0.20.0/OpenJDK11U-jre_x64_linux_openj9_11.0.7_10_openj9-0.20.0.tar.gz"
+      }
+    }
+
+  ]
+}
