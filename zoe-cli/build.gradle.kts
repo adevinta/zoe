@@ -66,46 +66,22 @@ tasks.register("jpackage", JPackageTask::class.java) {
 }
 
 
-mapOf(
-    "zip" to Zip::class,
-    "tar" to Tar::class
-).forEach { (archiveType, archiveClass) ->
+mapOf("zip" to Zip::class, "tar" to Tar::class).forEach { (archiveType, archiveClass) ->
 
     mapOf(
         "WithRuntime" to tasks.named<Sync>("installWithRuntimeDist"),
         "WithoutRuntime" to tasks.named<Sync>("installDist")
     ).forEach { (alias, installTask) ->
         tasks.register("${archiveType}Dist${alias}", archiveClass) {
-            val outputDir = findProperty("${name}.outputDir") ?: "$buildDir/dist${alias}"
-            val suffix = findProperty("${name}.suffix") ?: alias
-
             from(installTask)
-
-            archiveFileName.set("zoe${suffix}-${project.version}.${archiveType}")
-            destinationDirectory.set(file(outputDir))
-
             into("zoe")
+
+            archiveFileName.set("zoe${findProperty("${name}.suffix") ?: alias}-${project.version}.${archiveType}")
+            destinationDirectory.set(file(findProperty("${name}.outputDir") ?: "$buildDir/dist${alias}"))
         }
 
     }
 }
-
-//runtime {
-//    jpackage {
-//        imageName = "zoe"
-//        installerName = "zoe"
-//        mainJar = tasks.jar.flatMap { it.archiveFileName }.get()
-//
-//        findProperty("jpackage.installerType")?.toString()?.run {
-//            installerType = this
-//        }
-//
-//        findProperty("jpackage.output")?.let { file(it.toString()) }?.run {
-//            imageOutputDir = this
-//            installerOutputDir = this
-//        }
-//    }
-//}
 
 jib {
 
