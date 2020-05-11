@@ -55,3 +55,14 @@ You are now ready to use zoe. Go to the [Getting started](../basics/overview.md)
 
 ## Brew (MacOS / Linux)
 
+1. To install zoe with [Homebrew](https://brew.sh/), execute the following command:
+
+    ```bash
+    brew install adevinta/homebrew-zoe/zoe
+    ```
+
+2. You can now initialize zoe configuration :
+
+    ```bash
+    zoe -v config init
+    ```
