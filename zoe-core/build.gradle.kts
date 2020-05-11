@@ -27,24 +27,24 @@ jib {
 }
 
 dependencies {
-    implementation("com.amazonaws:aws-lambda-java-core:1.1.0")
+    implementation("com.amazonaws:aws-lambda-java-core:1.2.1")
 
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("io.confluent:kafka-avro-serializer:5.2.2")
+    implementation("io.confluent:kafka-avro-serializer:5.5.0")
 
-    implementation("org.slf4j:slf4j-log4j12:1.7.26")
+    implementation("org.slf4j:slf4j-log4j12:1.7.30")
     implementation("log4j:log4j:1.2.17")
-    implementation("org.apache.kafka:kafka-clients:2.3.1")
-    implementation("org.apache.avro:avro-compiler:1.8.2")
-    implementation("com.google.guava:guava:28.0-jre")
+    implementation("org.apache.kafka:kafka-clients:5.3.1-ce")
+    implementation("org.apache.avro:avro-compiler:1.9.2")
+    implementation("com.google.guava:guava:29.0-jre")
 
     implementation(group = "io.burt", name = "jmespath-jackson", version = "0.2.0")
 
     testImplementation(group = "junit", name = "junit", version = "4.12")
 
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.8")
-    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.8")
+    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.10")
+    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.10")
 
     // spek requires kotlin-reflect, can be omitted if already in the classpath
     testRuntimeOnly("org.jetbrains.kotlin:kotlin-reflect")

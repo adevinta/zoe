@@ -52,3 +52,6 @@ You are now ready to use zoe. Go to the [Getting started](../basics/overview.md)
     ```
 
 You are now ready to use zoe. Go to the [Getting started](../basics/overview.md) section.
+
+## Brew (MacOS / Linux)
+

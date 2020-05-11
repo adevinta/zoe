@@ -163,27 +163,27 @@ dependencies {
     implementation(project(":zoe-service"))
     implementation(project(":zoe-core"))
 
-    implementation("com.amazonaws:aws-java-sdk-lambda:1.11.580")
-    implementation("com.amazonaws:aws-java-sdk-iam:1.11.580")
-    implementation("com.amazonaws:aws-java-sdk-cloudformation:1.11.580")
+    implementation("com.amazonaws:aws-java-sdk-lambda:1.11.779")
+    implementation("com.amazonaws:aws-java-sdk-iam:1.11.779")
+    implementation("com.amazonaws:aws-java-sdk-cloudformation:1.11.779")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.6")
 
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.7")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.7.0.202003090808-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:5.7.0.202003110725-r")
 
     implementation("org.koin:koin-core:2.0.1")
-    implementation("com.jakewharton.picnic:picnic:0.2.0")
+    implementation("com.jakewharton.picnic:picnic:0.3.1")
     implementation("com.github.ajalt:clikt:2.5.0")
     implementation("com.github.ajalt:mordant:1.2.1")
-    implementation("org.slf4j:slf4j-log4j12:1.7.26")
+    implementation("org.slf4j:slf4j-log4j12:1.7.30")
     implementation("log4j:log4j:1.2.17")
 
     testImplementation(group = "junit", name = "junit", version = "4.12")
 
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.8")
-    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.8")
+    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.10")
+    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.10")
 }

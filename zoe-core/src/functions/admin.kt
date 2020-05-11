@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
+import io.confluent.kafka.schemaregistry.avro.AvroSchema
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import org.apache.avro.Schema
 import org.apache.avro.compiler.idl.Idl
@@ -119,11 +120,15 @@ val deploySchema = zoeFunction<DeploySchemaConfig, DeploySchemaResponse>(name = 
     val registry = CachedSchemaRegistryClient(config.registry, 10)
     val strategy = config.strategy
     val schema = config.schema.parsed()
-    val subject = strategy.subjectName(schema)
+    val subject = strategy.subjectName(schema.rawSchema())
 
     when {
         config.dryRun ->
-            DryRunResponse(subject = subject, schema = schema.toString(false), registry = config.registry)
+            DryRunResponse(
+                subject = subject,
+                schema = schema.rawSchema().toString(false),
+                registry = config.registry
+            )
         else -> {
             val id = registry.register(subject, schema)
             ActualRunResponse(id = id, subject = subject)
@@ -363,11 +368,11 @@ fun SubjectNameStrategy.subjectName(schema: Schema): String = when (this) {
     }
 }
 
-fun SchemaContent.parsed(): Schema = when (this) {
-    is SchemaContent.AvscSchema -> Schema.Parser().parse(content)
+fun SchemaContent.parsed(): AvroSchema = when (this) {
+    is SchemaContent.AvscSchema -> AvroSchema(Schema.Parser().parse(content))
     is SchemaContent.AvdlSchema -> {
         val protocol = Idl(content.byteInputStream(Charsets.UTF_8)).CompilationUnit()
         val fqdn = "${protocol.namespace}.$name"
-        protocol.getType(fqdn) ?: throw IllegalArgumentException("schema '$name' not found in avdl")
+        AvroSchema(protocol.getType(fqdn) ?: throw IllegalArgumentException("schema '$name' not found in avdl"))
     }
 }

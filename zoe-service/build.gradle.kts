@@ -9,24 +9,24 @@
 dependencies {
     api(project(":zoe-core"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.6")
 
-    implementation("com.amazonaws:aws-java-sdk-s3:1.11.580")
-    implementation("com.amazonaws:aws-java-sdk-lambda:1.11.580")
-    implementation("com.schibsted.security:strongbox-sdk:0.2.13")
+    implementation("com.amazonaws:aws-java-sdk-s3:1.11.779")
+    implementation("com.amazonaws:aws-java-sdk-lambda:1.11.779")
+    implementation("com.schibsted.security:strongbox-sdk:0.2.21")
 
-    implementation("org.slf4j:slf4j-log4j12:1.7.26")
+    implementation("org.slf4j:slf4j-log4j12:1.7.30")
     implementation("log4j:log4j:1.2.17")
 
-    implementation("io.fabric8:kubernetes-client:4.7.1")
+    implementation("io.fabric8:kubernetes-client:4.10.1")
 
     testImplementation(group = "junit", name = "junit", version = "4.12")
-    testImplementation("org.testcontainers:testcontainers:1.13.0")
-    testImplementation("org.testcontainers:kafka:1.13.0")
+    testImplementation("org.testcontainers:testcontainers:1.14.1")
+    testImplementation("org.testcontainers:kafka:1.14.1")
 
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.8")
-    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.8")
+    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.10")
+    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.10")
 }
 
 tasks {

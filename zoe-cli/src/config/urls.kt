@@ -34,9 +34,9 @@ fun ConfigUrlProvider.createConfig(env: String): EnvConfig {
         find(env)?.let(::loadConfigFromUrl)?.requireObjectNode() ?: userError("config url not found for env '$env'")
 
     val completeConfig = commonConfig.apply {
-        setAll(envConfig)
-        setAll(overrideConfig)
-        setAll(envOverrideConfig)
+        setAll<JsonNode>(envConfig)
+        setAll<JsonNode>(overrideConfig)
+        setAll<JsonNode>(envOverrideConfig)
     }
 
     return completeConfig.parseJson()

@@ -16,16 +16,18 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.github.jengelman.gradle.plugins:shadow:4.0.4")
+        classpath("com.github.jengelman.gradle.plugins:shadow:5.2.0")
     }
 }
 
 plugins {
     java
     kotlin("jvm") version "1.3.71" apply false
-    id("com.github.johnrengelman.shadow") version "4.0.4" apply false
-    id("com.google.cloud.tools.jib") version "2.1.0" apply false
-    id("com.palantir.git-version") version "0.12.2"
+    id("com.github.johnrengelman.shadow") version "5.2.0" apply false
+    id("com.google.cloud.tools.jib") version "2.2.0" apply false
+    id("com.github.ben-manes.versions") version "0.28.0"
+    id("com.palantir.git-version") version "0.12.3"
+
 }
 
 val versionDetails: groovy.lang.Closure<com.palantir.gradle.gitversion.VersionDetails> by extra
