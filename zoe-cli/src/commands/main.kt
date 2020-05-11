@@ -58,30 +58,32 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
     ).default("default")
 
     private val runner: RunnerName?
-            by option("--runner", "-r", help = "Runner to use").choice(
-                RunnerName.Lambda.code to RunnerName.Lambda,
-                RunnerName.Local.code to RunnerName.Local,
-                RunnerName.Kubernetes.code to RunnerName.Kubernetes
-            )
+        by option("--runner", "-r", help = "Runner to use").choice(
+            RunnerName.Lambda.code to RunnerName.Lambda,
+            RunnerName.Local.code to RunnerName.Local,
+            RunnerName.Kubernetes.code to RunnerName.Kubernetes
+        )
 
     private val outputFormat: Format
-            by option("-o", "--output", help = "Output format")
-                .choice(
-                    "raw" to Format.Raw,
-                    "json" to Format.Json,
-                    "table" to Format.Table
-                )
-                .default(Format.Raw)
+        by option("-o", "--output", help = "Output format")
+            .choice(
+                "raw" to Format.Raw,
+                "json" to Format.Json,
+                "table" to Format.Table
+            )
+            .default(Format.Raw)
 
     private val colorize by option("-C", "--colorize", help = "Force terminal colors").flag(default = false)
 
     private val configDir
-            by option("--config-dir", help = "Directory where config files are", envvar = "ZOE_CONFIG_DIR")
-                .file()
-                .defaultLazy { File("$home/config") }
+        by option("--config-dir", help = "Directory where config files are", envvar = "ZOE_CONFIG_DIR")
+            .file()
+            .defaultLazy { File("$home/config") }
 
     private val verbosity: Int
-            by option("-v", help = "verbose mode (can be set multiple times)").counted()
+        by option("-v", help = "verbose mode (can be set multiple times)").counted()
+
+    private val silent by option("--silent", help = "hide non error logs").flag(default = false)
 
     private val term by lazy {
         TermConfig(
@@ -91,10 +93,10 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
     }
 
     override fun run() {
-        LogManager.getRootLogger().level = when (verbosity) {
-            0 -> Level.ERROR
-            1 -> Level.INFO
-            2 -> Level.DEBUG
+        LogManager.getRootLogger().level = when {
+            silent -> Level.ERROR
+            verbosity <= 1 -> Level.INFO
+            verbosity == 2 -> Level.DEBUG
             else -> Level.ALL
         }
 
