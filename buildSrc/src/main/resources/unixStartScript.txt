@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+# source: https://raw.githubusercontent.com/gradle/gradle/master/subprojects/plugins/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
+
 ##############################################################################
 ##
 ##  ${applicationName} start up script for UN*X
@@ -83,8 +85,7 @@ esac
 CLASSPATH=$classpath
 <% if ( mainClassName.startsWith('--module ') ) { %>MODULE_PATH=$modulePath<% } %>
 
-JAVA_HOME="\$APP_HOME/runtime"
-JAVACMD="\$JAVA_HOME/bin/java"
+JAVACMD=\$(find "\$APP_HOME/runtime" -name java | head -n 1)
 
 which "\$JAVACMD" >/dev/null 2>&1 || die "ERROR: Couldn't use the provided java runtime"
 

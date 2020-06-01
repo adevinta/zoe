@@ -10,6 +10,7 @@ package com.adevinta.oss.zoe.core.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.burt.jmespath.Expression
 import io.burt.jmespath.jackson.JacksonRuntime
@@ -41,3 +42,9 @@ fun JsonNode.match(filters: List<Expression<JsonNode>>) =
 
 fun uuid(): String = UUID.randomUUID().toString()
 fun now(): Long = System.currentTimeMillis()
+
+fun buildJson(build: ObjectNode.() -> Unit): ObjectNode {
+    val node = json.createObjectNode()
+    node.build()
+    return node
+}

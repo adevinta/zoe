@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 package com.adevinta.oss.gradle.plugins
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -75,6 +77,7 @@ open class DistributionWithRuntimePlugin : Plugin<Project> {
                         project.getTextResource("/unixStartScript.txt")
                     (it.windowsStartScriptGenerator as DefaultTemplateBasedStartScriptGenerator).template =
                         project.getTextResource("/windowsStartScript.txt")
+                    extension.startScriptCustomizer.orNull?.invoke(it)
                 }
             }
         }

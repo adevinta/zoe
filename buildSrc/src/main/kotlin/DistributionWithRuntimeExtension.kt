@@ -2,11 +2,13 @@ package com.adevinta.oss.gradle.plugins
 
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.application.CreateStartScripts
 import javax.inject.Inject
 
 open class DistributionWithRuntimeExtension @Inject constructor(objects: ObjectFactory) {
-    internal val runtimeConfig: Property<RuntimeConfig> = objects.property(RuntimeConfig::class.java)
-    internal val baseDistribution: Property<String> = objects.property(String::class.java).convention("main")
+    internal val runtimeConfig: Property<RuntimeConfig> = objects.property()
+    internal val baseDistribution: Property<String> = objects.property<String>().convention("main")
+    internal val startScriptCustomizer: Property<(CreateStartScripts) -> Unit> = objects.property()
 
     fun runtime(configure: RuntimeConfig.() -> Unit) {
         val config = RuntimeConfig()
@@ -19,6 +21,8 @@ open class DistributionWithRuntimeExtension @Inject constructor(objects: ObjectF
         config.configure()
         baseDistribution.set(config.base)
     }
+
+    fun startScript(configure: (CreateStartScripts) -> Unit) = startScriptCustomizer.set(configure)
 }
 
 class RuntimeConfig(
@@ -30,3 +34,5 @@ class RuntimeConfig(
 class DistributionConfig(
     var base: String = "main"
 )
+
+private inline fun <reified T> ObjectFactory.property(): Property<T> = property(T::class.java)
