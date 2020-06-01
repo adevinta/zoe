@@ -24,7 +24,7 @@ Go to the [install section](install/overview.md) for instructions on how to inst
 Read 10 records from the `input` topic from the `local` kafka cluster (aliases for topics and clusters are set in the configuration) :
 
 ```bash tab="command"
-zoe --cluster local topics read -n 10 
+zoe --cluster local topics consume -n 10 
 ```
 
 ```json tab="output"
@@ -40,7 +40,7 @@ Read the 10 records starting from the last 6 hours and format the output data as
 ```bash tab="command"
 zoe --cluster local \
     --output table
-    topics read \
+    topics consume \
     -n 10 \
     --from 'PT6h'
 ```
@@ -71,7 +71,7 @@ Filter only records that belong to `Kasimir` :
 ```bash tab="command"
 zoe --cluster local \
     --output table \
-    topics read \
+    topics consume \
     -n 10 \
     --from 'PT6h' \
     --filter "user.name.first == 'Kasimir'"
@@ -101,7 +101,7 @@ Do the same search as before but against my production kafka cluster and by offl
 zoe --cluster my-production-kafka \
     --output table \
     --runner kubernetes \
-    topics read \
+    topics consume \
     -n 10 \
     --from 'PT6h' \
     --filter "user.name.first == 'Kasimir'" \

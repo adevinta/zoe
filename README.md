@@ -30,19 +30,19 @@ Go to the [install](docs/install/overview.md) page for instructions on how to in
 Read the last 10 records from the `input` topic from the `local` kafka cluster (aliases for topics and clusters are set in the configuration) :
 
 ```
-zoe --cluster local topics read -n 10 
+zoe --cluster local topics consume -n 10 
 ```
 
 Read the last 10 records from the last 6 hours :
 
 ```
-zoe --cluster local topics read -n 10 --from 'PT6h'
+zoe --cluster local topics consume -n 10 --from 'PT6h'
 ```
 
-Filter records that belongs to `Kasimir` :
+Filter records belonging to `Kasimir` :
 
 ```
-zoe --cluster local topics read -n 10 \
+zoe --cluster local topics consume -n 10 \
     --from 'PT6h' \
     --filter "user.name.first == 'Kasimir'
 ```
@@ -50,7 +50,7 @@ zoe --cluster local topics read -n 10 \
 Spin up 10 consumers in parallel :
 
 ```
-zoe --cluster local topics read -n 10 \
+zoe --cluster local topics consume -n 10 \
     --from 'PT6h' \
     --filter "user.name.first == 'Kasimir' \
     --jobs 10
@@ -60,7 +60,7 @@ Offload consumption to kubernetes pods (the target kubernetes cluster is configu
 
 ```
 zoe -x kubernetes \
-    --cluster local topics read -n 10 \
+    --cluster local topics consume -n 10 \
     --from 'PT6h' \
     --filter "user.name.first == 'Kasimir' \
     --jobs 10

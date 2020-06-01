@@ -44,8 +44,8 @@ open class DownloadJreTask : DefaultTask() {
             }
 
             Files.createTempDirectory(null).toFile().useThenDelete { tempUnarchive ->
-                project.copy { it.from(archive).into(tempUnarchive) }
-                project.copy { it.from(findJavaHome(tempUnarchive)).into(jre) }
+                project.copy { it.from(archive).into(jre) }
+//                project.copy { it.from(findJavaHome(tempUnarchive)).into(jre) }
             }
         }
     }
