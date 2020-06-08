@@ -1,0 +1,32 @@
+{
+  "resources":[
+    {"pattern":"\\QMETA-INF/services/io.fabric8.kubernetes.api.KubernetesResourceMappingProvider\\E"}, 
+    {"pattern":"\\QMETA-INF/services/javax.ws.rs.ext.RuntimeDelegate\\E"}, 
+    {"pattern":"\\QMETA-INF/services/kotlin.reflect.jvm.internal.impl.builtins.BuiltInsLoader\\E"}, 
+    {"pattern":"\\QMETA-INF/services/kotlin.reflect.jvm.internal.impl.resolve.ExternalOverridabilityCondition\\E"}, 
+    {"pattern":"\\QMETA-INF/services/org.eclipse.jgit.transport.SshSessionFactory\\E"}, 
+    {"pattern":"\\Qcom/amazonaws/internal/config/awssdk_config_default.json\\E"}, 
+    {"pattern":"\\Qcom/amazonaws/partitions/endpoints.json\\E"}, 
+    {"pattern":"\\Qcom/amazonaws/sdk/versionInfo.properties\\E"}, 
+    {"pattern":"\\Qkafka/kafka-version.properties\\E"}, 
+    {"pattern":"\\Qkotlin/annotation/annotation.kotlin_builtins\\E"}, 
+    {"pattern":"\\Qkotlin/collections/collections.kotlin_builtins\\E"}, 
+    {"pattern":"\\Qkotlin/coroutines/coroutines.kotlin_builtins\\E"}, 
+    {"pattern":"\\Qkotlin/internal/internal.kotlin_builtins\\E"}, 
+    {"pattern":"\\Qkotlin/kotlin.kotlin_builtins\\E"}, 
+    {"pattern":"\\Qkotlin/ranges/ranges.kotlin_builtins\\E"}, 
+    {"pattern":"\\Qkotlin/reflect/reflect.kotlin_builtins\\E"}, 
+    {"pattern":"\\Qlog4j.properties\\E"}, 
+    {"pattern":"\\Qmozilla/public-suffix-list.txt\\E"}, 
+    {"pattern":"\\Qorg/apache/http/client/version.properties\\E"}, 
+    {"pattern":"\\Qorg/joda/time/tz/data/Europe/Paris\\E"}, 
+    {"pattern":"\\Qorg/joda/time/tz/data/ZoneInfoMap\\E"}, 
+    {"pattern":"\\Qorg/slf4j/impl/StaticLoggerBinder.class\\E"}, 
+    {"pattern":"\\Qpod.template.json\\E"}, 
+    {"pattern":"\\Qversion.json\\E"}
+  ],
+  "bundles":[
+    {"name":"org.eclipse.jgit.internal.JGitText"}, 
+    {"name":"org.glassfish.jersey.internal.localization"}
+  ]
+}

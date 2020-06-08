@@ -36,10 +36,11 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
     val query = config.query?.let(jmespath::compile)
     val jsonifier = Jsonifiers.get(config.jsonifier)
 
-    val props = HashMap(config.props).apply {
+    val props = HashMap<String, Any>(config.props).apply {
         putIfAbsent(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1000")
         putIfAbsent(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
         putIfAbsent(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
+        putIfAbsent(ConsumerConfig.METRIC_REPORTER_CLASSES_CONFIG, emptyList<Any>())
     }
 
     val consumer = consumer(config = props)

@@ -10,7 +10,7 @@
 @file:MavenRepository("confluent", "https://packages.confluent.io/maven/")
 @file:DependsOn("com.kjetland:mbknor-jackson-jsonschema_2.12:1.0.36")
 @file:DependsOn("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7")
-@file:DependsOn("com.adevinta.oss:zoe-core:1.1")
+@file:DependsOn("com.adevinta.oss:zoe-core:0.18.0")
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode

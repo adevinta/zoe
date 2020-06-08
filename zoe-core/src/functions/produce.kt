@@ -8,18 +8,19 @@
 
 package com.adevinta.oss.zoe.core.functions
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.databind.JsonNode
-import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import com.adevinta.oss.zoe.core.utils.jmespath
 import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.producer
 import com.adevinta.oss.zoe.core.utils.uuid
 import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.databind.JsonNode
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.DecoderFactory
+import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
 
@@ -46,7 +47,9 @@ val produce = zoeFunction<ProduceConfig, ProduceResponse>(name = "produce") { co
     when {
         config.dryRun -> ProduceResponse(produced = listOf(), skipped = records.map { it.formatResponse() })
         else -> {
-            val produced = producer(config.props).use { producer ->
+            val produced = producer(HashMap<String, Any>(config.props).apply {
+                putIfAbsent(CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG, emptyList<Any>())
+            }).use { producer ->
                 records.map(producer::send).map { it.get().formatResponse() }
             }
             ProduceResponse(produced = produced, skipped = emptyList())

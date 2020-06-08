@@ -43,10 +43,7 @@ open class DownloadJreTask : DefaultTask() {
                 else -> throw IllegalArgumentException("unknown archive type: $jreUrl")
             }
 
-            Files.createTempDirectory(null).toFile().useThenDelete { tempUnarchive ->
-                project.copy { it.from(archive).into(jre) }
-//                project.copy { it.from(findJavaHome(tempUnarchive)).into(jre) }
-            }
+            project.copy { it.from(archive).into(jre) }
         }
     }
 }

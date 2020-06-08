@@ -13,6 +13,7 @@ import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.core.utils.toJsonString
 import com.adevinta.oss.zoe.service.utils.lambdaClient
 import com.amazonaws.auth.AWSCredentialsProvider
+import com.amazonaws.metrics.AwsSdkMetrics
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.InvokeRequest
 import kotlinx.coroutines.future.await
@@ -43,6 +44,7 @@ class LambdaZoeRunner(
 
     override suspend fun launch(function: String, payload: String): String = CompletableFuture.supplyAsync(
         Supplier {
+            AwsSdkMetrics.disableMetrics()
             val response = client.invoke(
                 InvokeRequest().apply {
                     functionName =
