@@ -18,7 +18,7 @@
 <div class="superfences-tabs">
 <input name="__tabs_1" type="radio" id="__tab_1_0" checked="checked" />
 <label for="__tab_1_0">command</label>
-<div class="superfences-content"><div class="codehilite"><pre><span></span>zoe --cluster <span class="nb">local</span> topics <span class="nb">read</span> -n <span class="m">10</span> 
+<div class="superfences-content"><div class="codehilite"><pre><span></span>zoe --cluster <span class="nb">local</span> topics consume -n <span class="m">10</span> 
 </pre></div></div>
 <input name="__tabs_1" type="radio" id="__tab_1_1" />
 <label for="__tab_1_1">output</label>
@@ -35,7 +35,7 @@
 <label for="__tab_2_0">command</label>
 <div class="superfences-content"><div class="codehilite"><pre><span></span>zoe --cluster <span class="nb">local</span> <span class="se">\</span>
     --output table
-    topics <span class="nb">read</span> <span class="se">\</span>
+    topics consume <span class="se">\</span>
     -n <span class="m">10</span> <span class="se">\</span>
     --from <span class="s1">&#39;PT6h&#39;</span>
 </pre></div></div>
@@ -67,7 +67,7 @@
 <label for="__tab_3_0">command</label>
 <div class="superfences-content"><div class="codehilite"><pre><span></span>zoe --cluster <span class="nb">local</span> <span class="se">\</span>
     --output table <span class="se">\</span>
-    topics <span class="nb">read</span> <span class="se">\</span>
+    topics consume <span class="se">\</span>
     -n <span class="m">10</span> <span class="se">\</span>
     --from <span class="s1">&#39;PT6h&#39;</span> <span class="se">\</span>
     --filter <span class="s2">&quot;user.name.first == &#39;Kasimir&#39;&quot;</span>
@@ -98,7 +98,7 @@
 <div class="superfences-content"><div class="codehilite"><pre><span></span>zoe --cluster my-production-kafka <span class="se">\</span>
     --output table <span class="se">\</span>
     --runner kubernetes <span class="se">\</span>
-    topics <span class="nb">read</span> <span class="se">\</span>
+    topics consume <span class="se">\</span>
     -n <span class="m">10</span> <span class="se">\</span>
     --from <span class="s1">&#39;PT6h&#39;</span> <span class="se">\</span>
     --filter <span class="s2">&quot;user.name.first == &#39;Kasimir&#39;&quot;</span> <span class="se">\</span>
