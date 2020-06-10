@@ -11,8 +11,10 @@ package com.adevinta.oss.zoe.cli.commands
 import com.adevinta.oss.zoe.cli.config.*
 import com.adevinta.oss.zoe.cli.utils.globalTermColors
 import com.adevinta.oss.zoe.cli.utils.yaml
+import com.adevinta.oss.zoe.core.utils.buildJson
 import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.logger
+import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.utils.userError
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
@@ -155,12 +157,61 @@ class ConfigInit : CliktCommand(
     }
 }
 
+class ConfigClusters : CliktCommand(name = "clusters") {
+    override fun run() {}
+}
+
+class ClustersList : CliktCommand(name = "list", help = "List configured clusters"), KoinComponent {
+    private val ctx by inject<CliContext>()
+    private val env by inject<EnvConfig>()
+
+    override fun run() {
+        val response = env.clusters.map { (name, config) ->
+            mapOf(
+                "cluster" to name,
+                "brokers" to config.props["bootstrap.servers"],
+                "registry" to config.registry,
+                "topics" to config.topics.map { (alias, topic) ->
+                    buildJson {
+                        put("alias", alias)
+                        put("name", topic.name)
+                    }
+                },
+                "groups" to config.groups
+            )
+        }
+
+        ctx.term.output.format(response.toJsonNode()) { echo(it) }
+    }
+}
+
+class ConfigEnvironments : CliktCommand(name = "environments"), KoinComponent {
+    override fun run() {}
+}
+
+class EnvironmentsList : CliktCommand(name = "list"), KoinComponent {
+    private val ctx by inject<CliContext>()
+
+    override fun run() {
+        val envs = ctx.configDir
+            .takeIf { it.exists() && it.isDirectory }
+            ?.listFiles()
+            ?.map { it.nameWithoutExtension }
+            ?.filter { it != "common" }
+            ?: emptyList()
+
+        ctx.term.output.format(envs.toJsonNode()) { echo(it) }
+    }
+
+}
+
+
 sealed class LoadFrom(name: String) : OptionGroup(name) {
     class Local : LoadFrom("Options to load from local") {
         val path: File
-                by option("--path")
-                    .file(mustExist = true, canBeDir = true, mustBeReadable = true)
-                    .required()
+            by option("--path")
+                .file(mustExist = true, canBeDir = true, mustBeReadable = true)
+                .required()
     }
 
     class Git : LoadFrom("Options to load from git") {
@@ -197,5 +248,7 @@ fun LoadFrom.getSourceDir(): File = when (this) {
 @FlowPreview
 @ExperimentalCoroutinesApi
 fun configCommands() = ConfigCommand().subcommands(
-    ConfigInit()
+    ConfigInit(),
+    ConfigClusters().subcommands(ClustersList()),
+    ConfigEnvironments().subcommands(EnvironmentsList())
 )
