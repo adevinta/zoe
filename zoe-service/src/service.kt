@@ -237,6 +237,28 @@ class ZoeService(
     }
 
     /**
+     * Create topic using its alias or real name
+     */
+    suspend fun createTopic(
+        cluster: String,
+        topic: TopicAliasOrRealName,
+        partitions: Int,
+        replicationFactor: Int
+    ): CreateTopicResponse {
+        val clusterConfig = getCluster(cluster)
+        val topicName = clusterConfig.getTopicConfig(topic, subjectOverride = null).name
+        return runner.createTopic(
+            CreateTopicRequest(
+                name = topicName,
+                partitions = partitions,
+                replicationFactor = replicationFactor,
+                props = clusterConfig.getCompletedProps()
+            )
+        )
+    }
+
+
+    /**
      * Describe a topic
      */
     suspend fun describeTopic(cluster: String, topic: TopicAliasOrRealName): TopicDescription? {

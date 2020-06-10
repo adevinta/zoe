@@ -76,6 +76,7 @@ object FunctionsRegistry {
     init {
         add(version)
         add(listTopics)
+        add(createTopic)
         add(listSchemas)
         add(queryOffsets)
         add(listGroups)

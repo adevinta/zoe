@@ -18,6 +18,11 @@ suspend fun ZoeRunner.topics(config: AdminConfig): ListTopicsResponse {
     return launch(listTopics.name(), config.toJsonString()).parseJson()
 }
 
+suspend fun ZoeRunner.createTopic(config: CreateTopicRequest): CreateTopicResponse {
+    logger.info("creating topic: ${config.name}")
+    return launch(createTopic.name(), config.toJsonString()).parseJson()
+}
+
 suspend fun ZoeRunner.poll(config: PollConfig): PollResponse {
     logger.info("polling topic '${config.topic}' (subscription : ${config.subscription})")
     return launch(poll.name(), config.toJsonString()).parseJson()

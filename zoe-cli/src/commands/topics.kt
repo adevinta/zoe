@@ -84,6 +84,26 @@ class TopicsDescribe : CliktCommand(name = "describe", help = "describe a topic"
 
 @FlowPreview
 @ExperimentalCoroutinesApi
+class TopicsCreate : CliktCommand(name = "create", help = "Create a topic"), KoinComponent {
+
+    private val topic
+        by argument("topic", help = "Topic name (real or alias)").convert { TopicAliasOrRealName(it) }
+
+    private val partitions by option("-p", "--partitions", help = "Number of partitions").int().default(1)
+    private val replicationFactor
+        by option("-r", "--replication-factor", help = "Replication factor").int().default(1)
+
+    private val ctx by inject<CliContext>()
+    private val service by inject<ZoeService>()
+
+    override fun run() = runBlocking {
+        val response = service.createTopic(ctx.cluster, topic, partitions, replicationFactor)
+        ctx.term.output.format(response.toJsonNode()) { echo(it) }
+    }
+}
+
+@FlowPreview
+@ExperimentalCoroutinesApi
 class TopicsConsume : CliktCommand(
     name = "consume",
     help = "Consumes messages from a topic",
@@ -107,48 +127,48 @@ class TopicsConsume : CliktCommand(
     }
 ), KoinComponent {
     private val from: Duration
-            by option(help = "Amount of time to go back in the past")
-                .convert { Duration.parse(it) }
-                .default(Duration.ofHours(1))
+        by option(help = "Amount of time to go back in the past")
+            .convert { Duration.parse(it) }
+            .default(Duration.ofHours(1))
 
     private val filters: List<String> by option("-f", "--filter", help = "Jmespath expression filters").multiple()
     private val formatter by option("--formatter").default("raw")
     private val query: String? by option("--query", help = "Jmespath query to execute on each record")
 
     private val maxRecords: Int?
-            by option("-n", "--max-records", help = "Max number of records to output").int()
+        by option("-n", "--max-records", help = "Max number of records to output").int()
 
     private val recordsPerBatch: Int?
-            by option("--records-per-batch", help = "Max records per lambda call")
-                .int()
+        by option("--records-per-batch", help = "Max records per lambda call")
+            .int()
 
     private val timeoutPerBatch: Long
-            by option("--timeout-per-batch", help = "Timeout per lambda call")
-                .long()
-                .default(15000L)
+        by option("--timeout-per-batch", help = "Timeout per lambda call")
+            .long()
+            .default(15000L)
 
     private val parallelism: Int
-            by option("-j", "--jobs", help = "Number of readers to spin up in parallel")
-                .int()
-                .default(1)
+        by option("-j", "--jobs", help = "Number of readers to spin up in parallel")
+            .int()
+            .default(1)
 
     private val continuously: Boolean
-            by option("--continuously", help = "Contiously read the topic")
-                .flag(default = false)
-                .validate {
-                    if (it && ctx.term.output != Format.Raw)
-                        fail("cannot use '--continuously' with output : ${ctx.term.output}")
-                }
+        by option("--continuously", help = "Contiously read the topic")
+            .flag(default = false)
+            .validate {
+                if (it && ctx.term.output != Format.Raw)
+                    fail("cannot use '--continuously' with output : ${ctx.term.output}")
+            }
 
     private val verbose: Boolean
-            by option(
-                "-v",
-                "--verbose",
-                help = "Use this flag to have the offsets, timestamp and other informations along with the message"
-            ).flag(default = false)
+        by option(
+            "-v",
+            "--verbose",
+            help = "Use this flag to have the offsets, timestamp and other informations along with the message"
+        ).flag(default = false)
 
     private val topic: TopicAliasOrRealName
-            by argument("topic", help = "Target topic to read (alias or real)").convert { TopicAliasOrRealName(it) }
+        by argument("topic", help = "Target topic to read (alias or real)").convert { TopicAliasOrRealName(it) }
 
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()
@@ -186,9 +206,9 @@ class TopicsConsume : CliktCommand(
         it.progress.run {
             val message =
                 "progress on partition ${String.format("%02d", it.partition)}\t" +
-                        "timestamp -> ${currentTimestamp?.let { ts -> dateFmt.format(Date(ts)) }}\t" +
-                        "consumed -> $numberOfRecords / ${it.until?.let { until -> until - it.from } ?: "Inf"} " +
-                        "(${it.percent()}%)"
+                    "timestamp -> ${currentTimestamp?.let { ts -> dateFmt.format(Date(ts)) }}\t" +
+                    "consumed -> $numberOfRecords / ${it.until?.let { until -> until - it.from } ?: "Inf"} " +
+                    "(${it.percent()}%)"
 
             logger.info(ctx.term.colors.yellow(message))
         }
@@ -236,9 +256,9 @@ class TopicsProduce : CliktCommand(
 
     private val dryRun by option("--dry-run", help = "Do not actually produce records").flag(default = false)
     private val topic
-            by option("-t", "--topic", help = "Topic to write to")
-                .convert { TopicAliasOrRealName(it) }
-                .required()
+        by option("-t", "--topic", help = "Topic to write to")
+            .convert { TopicAliasOrRealName(it) }
+            .required()
     private val subject by option("--subject", help = "Avro subject name to use")
     private val keyPath by option("-k", "--key-path", help = "Jmespath expression to extract the key")
     private val valuePath by option("-v", "--value-path", help = "Jmespath expression to extract the value")
@@ -247,8 +267,8 @@ class TopicsProduce : CliktCommand(
     private val timeoutMs by option("--timeout", help = "Timeout in millis").long().default(Long.MAX_VALUE)
     private val fromStdin by option("--from-stdin", help = "Consume data from stdin").flag(default = false)
     private val fromFile
-            by option("--from-file", help = "Consume data from a json file")
-                .file(mustExist = true, canBeFile = true, mustBeReadable = true)
+        by option("--from-file", help = "Consume data from a json file")
+            .file(mustExist = true, canBeFile = true, mustBeReadable = true)
 
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()
@@ -297,6 +317,7 @@ class TopicsProduce : CliktCommand(
 fun topicsCommand() = TopicsCommand().subcommands(
     TopicsConsume(),
     TopicsList(),
+    TopicsCreate(),
     TopicsDescribe(),
     TopicsProduce()
 )

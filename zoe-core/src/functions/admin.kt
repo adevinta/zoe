@@ -22,6 +22,7 @@ import io.confluent.kafka.schemaregistry.avro.AvroSchema
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import org.apache.avro.Schema
 import org.apache.avro.compiler.idl.Idl
+import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.common.TopicPartition as KafkaTopicPartition
 
 /**
@@ -41,6 +42,21 @@ val listTopics = zoeFunction<AdminConfig, ListTopicsResponse>(name = "topics") {
             .let { ListTopicsResponse(it) }
     }
 }
+
+/**
+ * Create a kafka topic
+ */
+val createTopic = zoeFunction<CreateTopicRequest, CreateTopicResponse>(name = "topics") { config ->
+    admin(config.props).use { cli ->
+        cli
+            .createTopics(listOf(NewTopic(config.name, config.partitions, config.replicationFactor.toShort())))
+            .all()
+            .get()
+
+        CreateTopicResponse(done = true)
+    }
+}
+
 
 /**
  * Get offsets from a specific timestamp
@@ -376,3 +392,12 @@ fun SchemaContent.parsed(): AvroSchema = when (this) {
         AvroSchema(protocol.getType(fqdn) ?: throw IllegalArgumentException("schema '$name' not found in avdl"))
     }
 }
+
+data class CreateTopicRequest(
+    val name: String,
+    val partitions: Int,
+    val replicationFactor: Int,
+    val props: Map<String, String>
+)
+
+data class CreateTopicResponse(val done: Boolean)
