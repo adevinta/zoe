@@ -189,6 +189,7 @@ fun mainModule(context: CliContext) = module {
             RunnerName.Lambda -> with(runnersSectionWithSecrets.config.lambda) {
                 LambdaZoeRunner(
                     name = RunnerName.Lambda.code,
+                    version = ctx.version,
                     executor = ioPool,
                     awsCredentials = credentials.resolve(),
                     awsRegion = awsRegion

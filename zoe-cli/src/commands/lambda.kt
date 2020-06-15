@@ -18,17 +18,23 @@ import com.adevinta.oss.zoe.core.Handler
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.runners.LambdaZoeRunner
+import com.adevinta.oss.zoe.service.utils.Timeout
 import com.adevinta.oss.zoe.service.utils.lambdaClient
 import com.adevinta.oss.zoe.service.utils.userError
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.cloudformation.AmazonCloudFormation
 import com.amazonaws.services.cloudformation.model.*
 import com.amazonaws.services.identitymanagement.model.GetRoleRequest
 import com.amazonaws.services.lambda.AWSLambda
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder
 import com.amazonaws.services.lambda.model.*
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
-import com.github.ajalt.clikt.parameters.options.*
-import com.github.ajalt.clikt.parameters.types.file
+import com.github.ajalt.clikt.parameters.options.convert
+import com.github.ajalt.clikt.parameters.options.defaultLazy
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.option
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import org.koin.core.KoinComponent
@@ -61,10 +67,10 @@ class DescribeLambda : CliktCommand(name = "describe", help = "Describe the curr
                 awsRegion
             )
         }
-        val name = LambdaZoeRunner.LambdaFunctionName
+        val name = LambdaZoeRunner.LambdaFunctionNamePrefix
         val response =
             lambda
-                .getFunctionIfExists(name)
+                .getFunctionOrNull(name)
                 ?.toJsonNode()
                 ?: userError("lambda function not found : $name")
 
@@ -80,12 +86,12 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
     private val environment by inject<EnvConfig>()
 
     private val jarUrl: URL
-            by option("--jar-url", help = "Url to the zoe jar file", hidden = true, envvar = "ZOE_JAR_URL")
-                .convert { URL(it) }
-                .defaultLazy {
-                    val baseUrl = "https://github.com/adevinta/zoe/releases/download"
-                    URL("$baseUrl/v${ctx.version}/zoe-core-${ctx.version}.jar")
-                }
+        by option("--jar-url", help = "Url to the zoe jar file", hidden = true, envvar = "ZOE_JAR_URL")
+            .convert { URL(it) }
+            .defaultLazy {
+                val baseUrl = "https://github.com/adevinta/zoe/releases/download"
+                URL("$baseUrl/v${ctx.version}/zoe-core-${ctx.version}.jar")
+            }
 
     private val dryRun: Boolean by option("--dry-run", help = "Dry run mode").flag(default = false)
 
@@ -93,15 +99,15 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
         with(environment.runners.config.lambda) {
             object {
                 val iam = iamClient(credentials.resolve(), awsRegion)
-                val lambda =
-                    lambdaClient(credentials.resolve(), awsRegion)
-                val cf =
-                    cfClient(credentials.resolve(), awsRegion)
+                val lambda = lambdaClient(credentials.resolve(), awsRegion)
+                val cf = cfClient(credentials.resolve(), awsRegion)
             }
         }
     }
 
     override fun run() {
+        val lambdaFunctionName = LambdaZoeRunner.functionName(ctx.version)
+
         val template =
             loadFileFromResources("lambda.infra.cf.json")
                 ?: userError("Zoe infra cloud formation template not found !")
@@ -135,7 +141,7 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
         }
 
         val lambda = aws.lambda.createOrUpdateLambda(
-            name = LambdaZoeRunner.LambdaFunctionName,
+            name = lambdaFunctionName,
             concurrency = deployConfig.concurrency,
             entrypoint = Handler::class.java.name,
             tags = ZoeTags,
@@ -164,30 +170,66 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
 class DestroyLambda : CliktCommand(name = "destroy", help = "destroy lambda infrastructure"), KoinComponent {
 
     private val environment by inject<EnvConfig>()
+    private val ctx by inject<CliContext>()
+
+    private val all: Boolean
+        by option(
+            "-a",
+            "--all",
+            help = "Delete all existing versions of the zoe lambda function (default is only current)"
+        ).flag(default = false)
+
+    private val deleteStack: Boolean
+        by option(
+            "--purge-stack",
+            help = "Delete the cloud formation stack supporting zoe (by default only the lambda functions are removed)"
+        ).flag(default = false)
+
+    private val dryRun: Boolean
+        by option("--dry-run", help = "Safe run without actually modifying the resources")
+            .flag(default = false)
 
     private val aws by lazy {
         with(environment.runners.config.lambda) {
             object {
-                val lambda =
-                    lambdaClient(credentials.resolve(), awsRegion)
-                val cloudformation =
-                    cfClient(credentials.resolve(), awsRegion)
+                val lambda = lambdaClient(credentials.resolve(), awsRegion)
+                val cloudformation = cfClient(credentials.resolve(), awsRegion)
             }
         }
     }
 
     override fun run() {
-        aws.lambda.getFunctionIfExists(LambdaZoeRunner.LambdaFunctionName)?.run {
-            val name = configuration.functionName
-            logger.info("deleting function : $name")
-            aws.lambda.deleteFunction(DeleteFunctionRequest().withFunctionName(name))
+        val functionsToDelete =
+            if (all) {
+                aws.lambda
+                    .listAllFunctions()
+                    .filter { it.functionName.startsWith(LambdaZoeRunner.LambdaFunctionNamePrefix) }
+                    .map { it.functionName }
+                    .toList()
+            } else {
+                listOfNotNull(
+                    aws.lambda.getFunctionOrNull(LambdaZoeRunner.functionName(ctx.version))
+                        ?.configuration
+                        ?.functionName
+                )
+            }
+
+        for (functionName in functionsToDelete) {
+            logger.info("deleting function : $functionName (dry run: $dryRun)")
+            if (!dryRun) {
+                aws.lambda.deleteFunction(DeleteFunctionRequest().withFunctionName(functionName))
+            }
         }
 
-        aws.cloudformation.describeStack(LambdaInfraStackName)?.run {
-            val name = stackName
-            logger.info("deleting stack : $name")
-            aws.cloudformation.deleteStack(DeleteStackRequest().withStackName(name))
-            aws.cloudformation.waitForStackDeletion(name)
+        if (deleteStack) {
+            aws.cloudformation.describeStack(LambdaInfraStackName)?.run {
+                val name = stackName
+                logger.info("deleting stack : $name (dry run: $dryRun)")
+                if (!dryRun) {
+                    aws.cloudformation.deleteStack(DeleteStackRequest().withStackName(name))
+                    aws.cloudformation.waitForStackDeletion(name)
+                }
+            }
         }
     }
 }
@@ -209,8 +251,7 @@ sealed class LambdaUpdateResult {
     data class ActualRun(val current: LambdaDescription)
 }
 
-fun buildLambdaZipPackage(jar: File): ByteArray =
-    zipEntries(mapOf("lib/${jar.name}" to jar.toPath()))
+fun buildLambdaZipPackage(jar: File): ByteArray = zipEntries(mapOf("lib/${jar.name}" to jar.toPath()))
 
 internal fun AWSLambda.createOrUpdateLambda(
     name: String,
@@ -226,7 +267,7 @@ internal fun AWSLambda.createOrUpdateLambda(
     concurrency: Int?,
     dryRun: Boolean
 ) {
-    val current = getFunctionIfExists(name)
+    val current = getFunctionOrNull(name)
 
     if (current != null) {
         logger.info("function already exists : $current")
@@ -272,7 +313,7 @@ internal fun AWSLambda.createOrUpdateLambda(
             )
         }
 
-        LambdaUpdateResult.ActualRun(getFunctionIfExists(name)!!)
+        LambdaUpdateResult.ActualRun(getFunctionOrNull(name)!!)
     } else {
         LambdaUpdateResult.DryRun(current, request, actualConcurrency)
     }
@@ -307,7 +348,7 @@ internal fun AmazonCloudFormation.createOrUpdateStack(
                 .withParameters(
                     Parameter()
                         .withParameterKey("ZoeFunctionName")
-                        .withParameterValue(LambdaZoeRunner.LambdaFunctionName)
+                        .withParameterValue(LambdaZoeRunner.LambdaFunctionNamePrefix)
                 )
         )
 
@@ -346,7 +387,7 @@ internal fun AmazonCloudFormation.createOrUpdateStack(
 
 internal fun Stack.getOutput(key: String): String? = outputs.find { it.outputKey == key }?.outputValue
 
-internal fun AWSLambda.getFunctionIfExists(name: String): LambdaDescription? =
+internal fun AWSLambda.getFunctionOrNull(name: String): LambdaDescription? =
     try {
         val result = getFunction(GetFunctionRequest().withFunctionName(name))
         LambdaDescription(
@@ -365,6 +406,15 @@ internal fun AmazonCloudFormation.describeStack(name: String) =
     } catch (err: AmazonCloudFormationException) {
         if (err.errorMessage.contains("does not exist")) null else throw err
     }
+
+internal fun AWSLambda.listAllFunctions() = sequence {
+    var nextMarker: String? = null
+    do {
+        val response = listFunctions(ListFunctionsRequest().withMaxItems(10).withMarker(nextMarker))
+        yieldAll(response.functions)
+        nextMarker = response.nextMarker
+    } while (nextMarker != null)
+}
 
 val StackTerminalStates = setOf(
     StackStatus.CREATE_COMPLETE,
@@ -440,7 +490,7 @@ internal fun AmazonCloudFormation.waitForChangeset(
             .takeIf {
                 val status = ChangeSetStatus.fromValue(it.status)
                 status == ChangeSetStatus.CREATE_COMPLETE ||
-                        (status == ChangeSetStatus.FAILED && "didn't contain changes" in it.statusReason)
+                    (status == ChangeSetStatus.FAILED && "didn't contain changes" in it.statusReason)
             }
     }
 )

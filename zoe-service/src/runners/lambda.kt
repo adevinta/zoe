@@ -22,21 +22,25 @@ import java.util.function.Supplier
 
 class LambdaZoeRunner(
     override val name: String,
+    private val version: String,
     private val executor: ExecutorService,
     private val client: AWSLambda
 ) : ZoeRunner {
 
     companion object {
-        const val LambdaFunctionName = "zoe-final-launch"
+        const val LambdaFunctionNamePrefix = "zoe-final-launch"
+        fun functionName(version: String): String = "${LambdaFunctionNamePrefix}-${version}"
     }
 
     constructor(
         name: String,
+        version: String,
         executor: ExecutorService,
         awsCredentials: AWSCredentialsProvider,
         awsRegion: String?
     ) : this(
         name = name,
+        version = version,
         executor = executor,
         client = lambdaClient(awsCredentials, awsRegion)
     )
@@ -45,8 +49,7 @@ class LambdaZoeRunner(
         Supplier {
             val response = client.invoke(
                 InvokeRequest().apply {
-                    functionName =
-                        LambdaFunctionName
+                    functionName = functionName(version)
                     setPayload(
                         mapOf(
                             "function" to function,
