@@ -13,14 +13,18 @@ import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.AWSLambdaClientBuilder
 import kotlinx.coroutines.future.await
-import java.io.Closeable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.function.Supplier
 
 const val Timeout = 60 * 5 * 1000
 
-fun userError(message: String): Nothing = throw IllegalArgumentException(message)
+class HelpWrappedError(val help: String, val original: Throwable) : Exception(original)
+
+fun userError(message: String, help: String? = null): Nothing {
+    val exception = IllegalArgumentException(message)
+    if (help != null) throw HelpWrappedError(help = help, original = exception) else throw exception
+}
 
 fun lambdaClient(credentials: AWSCredentialsProvider, awsRegion: String?): AWSLambda =
     AWSLambdaClientBuilder

@@ -8,6 +8,7 @@
 
 package com.adevinta.oss.zoe.cli.config
 
+import com.adevinta.oss.zoe.cli.utils.HelpMessages
 import com.adevinta.oss.zoe.cli.utils.yaml
 import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.logger
@@ -31,7 +32,11 @@ fun ConfigUrlProvider.createConfig(env: String): EnvConfig {
             ?.let(json::readTree)?.requireObjectNode() ?: json.createObjectNode()
 
     val envConfig: ObjectNode =
-        find(env)?.let(::loadConfigFromUrl)?.requireObjectNode() ?: userError("config url not found for env '$env'")
+        find(env)?.let(::loadConfigFromUrl)?.requireObjectNode()
+            ?: userError(
+                message = "config url not found for env '$env'",
+                help = HelpMessages.howToConfigureEnvironments(missingEnv = env, configUrlProvider = this)
+            )
 
     val completeConfig = commonConfig.apply {
         setAll<JsonNode>(envConfig)
@@ -46,7 +51,7 @@ interface ConfigUrlProvider {
     fun find(env: String): URL?
 }
 
-class ConfigUrlProviderChain(private val providers: List<ConfigUrlProvider>) : ConfigUrlProvider {
+class ConfigUrlProviderChain(val providers: List<ConfigUrlProvider>) : ConfigUrlProvider {
     override fun find(env: String): URL? =
         providers
             .asSequence()

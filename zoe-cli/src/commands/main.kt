@@ -25,6 +25,7 @@ import com.adevinta.oss.zoe.service.storage.KeyValueStore
 import com.adevinta.oss.zoe.service.storage.LocalFsKeyValueStore
 import com.adevinta.oss.zoe.service.storage.withInMemoryBuffer
 import com.adevinta.oss.zoe.service.storage.withNamespace
+import com.adevinta.oss.zoe.service.utils.HelpWrappedError
 import com.adevinta.oss.zoe.service.utils.userError
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.*
@@ -126,22 +127,37 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
         }
     }
 
-    private fun formatError(err: Throwable, level: Int = 0): String {
+    private fun formatError(err: Throwable, help: String? = null, level: Int = 0): String {
         val res = when (err) {
 
-            is IllegalArgumentException ->
-                "${term.colors.red("error:")} ${err.message}"
+            is HelpWrappedError ->
+                formatError(err = err.original, help = err.help, level = level)
+
+            is IllegalArgumentException -> buildString {
+                append("${term.colors.red("error:")} ${err.message}")
+                if (help != null) {
+                    appendln()
+                    append(term.colors.yellow("help: "))
+                    append(help)
+                }
+            }
 
             else -> buildString {
                 append("""${term.colors.red("failure:")} ${err.message}""")
+                if (help != null) {
+                    appendln()
+                    append(term.colors.yellow("help: "))
+                    append(help)
+                }
                 val cause = err.cause
                 if (cause != null) {
                     appendln()
                     appendln(term.colors.red("cause:"))
-                    append(formatError(cause, level = level + 1))
+                    append(formatError(cause, help = null, level = level + 1))
                 }
             }
         }
+
         return res.prependIndent(indent = " ".repeat(2 * level))
     }
 }
