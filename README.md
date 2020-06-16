@@ -16,7 +16,7 @@ Here are some of the most interesting features of zoe :
 
 - Consume kafka topics from a specific point in time (ex. using `--from 'PT5h` from the last 5 hours).
 - Filter data based on content (ex. using `--filter "id == '12345'"` filters records with the selected id).
-- Supports offloading consumption of data to multiple lambda functions, kubernetes pods, etc. for parallelism (ex. adding `-x kubernetes` would offload all the requests to a configured kubernetes cluster).
+- Supports offloading consumption of data to multiple lambda functions, kubernetes pods, etc. for parallelism (ex. adding `--runner kubernetes` would offload all the requests to a configured kubernetes cluster).
 - Monitor consumer groups' offsets.
 - Upload avro schemas from a `.avsc` or `.avdl` file using different naming strategies.
 - ... and more.
@@ -59,7 +59,7 @@ zoe --cluster local topics consume -n 10 \
 Offload consumption to kubernetes pods (the target kubernetes cluster is configured in zoe's configuration file):
 
 ```
-zoe -x kubernetes \
+zoe --runner kubernetes \
     --cluster local topics consume -n 10 \
     --from 'PT6h' \
     --filter "user.name.first == 'Kasimir' \

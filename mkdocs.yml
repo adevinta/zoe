@@ -23,6 +23,7 @@ nav:
   - 'Install':
       - 'Overview': install/overview.md
       - 'Platform packages': install/package.md
+      - 'Homebrew': install/homebrew.md
       - 'Tarball install': install/tarball.md
       - 'Docker': install/docker.md
   - 'Getting started':
