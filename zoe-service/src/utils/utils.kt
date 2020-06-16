@@ -26,6 +26,8 @@ fun userError(message: String, help: String? = null): Nothing {
     if (help != null) throw HelpWrappedError(help = help, original = exception) else throw exception
 }
 
+fun Throwable.withHelpMessage(help: String) = HelpWrappedError(help = help, original = this)
+
 fun lambdaClient(credentials: AWSCredentialsProvider, awsRegion: String?): AWSLambda =
     AWSLambdaClientBuilder
         .standard()

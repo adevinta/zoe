@@ -9,6 +9,7 @@
 package com.adevinta.oss.zoe.cli.commands
 
 import com.adevinta.oss.zoe.cli.config.*
+import com.adevinta.oss.zoe.cli.utils.help
 import com.adevinta.oss.zoe.cli.utils.loadFileFromResources
 import com.adevinta.oss.zoe.cli.utils.singleCloseable
 import com.adevinta.oss.zoe.core.utils.logger
@@ -121,45 +122,59 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
     }
 
     fun printErr(err: Throwable) {
-        System.err.println(formatError(err))
+        val res = buildString {
+            append(formatError(err))
+            formatHelp(extractHelp(err))?.let { help ->
+                appendln()
+                append(help)
+            }
+        }
+
+        System.err.println(res)
         if (System.getenv("ZOE_STACKTRACE") == "1") {
             err.printStackTrace(System.err)
         }
     }
 
-    private fun formatError(err: Throwable, help: String? = null, level: Int = 0): String {
-        val res = when (err) {
+    private fun extractHelp(err: Throwable?): List<String> = when (err) {
+        null -> emptyList()
+        is HelpWrappedError -> listOf(err.help) + extractHelp(err.original)
+        else -> err.help() + extractHelp(err.cause)
+    }
 
-            is HelpWrappedError ->
-                formatError(err = err.original, help = err.help, level = level)
+    private fun formatError(
+        err: Throwable,
+        helpStack: List<String> = err.help(),
+        level: Int = 0
+    ): String {
+        val error = when (err) {
 
-            is IllegalArgumentException -> buildString {
-                append("${term.colors.red("error:")} ${err.message}")
-                if (help != null) {
-                    appendln()
-                    append(term.colors.yellow("help: "))
-                    append(help)
-                }
-            }
+            is HelpWrappedError -> formatError(err = err.original, helpStack = listOf(err.help), level = level)
+
+            is IllegalArgumentException -> "${term.colors.red("error:")} ${err.message}"
 
             else -> buildString {
                 append("""${term.colors.red("failure:")} ${err.message}""")
-                if (help != null) {
-                    appendln()
-                    append(term.colors.yellow("help: "))
-                    append(help)
-                }
                 val cause = err.cause
                 if (cause != null) {
                     appendln()
                     appendln(term.colors.red("cause:"))
-                    append(formatError(cause, help = null, level = level + 1))
+                    append(formatError(cause, helpStack = cause.help(), level = level + 1))
                 }
             }
         }
 
-        return res.prependIndent(indent = " ".repeat(2 * level))
+        return error.prependIndent(indent = " ".repeat(2 * level))
     }
+
+    private fun formatHelp(helpStack: List<String>) =
+        helpStack.takeIf { it.isNotEmpty() }?.let {
+            val message = if (it.size == 1) it.first() else it.joinToString(separator = "\n- ", prefix = "\n- ")
+            with(term.colors) {
+                bold(yellow("Help: ")) + message
+            }
+        }
+
 }
 
 @FlowPreview

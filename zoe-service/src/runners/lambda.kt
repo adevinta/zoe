@@ -12,9 +12,11 @@ import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.core.utils.toJsonString
 import com.adevinta.oss.zoe.service.utils.lambdaClient
+import com.adevinta.oss.zoe.service.utils.withHelpMessage
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.InvokeRequest
+import com.amazonaws.services.lambda.model.ResourceNotFoundException
 import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
