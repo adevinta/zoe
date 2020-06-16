@@ -31,7 +31,7 @@ class LambdaZoeRunner(
 
     companion object {
         const val LambdaFunctionNamePrefix = "zoe-final-launch"
-        fun functionName(version: String): String = "${LambdaFunctionNamePrefix}-${version}"
+        fun functionName(version: String): String = "${LambdaFunctionNamePrefix}-${version}".replace(".", "-")
     }
 
     constructor(

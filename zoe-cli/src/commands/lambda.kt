@@ -90,7 +90,7 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
             .convert { URL(it) }
             .defaultLazy {
                 val baseUrl = "https://github.com/adevinta/zoe/releases/download"
-                URL("$baseUrl/v${ctx.version}/zoe-core-${ctx.version}.jar")
+                URL("$baseUrl/v${ctx.version}/zoe-core-${ctx.version}-all.jar")
             }
 
     private val dryRun: Boolean by option("--dry-run", help = "Dry run mode").flag(default = false)
