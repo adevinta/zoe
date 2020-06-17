@@ -127,18 +127,16 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
         val deployConfig =
             environment.runners.config.lambda.deploy ?: userError("you must specify a deploy config !")
 
-        val jar = kotlin.run {
-            val file =
-                Files
-                    .createTempFile("zoe-jar-", null)
-                    .toFile()
-                    .also(File::deleteOnExit)
-
-            logger.info("copying zoe jar from '${jarUrl}' into '${file.path}")
-
-            file.outputStream().use { out -> jarUrl.openStream().use { inp -> inp.copyTo(out) } }
-            file
-        }
+        val jar =
+            Files
+                .createTempDirectory("zoe-jar")
+                .toFile()
+                .also(File::deleteOnExit)
+                .resolve("zoe-core.jar")
+                .apply {
+                    logger.info("copying zoe jar from '$jarUrl' into '$path")
+                    outputStream().use { out -> jarUrl.openStream().use { inp -> inp.copyTo(out) } }
+                }
 
         val lambda = aws.lambda.createOrUpdateLambda(
             name = lambdaFunctionName,
@@ -151,7 +149,7 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
             subnets = deployConfig.subnets,
             jar = jar,
             roleArn = roleArn,
-            inheritFromPrevious = true,
+            inheritFromPrevious = false,
             dryRun = dryRun
         )
 

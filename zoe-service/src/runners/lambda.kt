@@ -77,7 +77,7 @@ class LambdaZoeRunner(
     private data class LambdaExecutionError(
         val errorMessage: String,
         val errorType: String,
-        val stackTrace: List<String>,
+        val stackTrace: List<String>?,
         val cause: LambdaExecutionError?
     )
 

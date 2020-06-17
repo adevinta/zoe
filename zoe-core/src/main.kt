@@ -109,7 +109,7 @@ object FunctionsRegistry {
 data class FailureResponse(
     val errorMessage: String,
     val errorType: String,
-    val stackTrace: List<String>,
+    val stackTrace: List<String>?,
     val cause: FailureResponse?
 ) {
     companion object
@@ -119,7 +119,7 @@ fun FailureResponse.Companion.fromThrowable(throwable: Throwable): FailureRespon
     errorMessage = throwable.message ?: "",
     errorType = throwable::class.java.canonicalName,
     cause = throwable.cause?.let(FailureResponse.Companion::fromThrowable),
-    stackTrace = throwable.stackTrace.map { it.toString() }
+    stackTrace = throwable.stackTrace?.map { it.toString() } ?: emptyList()
 )
 
 fun error(msg: String): Nothing = throw IllegalArgumentException(msg)
