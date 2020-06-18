@@ -11,7 +11,7 @@ The platform packages are built with [jpackage](https://jdk.java.net/jpackage/) 
 1. Download the `.deb` package from the [latest release page](https://github.com/adevinta/zoe/releases/latest) and install it using `dpkg`:
 
     ```bash
-    ZOE_VERSION='0.19.0'  # change it to the suitable version
+    ZOE_VERSION='0.22.0'  # change it to the suitable version
     curl -L "https://github.com/adevinta/zoe/releases/download/v${ZOE_VERSION}/zoe_${ZOE_VERSION}-1_amd64.deb" -o /tmp/zoe.deb
     sudo dpkg -i /tmp/zoe.deb
     ```
@@ -35,7 +35,7 @@ You are now ready to use zoe. Go to the [Getting started](../basics/overview.md)
 1. Install the latest `.rpm` package from the [latest release page](https://github.com/adevinta/zoe/releases/latest) :
 
     ```bash
-    ZOE_VERSION=0.19.0  # change it to the suitable version
+    ZOE_VERSION=0.22.0  # change it to the suitable version
     sudo rpm -i "https://github.com/adevinta/zoe/releases/download/v${ZOE_VERSION}/zoe-${ZOE_VERSION}-1.x86_64.rpm"
     ```
 
