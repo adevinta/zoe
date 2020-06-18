@@ -46,7 +46,7 @@ val listTopics = zoeFunction<AdminConfig, ListTopicsResponse>(name = "topics") {
 /**
  * Create a kafka topic
  */
-val createTopic = zoeFunction<CreateTopicRequest, CreateTopicResponse>(name = "topics") { config ->
+val createTopic = zoeFunction<CreateTopicRequest, CreateTopicResponse>(name = "createTopic") { config ->
     admin(config.props).use { cli ->
         cli
             .createTopics(listOf(NewTopic(config.name, config.partitions, config.replicationFactor.toShort())))
