@@ -133,3 +133,11 @@ zoe -o table -v -c my-cluster groups offsets my-consumer-group-name
 ## Status
 
 Zoe has been open sourced very recently and is not GA yet. It is actively being improved towards stabilization. Documentation is also in progress. That said, we are already using it at Adevinta and you can already start trying it if you are not afraid of digging into the code to solve some eventual undocumented problems :) . 
+
+## Maintainers
+
+- Created by: Walid Lezzar ([Github](https://github.com/wlezzar), [Twitter](https://twitter.com/walezz), [LinkedIn](https://www.linkedin.com/in/walid-lezzar/))
+
+### Contributors
+
+Contributor's guide coming soon.

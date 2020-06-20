@@ -70,6 +70,14 @@ zoe --runner kubernetes \
 
 The full documentation can be found on the [website](https://adevinta.github.io/zoe).
 
+## Maintainers
+
+- Created by: Walid Lezzar ([Github](https://github.com/wlezzar), [Twitter](https://twitter.com/walezz), [LinkedIn](https://www.linkedin.com/in/walid-lezzar/))
+
+### Contributors
+
+Contributor's guide coming soon.
+
 ## Build from source
 
 ### Requirements
