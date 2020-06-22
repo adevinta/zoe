@@ -80,19 +80,7 @@ class DescribeSchema : CliktCommand(name = "describe"), KoinComponent {
 @ExperimentalCoroutinesApi
 class DeploySchema : CliktCommand(
     name = "deploy",
-    help = """
-        Deploy a schema to the registry
-        
-        Examples :
-        
-        > zoe schemas deploy --avdl --from-file schema.avdl --name SerenityResult
-        
-        {"type":"actual","id":21,"subject":"com.schibsted.serenity.ad.v1.ModuleReason"}
-        
-        > zoe schemas deploy --avdl --from-file schema.avdl --name ModuleReason --strategy topicRecord --topic input
-        
-        {"type":"actual","id":21,"subject":"tenant-input-topic-com.schibsted.serenity.ad.v1.ModuleReason"}
-    """,
+    help = """Deploy a schema to the registry""",
     printHelpOnEmptyArgs = true,
     epilog = with(globalTermColors) {
         """```
@@ -112,28 +100,28 @@ class DeploySchema : CliktCommand(
     enum class SchemaType { Avsc, Avdl }
 
     private val strategy
-            by option("--strategy", help = "Subject naming strategy")
-                .choice("topic" to Topic, "record" to Record, "topicRecord" to TopicRecord)
-                .default(Record)
+        by option("--strategy", help = "Subject naming strategy")
+            .choice("topic" to Topic, "record" to Record, "topicRecord" to TopicRecord)
+            .default(Record)
 
     private val fromStdin by option("--from-stdin", help = "Consume data from stdin").flag(default = false)
     private val fromFile
-            by option("--from-file", help = "Consume data from a json file")
-                .file(mustExist = true, canBeFile = true, mustBeReadable = true)
+        by option("--from-file", help = "Consume data from a json file")
+            .file(mustExist = true, canBeFile = true, mustBeReadable = true)
 
     private val topic by option("--topic", help = "Target topic")
     private val suffix
-            by option("--suffix", help = "Suffix for subject name")
-                .choice(TopicNameStrategySuffix.values().map { it.code to it }.toMap())
+        by option("--suffix", help = "Suffix for subject name")
+            .choice(TopicNameStrategySuffix.values().map { it.code to it }.toMap())
 
     private val content by argument("schema", help = "Schema json content").optional()
 
     private val type
-            by option().switch(SchemaType.values().map { "--${it.name.toLowerCase()}" to it }.toMap())
-                .default(SchemaType.Avsc)
+        by option().switch(SchemaType.values().map { "--${it.name.toLowerCase()}" to it }.toMap())
+            .default(SchemaType.Avsc)
 
     private val name
-            by option("--name", help = "Name of the schema in the avdl file (required when using --avdl)")
+        by option("--name", help = "Name of the schema in the avdl file (required when using --avdl)")
 
     private val dryRun by option("--dry-run", help = "Do not actually create the schema").flag(default = false)
 

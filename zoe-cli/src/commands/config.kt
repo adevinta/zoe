@@ -232,10 +232,10 @@ fun LoadFrom.getSourceDir(): File = when (this) {
             .cloneRepository()
             .setURI(url)
             .let {
-                if (password != null || username != null) it.setCredentialsProvider(
-                    UsernamePasswordCredentialsProvider(username ?: "", password ?: "")
-                ) else {
-                    it
+                when {
+                    password != null || username != null ->
+                        it.setCredentialsProvider(UsernamePasswordCredentialsProvider(username ?: "", password ?: ""))
+                    else -> it
                 }
             }
             .setDirectory(temp)
@@ -244,6 +244,7 @@ fun LoadFrom.getSourceDir(): File = when (this) {
         temp.resolve(dir)
     }
 }
+
 
 @FlowPreview
 @ExperimentalCoroutinesApi

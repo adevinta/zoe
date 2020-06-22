@@ -175,9 +175,9 @@ dependencies {
     implementation(project(":zoe-service"))
     implementation(project(":zoe-core"))
 
-    implementation("com.amazonaws:aws-java-sdk-lambda:1.11.779")
-    implementation("com.amazonaws:aws-java-sdk-iam:1.11.779")
-    implementation("com.amazonaws:aws-java-sdk-cloudformation:1.11.779")
+    implementation("com.amazonaws:aws-java-sdk-lambda:1.11.807")
+    implementation("com.amazonaws:aws-java-sdk-iam:1.11.807")
+    implementation("com.amazonaws:aws-java-sdk-cloudformation:1.11.807")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.6")

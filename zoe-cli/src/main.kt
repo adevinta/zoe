@@ -42,7 +42,7 @@ fun <T> withZoe(customizeContext: Context.Builder.() -> Unit = {}, action: (ZoeC
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-fun main(args: Array<String>): Unit = useResource(resource = startKoin { }, onClose = KoinApplication::close) {
+fun main(args: Array<String>) {
     val returnCode = withZoe { command ->
         command
             .runCatching { main(args) }
