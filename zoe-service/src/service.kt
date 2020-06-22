@@ -13,6 +13,7 @@ import com.adevinta.oss.zoe.core.functions.SubjectNameStrategy.TopicNameStrategy
 import com.adevinta.oss.zoe.core.functions.SubjectNameStrategy.TopicRecordNameStrategy
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.now
+import com.adevinta.oss.zoe.service.DejsonifierNotInferrable.Reason
 import com.adevinta.oss.zoe.service.config.Cluster
 import com.adevinta.oss.zoe.service.config.ConfigStore
 import com.adevinta.oss.zoe.service.config.Topic
@@ -59,20 +60,14 @@ class ZoeService(
         dryRun: Boolean
     ): ProduceResponse {
         val clusterConfig = getCluster(cluster)
-        val (topicName, topicSubject) = clusterConfig.getTopicConfig(topic, subjectOverride = subject)
+        val topicConfig = clusterConfig.getTopicConfig(topic, subjectOverride = subject)
         val props = clusterConfig.getCompletedProps()
 
-        val dejsonifierConfig = dejsonifier ?: when {
-            topicSubject != null -> DejsonifierConfig.Avro(
-                registry = clusterConfig.registry ?: userError("'registry' must be set when using a topic subject"),
-                subject = topicSubject
-            )
-            else -> DejsonifierConfig.Raw
-        }
+        val dejsonifierConfig = dejsonifier ?: clusterConfig.inferDejsonifierConfig(topicConfig)
 
         return runner.produce(
             ProduceConfig(
-                topic = topicName,
+                topic = topicConfig.name,
                 dejsonifier = dejsonifierConfig,
                 keyPath = keyPath,
                 valuePath = valuePath,
@@ -366,12 +361,6 @@ class ZoeService(
             .toMutableMap()
             .apply { if (registry != null) putIfAbsent("schema.registry.url", registry) }
 
-    private fun Cluster.getTopicConfig(aliasOrRealName: TopicAliasOrRealName, subjectOverride: String?) =
-        when (val retrievedTopic = topics[aliasOrRealName.value]) {
-            null -> Topic(aliasOrRealName.value, subjectOverride)
-            else -> Topic(retrievedTopic.name, (subjectOverride ?: retrievedTopic.subject))
-        }
-
     private fun Cluster.getConsumerGroup(aliasOrRealName: GroupAliasOrRealName): String =
         groups[aliasOrRealName.value]?.name ?: aliasOrRealName.value
 
@@ -484,3 +473,32 @@ data class RunnerVersionData(
     val mismatch: Boolean,
     val timestamp: Long
 )
+
+private fun Cluster.getTopicConfig(aliasOrRealName: TopicAliasOrRealName, subjectOverride: String?) =
+    when (val retrievedTopic = topics[aliasOrRealName.value]) {
+        null -> Topic(aliasOrRealName.value, subjectOverride)
+        else -> Topic(retrievedTopic.name, (subjectOverride ?: retrievedTopic.subject))
+    }
+
+fun Cluster.inferDejsonifierConfig(topic: Topic): DejsonifierConfig {
+    val deserializer = props["value.deserializer"]
+        ?: throw DejsonifierNotInferrable(reason = Reason.MissingValueDeserializer)
+
+    return when (deserializer) {
+        "io.confluent.kafka.serializers.KafkaAvroDeserializer" -> DejsonifierConfig.Avro(
+            registry = registry ?: throw DejsonifierNotInferrable(reason = Reason.MissingRegistry),
+            subject = topic.subject ?: throw DejsonifierNotInferrable(reason = Reason.MissingSubjectName)
+        )
+        else -> DejsonifierConfig.Raw
+    }
+}
+
+class DejsonifierNotInferrable(val reason: Reason) : Exception("cannot infer data type to convert to") {
+    enum class Reason(val msg: String) {
+        MissingValueDeserializer(
+            "missing 'value.deserializer' in the cluster config props (needed to infer data type to produce)"
+        ),
+        MissingSubjectName("unable to determine topic's subject name to use"),
+        MissingRegistry("cannot determine schema registry address")
+    }
+}

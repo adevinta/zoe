@@ -3,6 +3,7 @@ package com.adevinta.oss.zoe.cli.utils
 import com.adevinta.oss.zoe.cli.config.ConfigUrlProvider
 import com.adevinta.oss.zoe.cli.config.ConfigUrlProviderChain
 import com.adevinta.oss.zoe.cli.config.LocalConfigDirUrlProvider
+import com.adevinta.oss.zoe.service.DejsonifierNotInferrable
 import com.amazonaws.services.lambda.model.ResourceNotFoundException
 
 object HelpMessages {
@@ -31,16 +32,36 @@ object HelpMessages {
         "You may also need to configure the lambda runner in your zoe config. " +
             "Check out: ${DocUrl}/advanced/runners/lambda"
     )
+
+    fun helpWithDejsonifierInference(error: DejsonifierNotInferrable) = when (error.reason) {
+        DejsonifierNotInferrable.Reason.MissingValueDeserializer ->
+            listOf(
+                "You need to set the 'value.deserializer' parameter in the 'props' section of your cluster config." +
+                    " For more details, checkout: $DocUrl/advanced/avro"
+            )
+        DejsonifierNotInferrable.Reason.MissingSubjectName ->
+            listOf(
+                "The subject name of a topic can be defined in the 'topics' section in the cluster config when " +
+                    "defining an alias of a topic. For an example, checkout: $DocUrl/advanced/avro",
+                "If you are not using a topic alias and your topic is not listed in the configuration file, " +
+                    "you can specify the subject name in the command itself using `--subject <subject>`"
+            )
+        DejsonifierNotInferrable.Reason.MissingRegistry ->
+            listOf(
+                "You need to add the registry address in you cluster config. For an example, " +
+                    "checkout: $DocUrl/advanced/avro"
+            )
+    }
 }
 
-private data class KnownError<T : Throwable>(val err: Class<T>, val help: (err: Throwable) -> List<String>)
-
-private val knownErrors: List<KnownError<out Throwable>> = listOf(
-    KnownError(err = ResourceNotFoundException::class.java, help = { HelpMessages.howToInitZoeLambda() })
-)
-
-fun <T : Throwable> T.help(): List<String> =
-    knownErrors.find { it.err.isAssignableFrom(this::class.java) }?.help?.invoke(this) ?: emptyList()
+/**
+ * Known errors
+ */
+fun <T : Throwable> T.help(): List<String> = when (this) {
+    is ResourceNotFoundException -> HelpMessages.howToInitZoeLambda()
+    is DejsonifierNotInferrable -> HelpMessages.helpWithDejsonifierInference(this)
+    else -> emptyList()
+}
 
 fun detectUsedConfigUrlProviders(configUrlProvider: ConfigUrlProvider): Set<String> =
     when (configUrlProvider) {

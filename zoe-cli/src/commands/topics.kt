@@ -62,8 +62,8 @@ class TopicsList : CliktCommand(name = "list", help = "list topics"), KoinCompon
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val response = service.listTopics(ctx.cluster, userTopicsOnly = !all)
-        ctx.term.output.format(response.topics.map { it.topic }.toJsonNode()) { echo(it) }
+        val response = service.listTopics(ctx.cluster, userTopicsOnly = !all).topics.map { it.topic }.toJsonNode()
+        ctx.term.output.format(response) { echo(it) }
     }
 }
 

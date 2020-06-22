@@ -10,32 +10,44 @@ package com.adevinta.oss.zoe.cli
 
 import com.adevinta.oss.zoe.cli.commands.*
 import com.adevinta.oss.zoe.cli.utils.useResource
+import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.core.subcommands
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
 import kotlin.system.exitProcess
+
+@ExperimentalCoroutinesApi
+@FlowPreview
+fun <T> withZoe(customizeContext: Context.Builder.() -> Unit = {}, action: (ZoeCommandLine) -> T): T =
+    useResource(resource = startKoin { }, onClose = { stopKoin() }) {
+
+        val command =
+            ZoeCommandLine()
+                .subcommands(
+                    topicsCommand(),
+                    schemasCommand(),
+                    groupsCommands(),
+                    configCommands(),
+                    lambdaCommands(),
+                    versionCommands()
+                )
+                .context(customizeContext)
+
+        action(command)
+    }
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-fun main(args: Array<String>) {
-    val returnCode = useResource(resource = startKoin { }, onClose = KoinApplication::close) {
-
-        val command = ZoeCommandLine().subcommands(
-            topicsCommand(),
-            schemasCommand(),
-            groupsCommands(),
-            configCommands(),
-            lambdaCommands(),
-            versionCommands()
-        )
-
+fun main(args: Array<String>): Unit = useResource(resource = startKoin { }, onClose = KoinApplication::close) {
+    val returnCode = withZoe { command ->
         command
             .runCatching { main(args) }
             .onFailure { command.printErr(it) }
             .fold(onSuccess = { 0 }, onFailure = { 1 })
     }
-
     exitProcess(returnCode)
 }

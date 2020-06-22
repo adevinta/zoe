@@ -142,24 +142,17 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
         else -> err.help() + extractHelp(err.cause)
     }
 
-    private fun formatError(
-        err: Throwable,
-        helpStack: List<String> = err.help(),
-        level: Int = 0
-    ): String {
+    private fun formatError(err: Throwable, level: Int = 0): String {
         val error = when (err) {
-
-            is HelpWrappedError -> formatError(err = err.original, helpStack = listOf(err.help), level = level)
-
+            is HelpWrappedError -> formatError(err = err.original, level = level)
             is IllegalArgumentException -> "${term.colors.red("error:")} ${err.message}"
-
             else -> buildString {
                 append("""${term.colors.red("failure:")} ${err.message}""")
                 val cause = err.cause
                 if (cause != null) {
                     appendln()
                     appendln(term.colors.red("cause:"))
-                    append(formatError(cause, helpStack = cause.help(), level = level + 1))
+                    append(formatError(cause, level = level + 1))
                 }
             }
         }

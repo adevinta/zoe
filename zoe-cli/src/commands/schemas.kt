@@ -85,7 +85,7 @@ class DeploySchema : CliktCommand(
         
         Examples :
         
-        > zoe -q schemas deploy --avdl --from-file schema.avdl --name SerenityResult
+        > zoe schemas deploy --avdl --from-file schema.avdl --name SerenityResult
         
         {"type":"actual","id":21,"subject":"com.schibsted.serenity.ad.v1.ModuleReason"}
         
