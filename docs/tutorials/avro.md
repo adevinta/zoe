@@ -37,10 +37,10 @@ Usually, to deploy an `.avdl` file into the schema registry we first need to com
 
 ```
 # list currently registered avro schemas
-zoe -q -c local schemas list
+zoe -c local schemas list
 
 # deploy the cat facts schema from the 
-zoe -q -c local schemas deploy \
+zoe -c local schemas deploy \
   --avdl \
   --from-file schema.avdl \
   --name CatFact \
@@ -57,14 +57,14 @@ zoe -c local topics produce --topic input --from-file $(pwd)/data.json
 Read the data from the topic :
 ```
 # read the 10 last events
-zoe -q -o table -c local topics consume input -n 10 --from 'PT1h'
+zoe -o table -c local topics consume input -n 10 --from 'PT1h'
 
 # display events in a table
-zoe -q -o table -c local topics consume input -n 10 --from 'PT1h' \
+zoe -o table -c local topics consume input -n 10 --from 'PT1h' \
        --query '{id: _id, type: type, user: user, upvotes: upvotes}'
 
 # filter out Kasimir's data
-zoe -q -o table -c local topics consume input -n 10 --from 'PT1h' \
+zoe -o table -c local topics consume input -n 10 --from 'PT1h' \
        --query '{id: _id, type: type, user: user, upvotes: upvotes}' \
        --filter "user.name.first == 'Kasimir'"
 ```

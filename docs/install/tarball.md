@@ -9,7 +9,7 @@ Once java is installed, proceed with the following steps :
 1. Download the runtime-less zip or tar package of the zoe CLI from the [latest release page](https://github.com/adevinta/zoe/releases/latest) and uncompress it into your home directory (or wherever you wish)
     
     ```
-    ZOE_VERSION=0.22.0  # change it to the suitable version
+    ZOE_VERSION=0.23.0  # change it to the suitable version
     curl -L "https://github.com/adevinta/zoe/releases/download/v${ZOE_VERSION}/zoe-${ZOE_VERSION}.tar.gz" | tar -zx -C $HOME
     ```
 

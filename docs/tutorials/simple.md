@@ -59,14 +59,14 @@ Read the data that we have just inserted :
 
 ```
 # read the 10 last events
-zoe -q -o table topics consume input -n 10 --from 'PT1h'
+zoe -o table topics consume input -n 10 --from 'PT1h'
 
 # display events in a table
-zoe -q -o table topics consume input -n 10 --from 'PT1h' \
+zoe -o table topics consume input -n 10 --from 'PT1h' \
        --query '{id: _id, type: type, user: user, upvotes: upvotes}'
 
 # filter out Kasimir's data
-zoe -q -o table topics consume input -n 10 --from 'PT1h' \
+zoe -o table topics consume input -n 10 --from 'PT1h' \
        --query '{id: _id, type: type, user: user, upvotes: upvotes}' \
        --filter "user.name.first == 'Kasimir'"
 ```

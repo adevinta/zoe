@@ -11,6 +11,8 @@ import com.adevinta.oss.gradle.plugins.DistributionWithRuntimePlugin
 import com.adevinta.oss.gradle.plugins.JPackageTask
 import com.adevinta.oss.gradle.plugins.Platform
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.time.LocalDateTime
 
@@ -76,7 +78,7 @@ mapOf("zip" to Zip::class, "tar" to Tar::class).forEach { (archiveType, archiveC
 
     mapOf(
         "WithRuntime" to tasks.named<Sync>("installWithRuntimeDist"),
-        "WithoutRuntime" to tasks.named<Sync>("installDist")
+        "WithoutRuntime" to tasks.named<Sync>("installShadowDist")
     ).forEach { (alias, installTask) ->
         tasks.register("${archiveType}Dist${alias}", archiveClass) {
             from(installTask)
@@ -143,8 +145,12 @@ tasks {
     }
 
     test {
-        useJUnitPlatform {
-            includeEngines("spek2")
+        useJUnitPlatform()
+        testLogging {
+            events = setOf(TestLogEvent.FAILED, TestLogEvent.PASSED)
+            showExceptions = true
+            exceptionFormat = TestExceptionFormat.FULL
+            showStandardStreams = true
         }
     }
 }
@@ -188,8 +194,10 @@ dependencies {
     implementation("org.slf4j:slf4j-log4j12:1.7.30")
     implementation("log4j:log4j:1.2.17")
 
-    testImplementation(group = "junit", name = "junit", version = "4.12")
-
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.10")
-    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.10")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.0.6") // for kotest framework
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.0.6") // for kotest core jvm assertions
+    testImplementation("io.kotest:kotest-property-jvm:4.0.6") // for kotest property test
+    testImplementation(platform("org.testcontainers:testcontainers-bom:1.14.3")) //import bom
+    testImplementation("org.testcontainers:testcontainers")
 }
