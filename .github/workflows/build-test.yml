@@ -1,0 +1,23 @@
+name: Build test
+
+on: push
+
+jobs:
+  build-test:
+    name: Build test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: '100'
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v1.3.0
+        with:
+          java-version: 11
+          java-package: jdk
+          architecture: x64
+
+      - name: Build & Test
+        run: ./gradlew zoe-cli:test
