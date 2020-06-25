@@ -34,8 +34,7 @@ import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.mordant.TermColors
 import com.github.ajalt.mordant.TerminalCapabilities
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.*
 import org.apache.log4j.Level
 import org.apache.log4j.LogManager
 import org.koin.core.context.loadKoinModules
@@ -173,6 +172,10 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
 @FlowPreview
 @ExperimentalCoroutinesApi
 fun mainModule(context: CliContext) = module {
+    single<CoroutineScope>(named("main")) {
+        CoroutineScope(Dispatchers.Default + SupervisorJob())
+    } onClose { it?.cancel() }
+
     single<CliContext> { context }
 
     single<EnvConfig> {
@@ -203,6 +206,7 @@ fun mainModule(context: CliContext) = module {
     }
 
     singleCloseable<ZoeRunner> {
+        val scope = get<CoroutineScope>(named("main"))
         val ctx = get<CliContext>()
         val ioPool = get<ExecutorService>(named("io"))
 
@@ -239,7 +243,8 @@ fun mainModule(context: CliContext) = module {
                     ),
                     executor = ioPool,
                     namespace = kubeConfig.namespace,
-                    context = kubeConfig.context
+                    context = kubeConfig.context,
+                    scope = scope
                 )
             }
         }

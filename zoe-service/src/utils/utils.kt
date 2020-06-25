@@ -49,5 +49,5 @@ fun loadFileFromResources(path: String): String? =
         ?.use { it.readBytes() }
         ?.toString(Charsets.UTF_8)
 
-suspend fun <T> ExecutorService.doAsync(action: () -> T): T =
+suspend fun <T> ExecutorService.doSuspending(action: () -> T): T =
     CompletableFuture.supplyAsync(Supplier { action() }, this).await()
