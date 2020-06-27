@@ -27,10 +27,14 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
+import com.jcraft.jsch.JSch
+import com.jcraft.jsch.Session
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+import org.eclipse.jgit.api.TransportConfigCallback
+import org.eclipse.jgit.transport.*
+import org.eclipse.jgit.util.FS
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import java.io.File
@@ -205,7 +209,6 @@ class EnvironmentsList : CliktCommand(name = "list"), KoinComponent {
 
 }
 
-
 sealed class LoadFrom(name: String) : OptionGroup(name) {
     class Local : LoadFrom("Options to load from local") {
         val path: File
@@ -219,6 +222,9 @@ sealed class LoadFrom(name: String) : OptionGroup(name) {
         val dir: String by option("--dir", help = "path to the config inside the repo").default(".")
         val username: String? by option("-u", "--username")
         val password: String? by option("--password")
+        val privateKey: File?
+            by option("--private-key").file(canBeDir = false, canBeFile = true, mustExist = true)
+        val passphrase: String? by option("--passphrase")
     }
 }
 
@@ -226,15 +232,20 @@ fun LoadFrom.getSourceDir(): File = when (this) {
     is LoadFrom.Local -> path
 
     is LoadFrom.Git -> {
-        val temp = Files.createTempDirectory("tmp-zoe-config-init").toFile().also { it.deleteOnExit() }
+        val temp = Files.createTempDirectory("tmp-zoe-config-init-").toFile().also { it.deleteOnExit() }
 
         Git
             .cloneRepository()
             .setURI(url)
             .let {
                 when {
-                    password != null || username != null ->
-                        it.setCredentialsProvider(UsernamePasswordCredentialsProvider(username ?: "", password ?: ""))
+                    password != null || username != null -> it.setCredentialsProvider(
+                        UsernamePasswordCredentialsProvider(
+                            username ?: "",
+                            password ?: ""
+                        )
+                    )
+                    privateKey != null -> it.setTransportConfigCallback(GitSshTransport(privateKey, passphrase))
                     else -> it
                 }
             }
@@ -243,6 +254,27 @@ fun LoadFrom.getSourceDir(): File = when (this) {
 
         temp.resolve(dir)
     }
+}
+
+private class GitSshTransport(val privateKey: File?, val passphrase: String?) : TransportConfigCallback {
+    override fun configure(transport: Transport?) {
+        (transport as SshTransport).sshSessionFactory = object : JschConfigSessionFactory() {
+            override fun configure(host: OpenSshConfig.Host?, session: Session) {
+                session.setConfig("StrictHostKeyChecking", "no")
+            }
+
+            override fun createDefaultJSch(fs: FS): JSch = super.createDefaultJSch(fs).apply {
+                privateKey?.absolutePath?.let { privateKey ->
+                    when {
+                        passphrase != null -> addIdentity(privateKey, passphrase)
+                        else -> addIdentity(privateKey)
+                    }
+                }
+            }
+        }
+
+    }
+
 }
 
 
