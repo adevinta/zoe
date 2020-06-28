@@ -1,0 +1,60 @@
+# Copyright (c) 2020 Adevinta.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broker
+  labels:
+    context: zoe-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: broker
+  template:
+    metadata:
+      labels:
+        service: broker
+    spec:
+      containers:
+        - env:
+            - name: CONFLUENT_METRICS_ENABLE
+              value: "true"
+            - name: CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS
+              value: broker:9092
+            - name: CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS
+              value: "1"
+            - name: CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT
+              value: zookeeper:2181
+            - name: CONFLUENT_SUPPORT_CUSTOMER_ID
+              value: anonymous
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:29092
+            - name: KAFKA_BROKER_ID
+              value: "1"
+            - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+              value: "0"
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_ZOOKEEPER_CONNECT
+              value: zookeeper:2181
+          image: confluentinc/cp-kafka:5.0.0
+          name: broker
+          ports:
+            - containerPort: 9092
+            - containerPort: 29092
+          imagePullPolicy: "IfNotPresent"
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "1G"
+      hostname: broker
+      restartPolicy: Always

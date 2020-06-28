@@ -1,0 +1,22 @@
+@namespace("com.adevinta.oss.zoe.guides")
+protocol ZoeExamples {
+
+  record UserName {
+    string first;
+    string last;
+  }
+
+  record User {
+    string _id;
+    UserName name;
+  }
+
+  record CatFact {
+    string _id;
+    string text;
+    string type;
+    User user;
+    int upvotes;
+    null userUpvoted;
+  }
+}
