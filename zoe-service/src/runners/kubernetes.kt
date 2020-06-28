@@ -16,11 +16,14 @@ import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.client.*
 import io.fabric8.kubernetes.client.dsl.Watchable
+import io.fabric8.kubernetes.client.dsl.internal.ExecWebSocketListener
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.future.await
+import org.apache.log4j.Level
+import org.apache.log4j.LogManager
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -36,17 +39,15 @@ class KubernetesRunner(
     private val client: NamespacedKubernetesClient,
     private val executor: ExecutorService,
     private val closeClientAtShutdown: Boolean,
-    private val configuration: Config,
-    private val scope: CoroutineScope
-) : ZoeRunner, CoroutineScope by scope {
+    private val configuration: Config
+) : ZoeRunner {
 
     constructor(
         name: String,
         configuration: Config,
         namespace: String,
         context: String?,
-        executor: ExecutorService,
-        scope: CoroutineScope
+        executor: ExecutorService
     ) : this(
         name = name,
         client = kotlin.run {
@@ -58,8 +59,7 @@ class KubernetesRunner(
         },
         executor = executor,
         closeClientAtShutdown = true,
-        configuration = configuration,
-        scope = scope
+        configuration = configuration
     )
 
     data class Config(
@@ -70,6 +70,8 @@ class KubernetesRunner(
         val timeoutMs: Long?
     )
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     private val pendingResponses = mutableMapOf<String, CompletableDeferred<String>>()
     private val responseFile = "/output/response.txt"
     private val labels = mapOf(
@@ -77,74 +79,77 @@ class KubernetesRunner(
         "runnerId" to uuid()
     )
 
-    private val watcher = launch(start = CoroutineStart.LAZY) {
-        client.pods().withLabels(labels).watchContinuously().collect { (action, resource) ->
-            logger.debug("received event '$action' with pod: ${resource?.toJsonString()}")
+    private val watcher = with(scope) {
+        launch(start = CoroutineStart.LAZY) {
+            client.pods().withLabels(labels).watchContinuously().collect { (action, resource) ->
+                logger.debug("received event '$action' with pod: ${resource?.toJsonString()}")
 
-            val podResult = resource?.metadata?.name?.let { pendingResponses.getOrPut(it) { CompletableDeferred() } }
-            val podStatus = resource?.status?.phase
-            val zoeContainerStatus = resource?.status?.containerStatuses?.find { it.name == "zoe" }?.state
+                val podResult =
+                    resource?.metadata?.name?.let { pendingResponses.getOrPut(it) { CompletableDeferred() } }
+                val podStatus = resource?.status?.phase
+                val zoeContainerStatus = resource?.status?.containerStatuses?.find { it.name == "zoe" }?.state
 
-            when {
+                when {
 
-                podResult == null -> logger.warn("received event for a pod not waiting for a response: $resource")
+                    podResult == null -> logger.warn("received event for a pod not waiting for a response: $resource")
 
-                podResult.isCompleted -> logger.debug("discarding event as pod's response has already been fullfilled")
+                    podResult.isCompleted -> logger.debug("discarding event as pod's response has already been fullfilled")
 
-                zoeContainerStatus?.waiting?.reason == "ImagePullBackOff" ->
-                    // Means the container image is not pullable. Fail early!
-                    podResult.completeExceptionally(
+                    zoeContainerStatus?.waiting?.reason == "ImagePullBackOff" ->
+                        // Means the container image is not pullable. Fail early!
+                        podResult.completeExceptionally(
+                            ZoeRunnerException(
+                                "Zoe image does not seem to be pullable. Pod:${resource.toJsonString()}",
+                                cause = null,
+                                runnerName = name,
+                                remoteStacktrace = null
+                            )
+                        )
+
+                    podStatus == "Pending" -> logger.debug("pod is spinning up...")
+
+                    zoeContainerStatus == null -> podResult.completeExceptionally(
                         ZoeRunnerException(
-                            "Zoe image does not seem to be pullable. Pod:${resource.toJsonString()}",
+                            "State for container 'zoe' not found. Pod:${resource.toJsonString()}",
                             cause = null,
                             runnerName = name,
                             remoteStacktrace = null
                         )
                     )
 
-                podStatus == "Pending" -> logger.debug("pod is spinning up...")
+                    zoeContainerStatus.terminated != null ->
+                        try {
+                            // pulling response from the container
+                            val response =
+                                client
+                                    .pods()
+                                    .withName(resource.metadata.name)
+                                    .inContainer("tailer")
+                                    .file(responseFile)
+                                    .runSuspending { read().use { it.readAllBytes().toString(Charsets.UTF_8) } }
 
-                zoeContainerStatus == null -> podResult.completeExceptionally(
-                    ZoeRunnerException(
-                        "State for container 'zoe' not found. Pod:${resource.toJsonString()}",
-                        cause = null,
-                        runnerName = name,
-                        remoteStacktrace = null
-                    )
-                )
-
-                zoeContainerStatus.terminated != null ->
-                    try {
-                        // pulling response from the container
-                        val response =
-                            client
-                                .pods()
-                                .withName(resource.metadata.name)
-                                .inContainer("tailer")
-                                .file(responseFile)
-                                .runSuspending { read().use { it.readAllBytes().toString(Charsets.UTF_8) } }
-
-                        when (zoeContainerStatus.terminated.exitCode) {
-                            0 -> podResult.complete(response)
-                            else -> podResult.completeExceptionally(
-                                response
-                                    .runCatching { parseJson<FailureResponse>() }
-                                    .map { ZoeRunnerException.fromRunFailureResponse(it, name) }
-                                    .getOrElse {
-                                        ZoeRunnerException(
-                                            message = "container exit status: ${zoeContainerStatus.terminated}",
-                                            cause = null,
-                                            runnerName = name,
-                                            remoteStacktrace = null
-                                        )
-                                    }
-                            )
+                            when (zoeContainerStatus.terminated.exitCode) {
+                                0 -> podResult.complete(response)
+                                else -> podResult.completeExceptionally(
+                                    response
+                                        .runCatching { parseJson<FailureResponse>() }
+                                        .map { ZoeRunnerException.fromRunFailureResponse(it, name) }
+                                        .getOrElse {
+                                            ZoeRunnerException(
+                                                message = "container exit status: ${zoeContainerStatus.terminated}",
+                                                cause = null,
+                                                runnerName = name,
+                                                remoteStacktrace = null
+                                            )
+                                        }
+                                )
+                            }
+                        } catch (err: Throwable) {
+                            podResult.completeExceptionally(err)
                         }
-                    } catch (err: Throwable) {
-                        podResult.completeExceptionally(err)
-                    }
 
-                else -> logger.debug("zoe container is in: '${zoeContainerStatus.toJsonString()}'")
+                    else -> logger.debug("zoe container is in: '${zoeContainerStatus.toJsonString()}'")
+                }
             }
         }
     }
@@ -178,6 +183,25 @@ class KubernetesRunner(
 
     }
 
+    override fun close() {
+        if (closeClientAtShutdown) client.use { doClose() } else doClose()
+    }
+
+    private fun doClose() {
+        // When closing the kubernetes client, the ExecWebSocketListener may log useless error stack traces about closed
+        // sockets. We don't want them to show up to the client at this phase so we increase the logging level.
+        LogManager.getLogger(ExecWebSocketListener::class.java)?.level = Level.FATAL
+        runBlocking { watcher.cancelAndJoin() }
+        scope.cancel()
+        if (configuration.deletePodsAfterCompletion) {
+            logger.debug("deleting potentially dangling pods...")
+            client
+                .pods()
+                .withLabels(labels)
+                .withGracePeriod(0)
+                .delete()
+        }
+    }
 
     private fun generatePodObject(image: String, args: List<String>): Pod {
         val pod = loadFileFromResources("pod.template.json")?.parseJson<Pod>() ?: userError("pod template not found !")
@@ -197,23 +221,6 @@ class KubernetesRunner(
         }
     }
 
-    override fun close() {
-        if (closeClientAtShutdown) client.use { doClose() } else doClose()
-    }
-
-    private fun doClose() {
-        runBlocking { watcher.cancelAndJoin() }
-        // remove any dangling pod
-        if (configuration.deletePodsAfterCompletion) {
-            logger.debug("deleting potentially dangling pods...")
-            client
-                .pods()
-                .withLabels(labels)
-                .withGracePeriod(0)
-                .delete()
-        }
-    }
-
     private suspend fun <T : Any, R> T.runSuspending(action: T.() -> R): R =
         CompletableFuture
             .supplyAsync(Supplier { action() }, executor)
@@ -228,22 +235,25 @@ fun Watchable<Watch, Watcher<Pod>>.watchAsFlow(): Flow<WatcherEvent> = callbackF
     val watcher =
         CompletableFuture
             .supplyAsync {
-                logger.info("registering a watch...")
+                logger.debug("registering a watch...")
                 watch(object : Watcher<Pod> {
                     override fun onClose(cause: KubernetesClientException?) {
                         close(cause)
                     }
 
                     override fun eventReceived(action: Watcher.Action, resource: Pod?) {
-                        sendBlocking(WatcherEvent(action, resource))
+                        if (!isClosedForSend) {
+                            sendBlocking(WatcherEvent(action, resource))
+                        }
                     }
                 })
             }
             .await()
 
     awaitClose {
-        logger.info("closing the watcher (already collected events may still be received over the channel)")
-        watcher.close()
+        watcher.use {
+            logger.debug("closing the watcher (already collected events may still be received over the channel)")
+        }
     }
 }
 

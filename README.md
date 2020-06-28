@@ -76,41 +76,4 @@ The full documentation can be found on the [website](https://adevinta.github.io/
 
 ### Contributors
 
-Contributor's guide coming soon.
-
-## Build from source
-
-### Requirements
-To build and deploy :
-- java 11 or later (install with the awesome [sdkman](https://sdkman.io/)) 
-
-### Build zoe cli
-
-```bash
-# switch to java 11 or later
-# if you are using sdkman
-sdk use java 11
-
-# build zoe CLI
-./gradlew clean zoe-cli:installShadowDist
-
-# launch zoe cli
-zoe-cli/build/install/zoe-cli-shadow/bin/zoe --help
-
-# if you don't have any config yet
-zoe-cli/build/install/zoe-cli-shadow/bin/zoe config init
-```
-
-## Auto completion (optional)
-```bash
-_ZOE_COMPLETE=bash zoe-cli/build/install/zoe-cli-shadow/bin/zoe > /tmp/complete.sh
-source /tmp/complete.sh
-```
-
-## Development
-
-### Testing actions
-```bash
-docker build -t gh-actions:ubuntu-latest dev/actions/images/ubuntu
-act -P ubuntu-latest=gh-actions:ubuntu-latest -r -j release-runtimeless -e dev/actions/payloads/release.json release
-```
+The [contributor's guide](docs/contributing/README.md) currently only shows how to build the project from source. Some docs about the architecture of Zoe and how to contribute to the project will be added soon. 

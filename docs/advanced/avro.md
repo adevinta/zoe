@@ -80,5 +80,5 @@ You can also interact with the schema registry using the `zoe schemas` command. 
 
 ## Where to go from here
 
-- There is a hands on tutorial on using zoe with avro at : [tutorials/avro](https://github.com/adevinta/zoe/tree/master/tutorials/avro). 
+- There is a hands on tutorial on using zoe with avro at : [guides/avro](https://github.com/adevinta/zoe/tree/master/docs/guides/avro). 
 - Learn more about interacting with the registry with : `zoe schemas --help`

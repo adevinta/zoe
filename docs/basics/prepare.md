@@ -19,8 +19,8 @@ Clone the [zoe repository](https://github.com/adevinta/zoe) and use the provided
 # clone the repo
 git clone https://github.com/adevinta/zoe.git
 
-# go the to the tutorials folder
-cd zoe/tutorials/simple
+# go to the guides folder
+cd zoe/docs/guides/simple
 
 # spin up the stack
 docker-compose up -d

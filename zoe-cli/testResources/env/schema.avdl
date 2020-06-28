@@ -1,4 +1,4 @@
-@namespace("com.adevinta.oss.zoe.tutorials")
+@namespace("com.adevinta.oss.zoe.guides")
 protocol ZoeExamples {
 
   record UserName {

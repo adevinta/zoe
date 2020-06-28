@@ -431,7 +431,7 @@ class ZoeService(
 }
 
 private fun <T> Iterable<T>.splitIntoGroups(count: Int, by: (T) -> Int): Collection<List<T>> =
-    if (count <= 1) listOf(this.toList()) else groupBy { by(it) % (count - 1) }.values
+    if (count <= 1) listOf(this.toList()) else groupBy { by(it) % count }.values
 
 sealed class RecordOrProgress {
     data class Record(val record: PolledRecord) : RecordOrProgress()

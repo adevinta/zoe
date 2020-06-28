@@ -99,12 +99,12 @@ The key path option argument is a [Jmespath](https://jmespath.org/) expression t
 
 The other way to write data into Kafka with zoe is to use a json file.
 
-The following example uses a sample dataset downloaded from the [cats facts API](https://cat-fact.herokuapp.com/#/cat/facts). You can inspect the sample in the repository at [tutorials/simple/data.json](https://github.com/adevinta/zoe/blob/master/tutorials/simple/data.json).
+The following example uses a sample dataset downloaded from the [cats facts API](https://cat-fact.herokuapp.com/#/cat/facts). You can inspect the sample in the repository at [guides/simple/data.json](https://github.com/adevinta/zoe/blob/master/docs/guides/simple/data.json).
 
 Let's write this json file into the `input` topic.
 
 ```bash tab="command"
-zoe -v topics produce --topic input --from-file tutorials/simple/data.json
+zoe -v topics produce --topic input --from-file docs/guides/simple/data.json
 ```
 
 ```text tab="logs"

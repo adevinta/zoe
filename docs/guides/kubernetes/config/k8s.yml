@@ -7,26 +7,14 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---
-runners:
-  default: "local"
-  config:
-    lambda:
-      enabled: false
-    local:
-      enabled: true
-
 clusters:
-
   default:
-    topics:
-      input:
-        name: "input-events-topic"
-        subject: "input-events-topic-com.adevinta.oss.zoe.guides.CatFact"
     props:
-      bootstrap.servers: "localhost:29092"
+      bootstrap.servers: "broker:9092"
       key.deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
-      value.deserializer: "io.confluent.kafka.serializers.KafkaAvroDeserializer"
+      value.deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
       key.serializer: "org.apache.kafka.common.serialization.StringSerializer"
-      value.serializer: "io.confluent.kafka.serializers.KafkaAvroSerializer"
-    registry: "http://localhost:8081"
+      value.serializer: "org.apache.kafka.common.serialization.ByteArraySerializer"
 
+runners:
+  default: "kubernetes"

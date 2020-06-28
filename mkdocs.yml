@@ -26,6 +26,7 @@ nav:
       - 'Homebrew': install/homebrew.md
       - 'Tarball install': install/tarball.md
       - 'Docker': install/docker.md
+      - 'Enable auto completion': install/completion.md
   - 'Getting started':
       - 'Overview': basics/overview.md
       - 'Prepare the environment': basics/prepare.md
@@ -50,8 +51,8 @@ nav:
           - 'Local': advanced/runners/local.md
           - 'Lambda': advanced/runners/lambda.md
           - 'Kubernetes': advanced/runners/kubernetes.md
-  - 'Tutorials':
-      - 'Overview': tutorials/overview.md
-      - 'Simple': tutorials/simple.md
-      - 'Zoe with Avro': tutorials/avro.md
-      - 'Zoe with Kubernetes': tutorials/kubernetes.md
+  - 'Guides':
+      - 'Overview': guides/overview.md
+      - 'Basic scenario': guides/simple/guide.md
+      - 'Zoe with Avro': guides/avro/guide.md
+      - 'Zoe with Kubernetes': guides/kubernetes/guide.md

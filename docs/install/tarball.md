@@ -21,4 +21,4 @@ PATH=$PATH:$HOME/zoe/bin
 ```bash
 zoe config init
 ```
-4. You are now ready to use zoe. Go to the `./tutorials` folder to start learning zoe.
+4. You are now ready to use zoe. Go to the [guides section](../guides) to start learning zoe.

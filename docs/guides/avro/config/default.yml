@@ -8,17 +8,20 @@
 
 ---
 clusters:
-  local:
+  default:
     props:
       bootstrap.servers: "localhost:29092"
       key.deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
-      value.deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+      value.deserializer: "io.confluent.kafka.serializers.KafkaAvroDeserializer"
       key.serializer: "org.apache.kafka.common.serialization.StringSerializer"
-      value.serializer: "org.apache.kafka.common.serialization.ByteArraySerializer"
+      value.serializer: "io.confluent.kafka.serializers.KafkaAvroSerializer"
+
+    registry: "http://localhost:8081"
 
     topics:
       input:
-        name: input-topic
+        name: "input-events-topic"
+        subject: "input-events-topic-value"
 
 runners:
   default: "local"

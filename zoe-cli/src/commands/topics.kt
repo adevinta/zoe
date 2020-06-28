@@ -111,7 +111,7 @@ class TopicsConsume : CliktCommand(
         """```
         |Examples:
         |
-        |  Consume 10 records from the input topic from the last 2 hours:
+        |  Consume 10 records from the input topic from the last 2 hours from `local` aliased cluster:
         |  > ${bold("zoe -c local topics consume input -n 10 --from 'PT2h'")}
         |  
         |  Consume 5 records from the last day and filter only messages with id = 123:

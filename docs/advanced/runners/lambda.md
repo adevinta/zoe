@@ -45,7 +45,7 @@ The authentication method is configured in the credentials section of the lambda
 
     ```yaml
     credentials:
-    type: "default"
+       type: "default"
     ```
 
 2. Profile: uses the configured profile to authenticate with AWS. The chosen profile needs to be configured in `~/.aws/credentials`.
@@ -64,3 +64,37 @@ The authentication method is configured in the credentials section of the lambda
        accessKey: "accessKey"
        secretAccessKey: "secretAccessKey"
     ```
+
+## How to deal with an unsupported authentication method
+
+There are currently a bunch of other authentication methods that zoe doesn't support yet. Few examples are: MFA in the command line, the new AWS Single Sign On, etc.
+
+If you are dealing with such an unsupported authentication method, you can easily workaround it by generating an STS session and let zoe make use it. To make the process seamless, you can use the awesome [AWS Vault](https://github.com/99designs/aws-vault) that makes it almost transparent. 
+
+For zoe to be able to discover STS sessions, you need to use the default credentials type:
+
+```text
+runners:
+  default: lambda
+  config:
+    lambda:
+      credentials:
+        type: "default"
+      ...
+```
+
+You can use [AWS Vault](https://github.com/99designs/aws-vault) to make generating STS sessions transparent with zoe by using:
+
+```bash tab="command"
+aws-vault exec my-aws-profile-with-sso -- zoe topics list
+```
+
+You can even simplify the process further by creating an alias:
+
+```bash
+# Create an alias
+alias zoe-pro='aws-vault exec my-aws-profile-with-sso -- zoe'
+
+# Use it here
+zoe-pro topics list
+```

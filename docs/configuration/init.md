@@ -22,8 +22,8 @@ This will copy the yaml files from the target directory to `~/.zoe/config`.
 
 ## From a git repository
 
-You can also copy the configuration from an existing git repository. For example, to copy the zoe config used in the tutorials in the official repository:
+You can also copy the configuration from an existing git repository. For example, to copy the zoe config used in the guides in the official repository:
 
 ```bash tab="command"
-zoe config init --from git --url 'https://github.com/adevinta/zoe.git' --dir tutorials/simple/config
+zoe config init --from git --url 'https://github.com/adevinta/zoe.git' --dir docs/guides/simple/config
 ```

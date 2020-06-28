@@ -62,7 +62,7 @@ class ConfigInit : CliktCommand(
         |  > ${bold("""zoe config init --from local --path /path/to/existing/config""")}
         |
         |  Load config from a git repository:
-        |  > ${bold("""zoe config init --from git --url 'https://github.com/adevinta/zoe.git' --dir tutorials/simple/config""")}
+        |  > ${bold("""zoe config init --from git --url 'https://github.com/adevinta/zoe.git' --dir docs/guides/simple/config""")}
         |
         |  Load config from a git repository with authentication:
         |  > ${bold("""zoe config init --from git --url 'https://github.company.com/example/config.git' --dir zoe-config --username user --password pass""")}
