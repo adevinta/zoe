@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
+import java.time.Duration
 
 data class EnvConfig(
     val runners: RunnersSection,
@@ -56,7 +57,8 @@ sealed class StorageConfig {
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "provider")
 @JsonSubTypes(
     JsonSubTypes.Type(value = SecretsProviderConfig.Strongbox::class, name = "strongbox"),
-    JsonSubTypes.Type(value = SecretsProviderConfig.EnvVars::class, name = "env")
+    JsonSubTypes.Type(value = SecretsProviderConfig.EnvVars::class, name = "env"),
+    JsonSubTypes.Type(value = SecretsProviderConfig.Exec::class, name = "exec")
 )
 sealed class SecretsProviderConfig {
     data class Strongbox(
@@ -66,6 +68,8 @@ sealed class SecretsProviderConfig {
     ) : SecretsProviderConfig()
 
     data class EnvVars(val prepend: String?, val append: String?) : SecretsProviderConfig()
+
+    data class Exec(val command: String, val timeoutMs: Long = 60000) : SecretsProviderConfig()
 }
 
 data class RunnersSection(

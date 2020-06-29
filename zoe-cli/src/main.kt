@@ -10,6 +10,8 @@ package com.adevinta.oss.zoe.cli
 
 import com.adevinta.oss.zoe.cli.commands.*
 import com.adevinta.oss.zoe.cli.utils.useResource
+import com.fasterxml.jackson.databind.JsonMappingException
+import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.core.subcommands
@@ -18,6 +20,7 @@ import kotlinx.coroutines.FlowPreview
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import java.lang.Exception
 import kotlin.system.exitProcess
 
 @ExperimentalCoroutinesApi

@@ -46,13 +46,15 @@ nav:
           - 'Overview': advanced/secrets/overview.md
           - 'Environment variables provider': advanced/secrets/envvars.md
           - 'Strongbox provider': advanced/secrets/strongbox.md
+          - 'Exec provider': advanced/secrets/exec.md
       - 'Runners in depth':
           - 'Overview': advanced/runners/overview.md
           - 'Local': advanced/runners/local.md
           - 'Lambda': advanced/runners/lambda.md
           - 'Kubernetes': advanced/runners/kubernetes.md
-  - 'Guides':
+  - 'Hands-on Guides':
       - 'Overview': guides/overview.md
       - 'Basic scenario': guides/simple/guide.md
       - 'Zoe with Avro': guides/avro/guide.md
       - 'Zoe with Kubernetes': guides/kubernetes/guide.md
+      - 'Managing the configuration': guides/configuration/guide.md

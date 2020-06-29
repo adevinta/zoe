@@ -28,7 +28,6 @@ import com.adevinta.oss.zoe.service.storage.withInMemoryBuffer
 import com.adevinta.oss.zoe.service.storage.withNamespace
 import com.adevinta.oss.zoe.service.utils.HelpWrappedError
 import com.adevinta.oss.zoe.service.utils.userError
-import com.github.ajalt.clikt.completion.ExperimentalCompletionCandidates
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.choice
@@ -262,6 +261,11 @@ fun mainModule(context: CliContext) = module {
             is SecretsProviderConfig.EnvVars -> EnvVarsSecretProvider(
                 append = secrets.append ?: "",
                 prepend = secrets.prepend ?: ""
+            )
+
+            is SecretsProviderConfig.Exec -> ExecSecretProvider(
+                command = secrets.command,
+                timeout = Duration.ofMillis(secrets.timeoutMs)
             )
 
             else -> userError("no secrets provider matched : $secrets")

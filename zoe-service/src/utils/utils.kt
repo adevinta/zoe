@@ -8,13 +8,16 @@
 
 package com.adevinta.oss.zoe.service.utils
 
+import com.adevinta.oss.zoe.core.utils.logger
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.AWSLambdaClientBuilder
 import kotlinx.coroutines.future.await
+import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
 
 const val Timeout = 60 * 5 * 1000
@@ -51,3 +54,32 @@ fun loadFileFromResources(path: String): String? =
 
 suspend fun <T> ExecutorService.doSuspending(action: () -> T): T =
     CompletableFuture.supplyAsync(Supplier { action() }, this).await()
+
+data class CommandResult(val stdout: String, val stderr: String, val exitCode: Int)
+
+fun exec(command: Array<String>, failOnError: Boolean = true, timeout: Duration? = null): CommandResult {
+    logger.debug("executing command: ${command.contentToString()}")
+
+    val res =
+        Runtime
+            .getRuntime()
+            .exec(command)
+            .apply { timeout?.let { waitFor(it.seconds, TimeUnit.SECONDS) } ?: waitFor() }
+
+    val stdout = res.inputStream.use { it.readBytes() }.toString(Charsets.UTF_8)
+    val stderr = res.errorStream.use { it.readBytes() }.toString(Charsets.UTF_8)
+
+    val commandResult =
+        """command '${command.contentToString()}' finished with exit code: ${res.exitValue()}
+            | - stdout: $stdout
+            | - stderr: $stderr
+            """.trimMargin()
+
+    if (res.exitValue() != 0 && failOnError) {
+        throw Exception(commandResult)
+    }
+
+    logger.debug(commandResult)
+
+    return CommandResult(stdout, stderr, res.exitValue())
+}

@@ -13,6 +13,7 @@ import com.adevinta.oss.zoe.core.utils.now
 import com.adevinta.oss.zoe.service.storage.KeyValueStore
 import com.adevinta.oss.zoe.service.storage.getAsJson
 import com.adevinta.oss.zoe.service.storage.putAsJson
+import com.adevinta.oss.zoe.service.utils.exec
 import com.adevinta.oss.zoe.service.utils.userError
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
@@ -38,7 +39,9 @@ interface SecretsProvider : Closeable {
 class SecretsProviderWithLogging(private val wrapped: SecretsProvider) : SecretsProvider by wrapped {
     override fun decipher(secret: String): String {
         logger.info("deciphering secret : $secret")
-        return wrapped.decipher(secret)
+        val result = wrapped.decipher(secret)
+        logger.debug("secret deciphered to: $result")
+        return result
     }
 }
 
@@ -51,17 +54,26 @@ class SecretsProviderWithCache(
     private data class CachedSecrets(val secrets: Map<String, CachedValue>)
     private data class CachedValue(val value: String, val timestamp: Long)
 
-    private val fieldName = "secrets"
+    private val fieldName = "secrets:${wrapped::class.java.canonicalName}"
     private val secrets = runBlocking {
         val cached = store.getAsJson(fieldName) ?: CachedSecrets(mutableMapOf())
         cached.secrets.filter { now() - it.value.timestamp <= ttl.toMillis() }.toMutableMap()
     }
 
     override fun decipher(secret: String): String = runBlocking {
-        secrets
-            .computeIfAbsent(secret) { CachedValue(wrapped.decipher(secret), now()) }
-            .value
-            .also { store.putAsJson(fieldName, CachedSecrets(secrets)) }
+        val retrieved = when (val cached = secrets[secret]) {
+            null -> {
+                val deciphered = CachedValue(wrapped.decipher(secret), now())
+                secrets[secret] = deciphered
+                deciphered
+            }
+            else -> {
+                logger.debug("secret retrieved from cache: $secret")
+                cached
+            }
+        }
+
+        retrieved.value.also { store.putAsJson(fieldName, CachedSecrets(secrets)) }
     }
 }
 
@@ -104,5 +116,32 @@ class EnvVarsSecretProvider(private val append: String, private val prepend: Str
         val (secretName) = matches.destructured
         val completedSecretName = "$prepend$secretName$append"
         return System.getenv(completedSecretName) ?: userError("secret not found in env : $completedSecretName")
+    }
+}
+
+/**
+ * A [SecretsProvider] implementation that delegates secrets deciphering to a command.
+ *
+ * The supplied script should expect the following arguments:
+ * - the secret name
+ * - the context (optional)
+ */
+class ExecSecretProvider(private val command: String, private val timeout: Duration) : SecretsProvider {
+    private val secretsPattern = Regex("""secret(?::([a-zA-Z0-9_\-.]+))?:(\w+)""")
+
+    override fun decipher(secret: String): String {
+        val matches = secretsPattern.matchEntire(secret) ?: userError(
+            "secret not parsable by ${ExecSecretProvider::class.java} (regex used: $secretsPattern)"
+        )
+
+        val (context, secretName) = matches.destructured
+
+        val result = exec(
+            command = arrayOf(command, secretName, context),
+            failOnError = true,
+            timeout = timeout
+        )
+
+        return result.stdout.trim().takeIf { it.isNotEmpty() } ?: userError("command returned an empty secret")
     }
 }
