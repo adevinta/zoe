@@ -24,24 +24,20 @@ class MainTest : ExpectSpec({
         context("a new topic is created") {
             val topic = "topic-${UUID.randomUUID()}"
 
-            val result = zoe("topics", "create", topic)
-
-            expect("topic is successfully created") {
-                result.stdout.size shouldBe 1
-                result.stdout.first().toJsonNode() shouldBe """{"done": true}""".toJsonNode()
+            zoe("topics", "create", topic) {
+                it.stdout.size shouldBe 1
+                it.stdout.first().toJsonNode() shouldBe """{"done": true}""".toJsonNode()
             }
 
             context("listing topics") {
-                val topics = zoe("topics", "list")
-
-                expect("topics are listed successfully") {
-                    topics.stdout.size shouldBe 1
-                    topics.stdout.first().parseJson<List<String>>() shouldContain topic
+                zoe("topics", "list") {
+                    it.stdout.size shouldBe 1
+                    it.stdout.first().parseJson<List<String>>() shouldContain topic
                 }
             }
 
             context("creating an avro schema") {
-                val res = zoe(
+                zoe(
                     "schemas", "deploy",
                     "--avdl",
                     "--from-file", testConfDir.resolve("schema.avdl").absolutePath,
@@ -49,10 +45,8 @@ class MainTest : ExpectSpec({
                     "--strategy", "topic",
                     "--topic", topic,
                     "--suffix", "value"
-                )
-
-                expect("schema is correctly created") {
-                    res.stdout.first().parseJson<JsonNode>().has("id")
+                ) {
+                    it.stdout.first().parseJson<JsonNode>().has("id")
                 }
 
                 context("inserting some data") {
@@ -62,14 +56,12 @@ class MainTest : ExpectSpec({
                         "--topic", topic,
                         "--from-file", testConfDir.resolve("data.json").absolutePath,
                         "--subject", "$topic-value"
-                    )
-
-                    expect("data is successfully inserted") {
-                        inserted.error shouldBe null
+                    ) {
+                        it.error shouldBe null
                     }
 
                     context("reading data") {
-                        val read = zoe(
+                        zoe(
                             "-o", "json",
                             "topics",
                             "consume",
@@ -77,9 +69,7 @@ class MainTest : ExpectSpec({
                             "--from", "PT5m",
                             "--timeout-per-batch", "3000",
                             "-n", "1000"
-                        )
-
-                        expect("data can be read correctly") {
+                        ) { read ->
                             read.stdout.size shouldBe 1
                             read.stdout.first().parseJson<List<JsonNode>>().size shouldBe inserted.stdout.first()
                                 .parseJson<JsonNode>().get("produced").size()

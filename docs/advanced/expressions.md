@@ -4,7 +4,7 @@ We saw in the section about [consuming data with zoe](../basics/consume/#filteri
 
 Jmespath expressions can be long and tedious to write especially in the command line. Some characters like quotes and backticks may be interpreted wrongly by the shell. Additionally, it may be repetitive to write if the expression is commonly used.
 
-Zoe allows us to save reusable Jmespath expressions in the configuration file and refer to them by an alias when using zoe.
+Zoe allows you to save reusable Jmespath expressions in the configuration file and refer to them by an alias when using zoe.
 
 ## Registered expressions without arguments
 

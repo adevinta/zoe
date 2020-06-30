@@ -15,6 +15,8 @@ dependencies {
     implementation("com.amazonaws:aws-java-sdk-s3:1.11.779")
     implementation("com.amazonaws:aws-java-sdk-lambda:1.11.779")
     implementation("com.schibsted.security:strongbox-sdk:0.2.21")
+    implementation("com.amazonaws:aws-java-sdk-secretsmanager:1.11.779")
+
 
     implementation("org.slf4j:slf4j-log4j12:1.7.30")
     implementation("log4j:log4j:1.2.17")

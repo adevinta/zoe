@@ -58,7 +58,8 @@ sealed class StorageConfig {
 @JsonSubTypes(
     JsonSubTypes.Type(value = SecretsProviderConfig.Strongbox::class, name = "strongbox"),
     JsonSubTypes.Type(value = SecretsProviderConfig.EnvVars::class, name = "env"),
-    JsonSubTypes.Type(value = SecretsProviderConfig.Exec::class, name = "exec")
+    JsonSubTypes.Type(value = SecretsProviderConfig.Exec::class, name = "exec"),
+    JsonSubTypes.Type(value = SecretsProviderConfig.AwsSecretsManager::class, name = "awsSecretsManager")
 )
 sealed class SecretsProviderConfig {
     data class Strongbox(
@@ -70,6 +71,11 @@ sealed class SecretsProviderConfig {
     data class EnvVars(val prepend: String?, val append: String?) : SecretsProviderConfig()
 
     data class Exec(val command: String, val timeoutMs: Long = 60000) : SecretsProviderConfig()
+
+    data class AwsSecretsManager(
+        val region: String?,
+        val credentials: AwsCredentialsConfig = AwsCredentialsConfig.Default
+    ): SecretsProviderConfig()
 }
 
 data class RunnersSection(

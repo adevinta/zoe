@@ -45,7 +45,8 @@ nav:
       - 'Secrets provider':
           - 'Overview': advanced/secrets/overview.md
           - 'Environment variables provider': advanced/secrets/envvars.md
-          - 'Strongbox provider': advanced/secrets/strongbox.md
+          - 'Strongbox': advanced/secrets/strongbox.md
+          - 'AWS Secrets Manager': advanced/secrets/awssm.md
           - 'Exec provider': advanced/secrets/exec.md
       - 'Runners in depth':
           - 'Overview': advanced/runners/overview.md

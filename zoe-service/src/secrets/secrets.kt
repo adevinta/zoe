@@ -17,6 +17,8 @@ import com.adevinta.oss.zoe.service.utils.exec
 import com.adevinta.oss.zoe.service.utils.userError
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
+import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
+import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest
 import com.schibsted.security.strongbox.sdk.impl.DefaultSimpleSecretsGroup
 import com.schibsted.security.strongbox.sdk.types.Region
 import com.schibsted.security.strongbox.sdk.types.SecretsGroupIdentifier
@@ -144,4 +146,35 @@ class ExecSecretProvider(private val command: String, private val timeout: Durat
 
         return result.stdout.trim().takeIf { it.isNotEmpty() } ?: userError("command returned an empty secret")
     }
+}
+
+/**
+ * A [SecretsProvider] implementation that retrieves secrets from AWS secrets manager
+ */
+class AwsSecretsManagerProvider(
+    credentials: AWSCredentialsProvider,
+    private val region: String?
+) : SecretsProvider {
+    private val secretsPattern = Regex("""secret(?::.+)*:(\S+)""")
+
+    private val client =
+        AWSSecretsManagerClientBuilder
+            .standard()
+            .let { region?.let(it::withRegion) ?: it }
+            .withCredentials(credentials)
+            .build()
+
+    override fun decipher(secret: String): String {
+        val matches = secretsPattern.matchEntire(secret) ?: userError(
+            "secret not parsable by ${AwsSecretsManagerProvider::class.java} (regex used: $secretsPattern)"
+        )
+
+        val (secretName) = matches.destructured
+
+        return client
+            .getSecretValue(GetSecretValueRequest().withSecretId(secretName))
+            ?.secretString
+            ?: userError("secret not found: $secretName")
+    }
+
 }

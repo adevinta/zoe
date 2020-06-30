@@ -7,6 +7,6 @@ Zoe loads its configuration from a variety of sources. It also has a complex ove
 In this guide, we will discover the following points:
 
 - [Config initialization](init.md): We will start with how to initialize zoe configuration files by either creating them from scratch or loading them from an existing source.  
-- [Environments](environments.md): We will see how zoe allows us to separate clusters' configuration into multiple environments and how we can select the appropriate environment when using zoe.
+- [Environments](environments.md): We will see how zoe allows you to separate clusters' configuration into multiple environments and how we can select the appropriate environment when using zoe.
 - [Configuration loading chain](chain.md): We will then tackle zoe's complex configuration loading chain and how configuration values can be overridden with environment variables.
 - [Configuration reference](reference.md): This section contains the list of all possible values in zoe's configuration file.

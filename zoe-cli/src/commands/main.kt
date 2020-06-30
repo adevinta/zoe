@@ -268,6 +268,11 @@ fun mainModule(context: CliContext) = module {
                 timeout = Duration.ofMillis(secrets.timeoutMs)
             )
 
+            is SecretsProviderConfig.AwsSecretsManager -> AwsSecretsManagerProvider(
+                credentials = secrets.credentials.resolve(),
+                region = secrets.region
+            )
+
             else -> userError("no secrets provider matched : $secrets")
         }
 
