@@ -92,7 +92,8 @@ class ZoeService(
         numberOfRecordsPerBatch: Int,
         timeoutPerBatch: Long,
         formatter: String,
-        stopCondition: StopCondition
+        stopCondition: StopCondition,
+        dialect: JsonQueryDialect
     ): Flow<RecordOrProgress> = flow {
 
         val clusterConfig = getCluster(cluster)
@@ -119,7 +120,8 @@ class ZoeService(
                 range = rangeGroup,
                 recordsPerBatch = numberOfRecordsPerBatch,
                 timeoutPerBatch = timeoutPerBatch,
-                formatter = formatter
+                formatter = formatter,
+                dialect = dialect
             )
         }
 
@@ -372,7 +374,8 @@ class ZoeService(
         range: List<ConsumptionRange>,
         recordsPerBatch: Int,
         timeoutPerBatch: Long,
-        formatter: String
+        formatter: String,
+        dialect: JsonQueryDialect
     ): Flow<RecordOrProgress> = flow {
 
         var currentRange = range
@@ -389,7 +392,8 @@ class ZoeService(
                 query = query,
                 timeoutMs = timeoutPerBatch,
                 numberOfRecords = recordsPerBatch,
-                jsonifier = formatter
+                jsonifier = formatter,
+                jsonQueryDialect = dialect
             )
 
             val (records, progress) = runner.poll(config)

@@ -8,14 +8,13 @@
 
 package com.adevinta.oss.zoe.core.functions
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.databind.JsonNode
-import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
-import com.adevinta.oss.zoe.core.utils.jmespath
 import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.producer
 import com.adevinta.oss.zoe.core.utils.uuid
 import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.databind.JsonNode
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.generic.GenericRecord
@@ -27,19 +26,21 @@ import org.apache.kafka.clients.producer.RecordMetadata
  * Lambda function to producer a bunch of records into kafka
  */
 val produce = zoeFunction<ProduceConfig, ProduceResponse>(name = "produce") { config ->
-    val keyPath = config.keyPath?.let(jmespath::compile)
-    val valuePath = config.valuePath?.let(jmespath::compile)
-    val tsPath = config.timestampPath?.let(jmespath::compile)
+    val jsonSearch = config.jsonQueryDialect.getImplementation()
+
+    val keyPath = config.keyPath?.also(jsonSearch::validate)
+    val valuePath = config.valuePath?.also(jsonSearch::validate)
+    val tsPath = config.timestampPath?.also(jsonSearch::validate)
 
     val dejsonifier = Dejsonifier.fromConfig(config.dejsonifier)
 
-    val records = config.data.map {
+    val records = config.data.map { row ->
         ProducerRecord<Any?, Any?>(
             config.topic,
             null,
-            tsPath?.search(it)?.longValue(),
-            keyPath?.search(it)?.textValue() ?: uuid(),
-            dejsonifier.dejsonify(valuePath?.search(it) ?: it)
+            tsPath?.let { jsonSearch.search(row, it) }?.longValue(),
+            keyPath?.let { jsonSearch.search(row, it) }?.textValue() ?: uuid(),
+            dejsonifier.dejsonify(valuePath?.let { jsonSearch.search(row, it) } ?: row)
         )
     }
 
@@ -93,7 +94,8 @@ data class ProduceConfig(
     val timestampPath: String?,
     val data: List<JsonNode>,
     val dryRun: Boolean,
-    val props: Map<String, String>
+    val props: Map<String, String>,
+    val jsonQueryDialect: JsonQueryDialect = JsonQueryDialect.Jmespath
 )
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")

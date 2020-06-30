@@ -40,6 +40,8 @@ dependencies {
     implementation("com.google.guava:guava:29.0-jre")
 
     implementation(group = "io.burt", name = "jmespath-jackson", version = "0.2.0")
+    implementation("net.thisptr:jackson-jq:1.0.0-preview.20191208")
+    implementation("net.thisptr:jackson-jq-extra:1.0.0-preview.20191208")
 
     testImplementation(group = "junit", name = "junit", version = "4.12")
 

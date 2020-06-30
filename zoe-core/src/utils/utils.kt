@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 val json = ObjectMapper().registerKotlinModule()
-val jmespath = JacksonRuntime()
 val logger = LoggerFactory.getLogger("zoe")!!
 
 fun consumer(config: Map<String, Any>): KafkaConsumer<Any?, Any?> = KafkaConsumer(config)

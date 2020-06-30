@@ -8,10 +8,7 @@
 
 package com.adevinta.oss.zoe.core.functions
 
-import com.adevinta.oss.zoe.core.utils.consumer
-import com.adevinta.oss.zoe.core.utils.jmespath
-import com.adevinta.oss.zoe.core.utils.json
-import com.adevinta.oss.zoe.core.utils.match
+import com.adevinta.oss.zoe.core.utils.*
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.JsonNode
@@ -30,10 +27,12 @@ import java.time.Duration
  * Polls records from kafka
  */
 val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
+    val jsonQuery = config.jsonQueryDialect.getImplementation()
 
-    // parse filters and select statement
-    val filters = config.filter.map(jmespath::compile)
-    val query = config.query?.let(jmespath::compile)
+    // validate filters and select statement
+    val filters = config.filter.also { it.forEach(jsonQuery::validate) }
+    val query = config.query?.also(jsonQuery::validate)
+
     val jsonifier = Jsonifiers.get(config.jsonifier)
 
     val props = HashMap(config.props).apply {
@@ -63,8 +62,8 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
                         formatted = it.value()?.let { rec -> jsonifier.format(rec) } ?: NullNode.getInstance()
                     )
                 }
-                .filter { it.formatted.match(filters) }
-                .map { if (query == null) it else it.copy(formatted = query.search(it.formatted)) }
+                .filter { jsonQuery.match(it.formatted, filters = filters) }
+                .map { if (query == null) it else it.copy(formatted = jsonQuery.search(it.formatted, expr = query)) }
                 .take(config.numberOfRecords)
                 .toList()
 
@@ -233,7 +232,8 @@ data class PollConfig(
     val query: String? = null,
     val timeoutMs: Long = 10000,
     val numberOfRecords: Int = 3,
-    val jsonifier: String
+    val jsonifier: String,
+    val jsonQueryDialect: JsonQueryDialect = JsonQueryDialect.Jmespath
 )
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
@@ -244,4 +244,11 @@ data class PollConfig(
 sealed class Subscription {
     object WithGroupId : Subscription()
     data class AssignPartitions(val partitions: Map<Int, Long>) : Subscription()
+}
+
+enum class JsonQueryDialect { Jmespath, Jq }
+
+fun JsonQueryDialect.getImplementation(): JsonSearch = when (this) {
+    JsonQueryDialect.Jmespath -> JmespathImpl()
+    JsonQueryDialect.Jq -> JqImpl()
 }

@@ -12,6 +12,7 @@ import com.adevinta.oss.zoe.cli.config.Format
 import com.adevinta.oss.zoe.cli.utils.batches
 import com.adevinta.oss.zoe.cli.utils.fetch
 import com.adevinta.oss.zoe.cli.utils.globalTermColors
+import com.adevinta.oss.zoe.core.functions.JsonQueryDialect
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.*
@@ -22,6 +23,7 @@ import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
@@ -170,6 +172,14 @@ class TopicsConsume : CliktCommand(
     private val topic: TopicAliasOrRealName
         by argument("topic", help = "Target topic to read (alias or real)").convert { TopicAliasOrRealName(it) }
 
+    private val dialect: JsonQueryDialect
+        by option("--dialect")
+            .choice(
+                "jq" to JsonQueryDialect.Jq,
+                "jmespath" to JsonQueryDialect.Jmespath
+            )
+            .default(JsonQueryDialect.Jmespath)
+
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()
 
@@ -182,16 +192,17 @@ class TopicsConsume : CliktCommand(
         val records =
             service
                 .read(
-                    ctx.cluster,
-                    topic,
-                    from,
-                    filters,
-                    query,
-                    parallelism,
-                    recordsPerBatch,
-                    timeoutPerBatch,
-                    formatter,
-                    stop
+                    cluster = ctx.cluster,
+                    topic = topic,
+                    from = from,
+                    filters = filters,
+                    query = query,
+                    parallelism = parallelism,
+                    numberOfRecordsPerBatch = recordsPerBatch,
+                    timeoutPerBatch = timeoutPerBatch,
+                    formatter = formatter,
+                    stopCondition = stop,
+                    dialect = dialect
                 )
                 .onEach { if (it is RecordOrProgress.Progress && !continuously) log(it.range) }
                 .filter { it is RecordOrProgress.Record }
