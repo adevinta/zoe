@@ -90,6 +90,7 @@ data class RunnersConfig(
 )
 
 data class LambdaRunnerConfig(
+    val nameSuffix: String? = null,
     val deploy: LambdaDeployConfig? = null,
     val credentials: AwsCredentialsConfig = AwsCredentialsConfig.Default,
     val awsRegion: String? = null,

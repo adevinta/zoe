@@ -1,6 +1,9 @@
 package com.adevinta.oss.zoe.cli
 
 import com.adevinta.oss.zoe.core.utils.logger
+import com.adevinta.oss.zoe.core.utils.toJsonNode
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
 import com.github.ajalt.clikt.output.CliktConsole
 import io.kotest.core.listeners.TestListener
 import io.kotest.core.spec.style.ExpectScope
@@ -28,7 +31,7 @@ class MockConsole : CliktConsole {
 
 }
 
-data class ZoeOutput(val stdout: List<String>, val stderr: List<String>, val error: Throwable?)
+data class ZoeOutput(val stdout: JsonNode, val stderr: List<String>, val error: Throwable?)
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -38,27 +41,27 @@ suspend fun ExpectScope.zoe(
     expect: suspend TestContext.(ZoeOutput) -> Unit = {}
 ): ZoeOutput {
     val mockConsole = MockConsole()
-    val fullCommand = listOf("--config-dir", configDir) + command.toList()
+    val fullCommand = listOf("--config-dir", configDir, "-o", "json") + command.toList()
     val res = withZoe(customizeContext = { console = mockConsole }) {
         logger.info("running command: $fullCommand")
-        it.runCatching { parse(fullCommand) }.fold(
-            onFailure = { err ->
-                logger.error("zoe failed", err)
-                ZoeOutput(
-                    stdout = emptyList(),
-                    stderr = emptyList(),
-                    error = err
-                )
-            },
-            onSuccess = {
+        it
+            .runCatching { parse(fullCommand) }
+            .mapCatching {
                 logger.info("command succeeded: ${mockConsole.stdout}")
                 ZoeOutput(
-                    stdout = mockConsole.stdout.toList(),
+                    stdout = mockConsole.stdout.toJsonNode(),
                     stderr = mockConsole.stderr.toList(),
                     error = null
                 )
             }
-        )
+            .getOrElse { err ->
+                logger.error("zoe failed", err)
+                ZoeOutput(
+                    stdout = NullNode.instance,
+                    stderr = emptyList(),
+                    error = err
+                )
+            }
     }
 
     expect("command '$fullCommand' should return correct result") {

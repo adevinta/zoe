@@ -18,16 +18,12 @@ import com.adevinta.oss.zoe.core.Handler
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.runners.LambdaZoeRunner
-import com.adevinta.oss.zoe.service.utils.Timeout
 import com.adevinta.oss.zoe.service.utils.lambdaClient
 import com.adevinta.oss.zoe.service.utils.userError
-import com.amazonaws.ClientConfiguration
-import com.amazonaws.regions.Regions
 import com.amazonaws.services.cloudformation.AmazonCloudFormation
 import com.amazonaws.services.cloudformation.model.*
 import com.amazonaws.services.identitymanagement.model.GetRoleRequest
 import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.AWSLambdaClientBuilder
 import com.amazonaws.services.lambda.model.*
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
@@ -61,18 +57,19 @@ class DescribeLambda : CliktCommand(name = "describe", help = "Describe the curr
     private val ctx by inject<CliContext>()
 
     override fun run() {
-        val lambda = with(environment.runners.config.lambda) {
+        val lambdaConfig = environment.runners.config.lambda
+        val lambda = with(lambdaConfig) {
             lambdaClient(
                 credentials.resolve(),
                 awsRegion
             )
         }
-        val name = LambdaZoeRunner.LambdaFunctionNamePrefix
+        val name = LambdaZoeRunner.functionName(ctx.version, lambdaConfig.nameSuffix)
         val response =
             lambda
                 .getFunctionOrNull(name)
                 ?.toJsonNode()
-                ?: userError("lambda function not found : $name")
+                ?: userError("lambda function not found: $name")
 
         ctx.term.output.format(response) { echo(it) }
     }
@@ -106,7 +103,10 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
     }
 
     override fun run() {
-        val lambdaFunctionName = LambdaZoeRunner.functionName(ctx.version)
+        val lambdaFunctionName = LambdaZoeRunner.functionName(
+            version = ctx.version,
+            suffix = environment.runners.config.lambda.nameSuffix
+        )
 
         val template =
             loadFileFromResources("lambda.infra.cf.json")
@@ -205,8 +205,14 @@ class DestroyLambda : CliktCommand(name = "destroy", help = "destroy lambda infr
                     .map { it.functionName }
                     .toList()
             } else {
+                val lambdaFunctionName = LambdaZoeRunner.functionName(
+                    version = ctx.version,
+                    suffix = environment.runners.config.lambda.nameSuffix
+                )
+
                 listOfNotNull(
-                    aws.lambda.getFunctionOrNull(LambdaZoeRunner.functionName(ctx.version))
+                    aws.lambda
+                        .getFunctionOrNull(lambdaFunctionName)
                         ?.configuration
                         ?.functionName
                 )

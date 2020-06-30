@@ -4,7 +4,6 @@ package com.adevinta.oss.zoe.cli
 
 import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonNode
-import com.fasterxml.jackson.databind.JsonNode
 import io.kotest.core.spec.style.ExpectSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
@@ -24,17 +23,9 @@ class MainTest : ExpectSpec({
         context("a new topic is created") {
             val topic = "topic-${UUID.randomUUID()}"
 
-            zoe("topics", "create", topic) {
-                it.stdout.size shouldBe 1
-                it.stdout.first().toJsonNode() shouldBe """{"done": true}""".toJsonNode()
-            }
+            zoe("topics", "create", topic) { it.stdout shouldBe """{"done": true}""".toJsonNode() }
 
-            context("listing topics") {
-                zoe("topics", "list") {
-                    it.stdout.size shouldBe 1
-                    it.stdout.first().parseJson<List<String>>() shouldContain topic
-                }
-            }
+            zoe("topics", "list") { it.stdout.parseJson<List<String>>() shouldContain topic }
 
             context("creating an avro schema") {
                 zoe(
@@ -45,20 +36,16 @@ class MainTest : ExpectSpec({
                     "--strategy", "topic",
                     "--topic", topic,
                     "--suffix", "value"
-                ) {
-                    it.stdout.first().parseJson<JsonNode>().has("id")
-                }
+                ) { it.stdout.has("id") }
 
                 context("inserting some data") {
-                    val inserted = zoe(
+                    val insertResult = zoe(
                         "topics",
                         "produce",
                         "--topic", topic,
                         "--from-file", testConfDir.resolve("data.json").absolutePath,
                         "--subject", "$topic-value"
-                    ) {
-                        it.error shouldBe null
-                    }
+                    )
 
                     context("reading data") {
                         zoe(
@@ -70,9 +57,10 @@ class MainTest : ExpectSpec({
                             "--timeout-per-batch", "3000",
                             "-n", "1000"
                         ) { read ->
-                            read.stdout.size shouldBe 1
-                            read.stdout.first().parseJson<List<JsonNode>>().size shouldBe inserted.stdout.first()
-                                .parseJson<JsonNode>().get("produced").size()
+                            val numberOfAdsConsumed = read.stdout.size()
+                            val numberOfAdsProduced = insertResult.stdout["produced"]?.size()
+
+                            numberOfAdsConsumed shouldBe numberOfAdsProduced
                         }
                     }
                 }

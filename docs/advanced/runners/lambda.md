@@ -9,6 +9,7 @@ runners:
   default: lambda
   config:
     lambda:
+      nameSuffix: null  # optional: if not null, this would be appended at the end of the function name
       deploy:
         subnets: ["subnet-xxxxxxx"]
         securityGroups: ["sg-yyyyyyy"]
@@ -20,7 +21,7 @@ runners:
       awsRegion: eu-west-1
 ```
 
-To the deploy the lambda function using the configured deployment context:
+To deploy the lambda function using the configured deployment context:
 
 ```bash
 zoe -v lambda deploy
@@ -31,7 +32,7 @@ Zoe deploys the lambda function in 2 steps :
 1. It deploys a minimal set of resources needed by the lambda using CloudFormation (an S3 bucket, AWS roles, etc.). For more details on the resources deployed, checkout the [cloudformation template](https://github.com/adevinta/zoe/blob/master/zoe-cli/resources/lambda.infra.cf.json).
 2. It deploys the lambda function itself by uploading the local Zoe JAR into AWS and registering the lambda within AWS. Zoe jar path needs to be set and must point to a valid zoe core jar downloaded beforehand (Todo: a guide for this).
 
-Once the lambda function is deployed, you can use the lambda runner to interact with your cluster :
+Once the lambda function is deployed, you can use the lambda runner to interact with your cluster:
 
 ```bash
 zoe -c my-cluster -r lambda topics consume input -n 10

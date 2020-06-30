@@ -214,6 +214,7 @@ fun mainModule(context: CliContext) = module {
                 LambdaZoeRunner(
                     name = RunnerName.Lambda.code,
                     version = ctx.version,
+                    suffix = nameSuffix,
                     executor = ioPool,
                     awsCredentials = credentials.resolve(),
                     awsRegion = awsRegion

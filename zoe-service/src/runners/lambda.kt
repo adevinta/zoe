@@ -12,11 +12,9 @@ import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.core.utils.toJsonString
 import com.adevinta.oss.zoe.service.utils.lambdaClient
-import com.adevinta.oss.zoe.service.utils.withHelpMessage
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.lambda.AWSLambda
 import com.amazonaws.services.lambda.model.InvokeRequest
-import com.amazonaws.services.lambda.model.ResourceNotFoundException
 import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
@@ -25,24 +23,30 @@ import java.util.function.Supplier
 class LambdaZoeRunner(
     override val name: String,
     private val version: String,
+    private val suffix: String?,
     private val executor: ExecutorService,
     private val client: AWSLambda
 ) : ZoeRunner {
 
     companion object {
         const val LambdaFunctionNamePrefix = "zoe-final-launch"
-        fun functionName(version: String): String = "${LambdaFunctionNamePrefix}-${version}".replace(".", "-")
+        fun functionName(version: String, suffix: String?): String =
+            listOfNotNull(LambdaFunctionNamePrefix, version, suffix)
+                .joinToString(separator = "-")
+                .replace(".", "-")
     }
 
     constructor(
         name: String,
         version: String,
+        suffix: String?,
         executor: ExecutorService,
         awsCredentials: AWSCredentialsProvider,
         awsRegion: String?
     ) : this(
         name = name,
         version = version,
+        suffix = suffix,
         executor = executor,
         client = lambdaClient(awsCredentials, awsRegion)
     )
@@ -51,7 +55,7 @@ class LambdaZoeRunner(
         Supplier {
             val response = client.invoke(
                 InvokeRequest().apply {
-                    functionName = functionName(version)
+                    functionName = functionName(version, suffix)
                     setPayload(
                         mapOf(
                             "function" to function,
