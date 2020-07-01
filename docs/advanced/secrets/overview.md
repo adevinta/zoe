@@ -32,7 +32,7 @@ clusters:
       bootstrap.servers: my-kafka-cluster.example.com:9092
       security.protocol: SASL_SSL
       sasl.mechanism: SCRAM-SHA-256
-      sasl.jaas.config: secrets:JAAS_CONFIG
+      sasl.jaas.config: secret:JAAS_CONFIG
       ...
 
 secrets:
@@ -40,7 +40,7 @@ secrets:
 ...
 ```
 
-When zoe encounters `secrets:JAAS_CONFIG`, it uses the configured secrets provider to search for a secret named `JAAS_CONFIG` and uses its value to replace `secret:JAAS_CONFIG`.
+When zoe encounters `secret:JAAS_CONFIG`, it uses the configured secrets provider to search for a secret named `JAAS_CONFIG` and uses its value to replace `secret:JAAS_CONFIG`.
 
 Zoe currently supports the following secrets provider (more may be supported in the future) :
 
