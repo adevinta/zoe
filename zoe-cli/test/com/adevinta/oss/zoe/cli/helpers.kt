@@ -31,7 +31,7 @@ class MockConsole : CliktConsole {
 
 }
 
-data class ZoeOutput(val stdout: JsonNode, val stderr: List<String>, val error: Throwable?)
+data class ZoeOutput(val stdout: JsonNode?, val stderr: List<String>, val error: Throwable?)
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -49,7 +49,7 @@ suspend fun ExpectScope.zoe(
             .mapCatching {
                 logger.info("command succeeded: ${mockConsole.stdout}")
                 ZoeOutput(
-                    stdout = mockConsole.stdout.toJsonNode(),
+                    stdout = mockConsole.stdout.firstOrNull()?.toJsonNode(),
                     stderr = mockConsole.stderr.toList(),
                     error = null
                 )

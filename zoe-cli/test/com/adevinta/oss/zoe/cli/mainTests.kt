@@ -7,6 +7,7 @@ import com.adevinta.oss.zoe.core.utils.toJsonNode
 import io.kotest.core.spec.style.ExpectSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import java.util.*
@@ -25,7 +26,7 @@ class MainTest : ExpectSpec({
 
             zoe("topics", "create", topic) { it.stdout shouldBe """{"done": true}""".toJsonNode() }
 
-            zoe("topics", "list") { it.stdout.parseJson<List<String>>() shouldContain topic }
+            zoe("topics", "list") { it.stdout?.parseJson<List<String>>()?.shouldContain(topic) }
 
             context("creating an avro schema") {
                 zoe(
@@ -36,7 +37,7 @@ class MainTest : ExpectSpec({
                     "--strategy", "topic",
                     "--topic", topic,
                     "--suffix", "value"
-                ) { it.stdout.has("id") }
+                ) { it.stdout?.has("id") shouldBe true }
 
                 context("inserting some data") {
                     val insertResult = zoe(
@@ -57,9 +58,10 @@ class MainTest : ExpectSpec({
                             "--timeout-per-batch", "3000",
                             "-n", "1000"
                         ) { read ->
-                            val numberOfAdsConsumed = read.stdout.size()
-                            val numberOfAdsProduced = insertResult.stdout["produced"]?.size()
+                            val numberOfAdsConsumed = read.stdout?.size()
+                            val numberOfAdsProduced = insertResult.stdout?.get("produced")?.size()
 
+                            numberOfAdsConsumed shouldNotBe null
                             numberOfAdsConsumed shouldBe numberOfAdsProduced
                         }
                     }
