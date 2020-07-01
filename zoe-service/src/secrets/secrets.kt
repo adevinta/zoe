@@ -29,7 +29,7 @@ import java.time.Duration
 interface SecretsProvider : Closeable {
 
     companion object {
-        val secretsPattern = Regex("""secret(?::(\S+))*:(\w+)""")
+        val secretsPattern = Regex("""secret(?::(\S+))*:(\S+)""")
     }
 
     fun isSecret(value: String): Boolean = secretsPattern.matchEntire(value) != null

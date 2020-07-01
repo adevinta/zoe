@@ -1,5 +1,3 @@
-@file:Suppress("NAME_SHADOWING")
-
 package com.adevinta.oss.zoe.cli
 
 import com.adevinta.oss.zoe.core.utils.parseJson
