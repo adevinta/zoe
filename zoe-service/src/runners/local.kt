@@ -20,7 +20,7 @@ class LocalZoeRunner(override val name: String, private val executor: ExecutorSe
             Supplier {
                 FunctionsRegistry
                     .runCatching { call(function, payload) }
-                    .getOrElse { throw ZoeRunnerException(null, it, name, null) }
+                    .getOrElse { throw ZoeRunnerException("runner '$name' failed", it, name, null) }
             },
             executor
         ).await()

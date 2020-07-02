@@ -42,7 +42,7 @@ import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-class ConfigCommand : CliktCommand(name = "config", help = "Initialize zoe") {
+class ConfigCommand : CliktCommand(name = "config", help = "Inspect or initialize zoe config") {
     override fun run() {}
 }
 

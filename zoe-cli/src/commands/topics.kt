@@ -173,7 +173,7 @@ class TopicsConsume : CliktCommand(
         by argument("topic", help = "Target topic to read (alias or real)").convert { TopicAliasOrRealName(it) }
 
     private val dialect: JsonQueryDialect
-        by option("--dialect", help = "Json query dialect")
+        by option("--dialect", help = "Json query dialect to use with `--query` and `--filter`")
             .choice(
                 "jq" to JsonQueryDialect.Jq,
                 "jmespath" to JsonQueryDialect.Jmespath

@@ -40,7 +40,7 @@ import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.file.Files
 
-class LambdaCommand : CliktCommand(name = "lambda", help = "Manage zoe lambda function") {
+class LambdaCommand : CliktCommand(name = "lambda", help = "Manage the AWS Lambda runner") {
     companion object {
         val ZoeTags = mapOf("service" to "zoe")
         const val LambdaInfraStackName = "zoe-infra-stack"
