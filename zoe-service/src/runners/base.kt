@@ -24,16 +24,20 @@ class ZoeRunnerException(
     cause: Throwable?,
     val runnerName: String,
     val remoteStacktrace: List<String>?
-) : Exception("runner '$runnerName' failed ${message?.let { ": $it" } ?: ""}", cause) {
+) : Exception(message, cause) {
     companion object
 }
 
 fun ZoeRunnerException.Companion.fromRunFailureResponse(
     error: FailureResponse,
-    runnerName: String
+    runnerName: String,
+    level: Int = 0
 ): ZoeRunnerException = ZoeRunnerException(
-    message = "${error.errorMessage} (type: ${error.errorType})",
-    cause = error.cause?.let { ZoeRunnerException.fromRunFailureResponse(error, runnerName) },
+    message = buildString {
+        if (level <= 0) append("runner '$runnerName' failed: ")
+        append("${error.errorMessage} (type: ${error.errorType})")
+    },
+    cause = error.cause?.let { ZoeRunnerException.fromRunFailureResponse(error, runnerName, level = level + 1) },
     runnerName = runnerName,
     remoteStacktrace = error.stackTrace
 )

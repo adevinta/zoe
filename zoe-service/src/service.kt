@@ -486,18 +486,30 @@ private fun Cluster.getTopicConfig(aliasOrRealName: TopicAliasOrRealName, subjec
 
 fun Cluster.inferDejsonifierConfig(topic: Topic): DejsonifierConfig {
     val deserializer = props["value.deserializer"]
-        ?: throw DejsonifierNotInferrable(reason = Reason.MissingValueDeserializer)
+        ?: throw DejsonifierNotInferrable(error = "couldn't infer data type", reason = Reason.MissingValueDeserializer)
 
     return when (deserializer) {
-        "io.confluent.kafka.serializers.KafkaAvroDeserializer" -> DejsonifierConfig.Avro(
-            registry = registry ?: throw DejsonifierNotInferrable(reason = Reason.MissingRegistry),
-            subject = topic.subject ?: throw DejsonifierNotInferrable(reason = Reason.MissingSubjectName)
-        )
+        "io.confluent.kafka.serializers.KafkaAvroDeserializer" -> {
+            val msgInCaseOfError =
+                "inferred avro data type (because KafkaAvroDeserializer is used) " +
+                    "but couldn't build the data converter"
+
+            DejsonifierConfig.Avro(
+                registry = registry ?: throw DejsonifierNotInferrable(
+                    error = msgInCaseOfError,
+                    reason = Reason.MissingRegistry
+                ),
+                subject = topic.subject ?: throw DejsonifierNotInferrable(
+                    error = msgInCaseOfError,
+                    reason = Reason.MissingSubjectName
+                )
+            )
+        }
         else -> DejsonifierConfig.Raw
     }
 }
 
-class DejsonifierNotInferrable(val reason: Reason) : Exception("cannot infer data type to convert to") {
+class DejsonifierNotInferrable(val error: String, val reason: Reason) : Exception("$error. Reason: ${reason.msg}") {
     enum class Reason(val msg: String) {
         MissingValueDeserializer(
             "missing 'value.deserializer' in the cluster config props (needed to infer data type to produce)"

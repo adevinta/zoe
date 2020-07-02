@@ -85,10 +85,13 @@ class LambdaZoeRunner(
         val cause: LambdaExecutionError?
     )
 
-    private fun LambdaExecutionError.toZoeRunnerException(): ZoeRunnerException =
+    private fun LambdaExecutionError.toZoeRunnerException(level: Int = 0): ZoeRunnerException =
         ZoeRunnerException(
-            message = "$errorMessage (type: $errorType)",
-            cause = cause?.toZoeRunnerException(),
+            message = buildString {
+                if (level <= 0) append("runner '$name' failed: ")
+                append("$errorMessage (type: $errorType)")
+            },
+            cause = cause?.toZoeRunnerException(level = level + 1),
             runnerName = name,
             remoteStacktrace = stackTrace
         )

@@ -52,7 +52,11 @@ class JqImpl : JsonSearch {
         val results = ArrayList<JsonNode>().apply {
             compiled.apply(scope, obj) { add(it) }
         }
-        return results.firstOrNull() ?: NullNode.instance
+        return if (results.size <= 1) {
+            results.firstOrNull() ?: NullNode.instance
+        } else {
+            json.createArrayNode().addAll(results)
+        }
     }
 
     private fun getOrCompile(expr: String) = cache.computeIfAbsent(expr) { JsonQuery.compile(expr, Versions.JQ_1_6) }

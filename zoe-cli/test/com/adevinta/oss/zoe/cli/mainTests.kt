@@ -48,7 +48,6 @@ class MainTest : ExpectSpec({
 
                     context("reading data") {
                         zoe(
-                            "-o", "json",
                             "topics",
                             "consume",
                             topic,
