@@ -22,5 +22,9 @@ inline fun <reified T : Closeable?> Module.singleCloseable(
     noinline definition: Definition<T>
 ) = single(qualifier, createdAtStart, override, definition) onClose {
     logger.debug("closing: $it")
-    it?.close()
+    try {
+        it?.close()
+    } catch (err: Throwable) {
+        logger.error("error closing '$it': $err")
+    }
 }
