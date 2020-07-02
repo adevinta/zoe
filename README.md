@@ -6,9 +6,15 @@ Zoe is a command line tool to interact with kafka in an easy and intuitive way. 
 
 Zoe really shines when it comes to interacting with cloud hosted kafka clusters (kubernetes, AWS, etc.) **due to its ability to offload consumption and execution to kubernetes pods or lambda functions** (more runners will be supported in the future).
 
+## Try zoe from your browser!
+
+You can try zoe from your browser using our [new Katacoda tutorials](https://www.katacoda.com/wlezzar).
+
 ## Status
 
-Zoe has been open sourced very recently and is not GA yet. It is actively being improved towards stabilization. Documentation is also in progress. That said, we are already using it at Adevinta and you can already start trying it if you are not afraid of digging into the code to solve some eventual undocumented problems :) . 
+Zoe has been open sourced very recently. It is actively being improved towards stabilization. Documentation is also in progress. That said, we are already using it at Adevinta and you can already start trying it if you are not afraid of digging into the code to solve some eventual undocumented problems :) .
+
+If you encounter any bugs or you have any question, please raise an issue on the repository.
 
 ## Key features
 
