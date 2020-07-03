@@ -146,10 +146,10 @@ zoe --silent -o table schemas describe input-events-topic-value
 
 ## Producing data
 
-No that we have the Cat Facts Avro schema registered, let's produce some cat facts from the `data.json` file in avro:
+Now that we have the Cat Facts Avro schema registered, let's produce some cat facts from the `data.json` file in avro:
 
 ```bash tab="command"
-zoe topics produce --topic input --from-file data.json --subject input-events-topic-value
+zoe -o table topics produce --topic input --from-file data.json --subject input-events-topic-value
 ``` 
 
 ```text tab="output"
@@ -176,8 +176,6 @@ zoe topics produce --topic input --from-file data.json --subject input-events-to
 ```
 
 We could have omitted the `--subject` option as we have already told zoe about that topic's subject name in the configuration (see above).
-
-When zoe sees that we are using the `KafkaAvroDeserializer`, it automatically tries to convert data from json into Avro [Generic Records](https://avro.apache.org/docs/1.7.6/api/java/org/apache/avro/generic/GenericRecord.html) before supplying them to the producer.
 
 ## Reading data
 
