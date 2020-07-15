@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
-import java.time.Duration
 
 data class EnvConfig(
     val runners: RunnersSection,
@@ -156,11 +155,12 @@ enum class RunnerName(@JsonValue val code: String) {
 }
 
 enum class Format {
-    Json, Raw, Table;
+    Json, JsonPretty, Raw, Table;
 
     fun format(content: JsonNode, foreach: (String) -> Unit) = when (this) {
         Raw -> foreach(content.toString())
         Json -> foreach(content.toString())
+        JsonPretty -> foreach(content.toPrettyString())
         Table -> foreach(content.toPrettyPrintedTable())
     }
 
