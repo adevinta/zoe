@@ -1,9 +1,13 @@
 package com.adevinta.oss.zoe.cli
 
+import com.adevinta.oss.zoe.core.functions.TopicDescription
 import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import io.kotest.core.spec.style.ExpectSpec
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.maps.shouldNotBeEmpty
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,6 +29,15 @@ class MainTest : ExpectSpec({
             zoe("topics", "create", topic) { it.stdout shouldBe """{"done": true}""".toJsonNode() }
 
             zoe("topics", "list") { it.stdout?.parseJson<List<String>>()?.shouldContain(topic) }
+
+            zoe("topics", "describe", topic) {
+                it.stdout?.parseJson<TopicDescription>()?.should { topicDescription ->
+                    topicDescription.topic.shouldBe(topic)
+                    topicDescription.partitions.shouldBe(listOf(0))
+                    topicDescription.internal.shouldBeFalse()
+                    topicDescription.config.shouldNotBeEmpty()
+                }
+            }
 
             context("creating an avro schema") {
                 zoe(

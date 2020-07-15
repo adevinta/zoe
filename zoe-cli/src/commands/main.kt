@@ -71,6 +71,7 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
             .choice(
                 "raw" to Format.Raw,
                 "json" to Format.Json,
+                "json-p" to Format.JsonPretty,
                 "table" to Format.Table
             )
             .default(Format.Raw)

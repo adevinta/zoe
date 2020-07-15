@@ -23,6 +23,7 @@ import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import org.apache.avro.Schema
 import org.apache.avro.compiler.idl.Idl
 import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.TopicPartition as KafkaTopicPartition
 
 /**
@@ -32,12 +33,29 @@ val listTopics = zoeFunction<AdminConfig, ListTopicsResponse>(name = "topics") {
     admin(config.props).use { cli ->
         cli.listTopics().listings().get()
             .map { it.name() }
-            .let(cli::describeTopics).all().get()
-            .map { (_, topic) ->
-                TopicDescription(
-                    topic.name(),
-                    topic.isInternal,
-                    topic.partitions().map { it.partition() })
+            .let { topics ->
+                val describeTopicsFuture = cli
+                    .describeTopics(topics).all()
+
+                val describeConfigsFuture = cli
+                    .describeConfigs(topics.map { ConfigResource(ConfigResource.Type.TOPIC, it) }).all()
+
+                val (kafkaTopicDescriptions, configResources) = describeTopicsFuture.get() to describeConfigsFuture.get()
+
+                kafkaTopicDescriptions.entries.map { (_, topic) ->
+                    val configMap = configResources[ConfigResource(ConfigResource.Type.TOPIC, topic.name())]
+                        ?.entries()
+                        ?.filter { it.value().isNotEmpty() }
+                        ?.map { it.name() to it.value() }
+                        ?.toMap()?.toSortedMap() ?: sortedMapOf()
+
+                    TopicDescription(
+                        topic.name(),
+                        topic.isInternal,
+                        topic.partitions().map { it.partition() },
+                        configMap
+                    )
+                }
             }
             .let { ListTopicsResponse(it) }
     }
@@ -310,7 +328,8 @@ data class ListSchemasResponse(
 data class TopicDescription(
     val topic: String,
     val internal: Boolean,
-    val partitions: List<Int>
+    val partitions: List<Int>,
+    val config: Map<String, String>
 )
 
 data class ListTopicsResponse(
