@@ -28,7 +28,7 @@ object HelpMessages {
 
     fun howToInitZoeLambda() = listOf(
         "It looks like the zoe lambda function is not deployed in your AWS environment. " +
-            "Have you you run: `zoe -e <env> lambda deploy`?",
+            "Did you run: `zoe -e <env> lambda deploy`?",
         "You may also need to configure the lambda runner in your zoe config. " +
             "Check out: ${DocUrl}/advanced/runners/lambda"
     )

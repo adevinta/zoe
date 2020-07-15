@@ -26,7 +26,7 @@ import org.apache.kafka.clients.producer.RecordMetadata
  * Lambda function to producer a bunch of records into kafka
  */
 val produce = zoeFunction<ProduceConfig, ProduceResponse>(name = "produce") { config ->
-    val jsonSearch = config.jsonQueryDialect.getImplementation()
+    val jsonSearch = config.jsonQueryDialect.createInstance()
 
     val keyPath = config.keyPath?.also(jsonSearch::validate)
     val valuePath = config.valuePath?.also(jsonSearch::validate)
@@ -38,9 +38,9 @@ val produce = zoeFunction<ProduceConfig, ProduceResponse>(name = "produce") { co
         ProducerRecord<Any?, Any?>(
             config.topic,
             null,
-            tsPath?.let { jsonSearch.search(row, it) }?.longValue(),
-            keyPath?.let { jsonSearch.search(row, it) }?.textValue() ?: uuid(),
-            dejsonifier.dejsonify(valuePath?.let { jsonSearch.search(row, it) } ?: row)
+            tsPath?.let { jsonSearch.query(row, it) }?.longValue(),
+            keyPath?.let { jsonSearch.query(row, it) }?.textValue() ?: uuid(),
+            dejsonifier.dejsonify(valuePath?.let { jsonSearch.query(row, it) } ?: row)
         )
     }
 

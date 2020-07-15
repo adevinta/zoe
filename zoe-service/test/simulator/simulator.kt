@@ -15,6 +15,9 @@ import com.adevinta.oss.zoe.service.runners.ZoeRunner
 import com.fasterxml.jackson.databind.JsonNode
 import kotlin.math.min
 
+/**
+ * de
+ */
 class ZoeRunnerSimulator(val state: RunnerState) : ZoeRunner {
 
     override val name: String = "simulator"
@@ -77,7 +80,7 @@ class ZoeRunnerSimulator(val state: RunnerState) : ZoeRunner {
                         timestamp = it.timestamp,
                         partition = it.partition,
                         topic = topic.name,
-                        formatted = it.content
+                        content = it.content
                     )
                 }
                 .toList(),

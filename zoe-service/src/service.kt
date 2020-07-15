@@ -87,6 +87,7 @@ class ZoeService(
         topic: TopicAliasOrRealName,
         from: ConsumeFrom,
         filters: List<String>,
+        metadataFilters: List<String>,
         query: String?,
         parallelism: Int,
         numberOfRecordsPerBatch: Int,
@@ -101,7 +102,9 @@ class ZoeService(
         val completedProps = clusterConfig.getCompletedProps()
 
         val resolvedFilters = filters.map { resolveExpression(it) }
+        val resolvedMetaFilters = metadataFilters.map { resolveExpression(it) }
         val resolvedQuery = query?.let { resolveExpression(it) }
+
 
         val partitionGroups: Collection<List<ConsumptionRange>> =
             determineConsumptionRange(
@@ -116,6 +119,7 @@ class ZoeService(
                 props = completedProps,
                 topic = topicName,
                 filter = resolvedFilters,
+                filterMeta = resolvedMetaFilters,
                 query = resolvedQuery,
                 range = rangeGroup,
                 recordsPerBatch = numberOfRecordsPerBatch,
@@ -370,6 +374,7 @@ class ZoeService(
         props: Map<String, String>,
         topic: String,
         filter: List<String>,
+        filterMeta: List<String>,
         query: String?,
         range: List<ConsumptionRange>,
         recordsPerBatch: Int,
@@ -389,6 +394,7 @@ class ZoeService(
                 ),
                 props = props,
                 filter = filter,
+                filterMeta = filterMeta,
                 query = query,
                 timeoutMs = timeoutPerBatch,
                 numberOfRecords = recordsPerBatch,
