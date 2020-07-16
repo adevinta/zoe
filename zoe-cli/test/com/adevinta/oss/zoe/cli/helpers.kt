@@ -1,16 +1,16 @@
 package com.adevinta.oss.zoe.cli
 
+import com.adevinta.oss.zoe.cli.config.EnvConfig
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.github.ajalt.clikt.output.CliktConsole
-import io.kotest.core.listeners.TestListener
 import io.kotest.core.spec.style.scopes.ExpectScope
 import io.kotest.core.test.TestContext
 import io.kotest.matchers.shouldBe
-import org.testcontainers.containers.DockerComposeContainer
-import org.testcontainers.containers.wait.strategy.Wait
+import org.koin.core.context.loadKoinModules
+import org.koin.dsl.module
 import java.io.File
 
 class MockConsole : CliktConsole {
@@ -26,7 +26,6 @@ class MockConsole : CliktConsole {
     override fun promptForLine(prompt: String, hideInput: Boolean): String? {
         TODO("Not yet implemented")
     }
-
 }
 
 data class ZoeOutput(val stdout: JsonNode?, val stderr: List<String>, val error: Throwable?)
@@ -40,6 +39,9 @@ suspend fun ExpectScope.zoe(
     val fullCommand = listOf("--config-dir", configDir, "-o", "json") + command.toList()
     val res = withZoe(customizeContext = { console = mockConsole }) {
         logger.info("running command: $fullCommand")
+
+        loadKoinModules(testModule)
+
         it
             .runCatching { parse(fullCommand) }
             .mapCatching {
@@ -68,17 +70,23 @@ suspend fun ExpectScope.zoe(
     return res
 }
 
-val testConfDir = File("testResources/env")
+private val testModule = module {
+    single<((EnvConfig) -> EnvConfig)> { ::customizeEnvConfigWithTestContainerAddresses }
+}
 
-fun testDockerCompose() =
-    DockerCompose(testConfDir.resolve("docker-compose.yml")).apply {
-        waitingFor("broker", Wait.forListeningPort())
-        waitingFor("schema-registry", Wait.forHttp("/subjects").forStatusCode(200))
+private fun customizeEnvConfigWithTestContainerAddresses(envConfig: EnvConfig): EnvConfig {
+    val clusters = envConfig.clusters.mapValues { cluster ->
+        cluster.value.copy(
+            registry = TestcontainersContext.schemaRegistry.url,
+            props = cluster.value.props.let { props ->
+                props.toMutableMap().apply {
+                    put("bootstrap.servers", TestcontainersContext.kafka.bootstrapServers)
+                }
+            }
+        )
     }
 
-typealias DockerCompose = DockerComposeContainer<Nothing>
-
-class DockerComposeEnv(private val env: DockerCompose) : TestListener {
-    override suspend fun beforeSpec(spec: io.kotest.core.spec.Spec) = env.start()
-    override suspend fun afterSpec(spec: io.kotest.core.spec.Spec) = env.stop()
+    return envConfig.copy(clusters = clusters)
 }
+
+val testConfDir = File("testResources/env")

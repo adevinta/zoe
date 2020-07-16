@@ -14,8 +14,7 @@ import java.util.*
 
 class MainTest : ExpectSpec({
 
-    // spin up docker compose
-    listener(DockerComposeEnv(testDockerCompose()))
+    listener(TestcontainersListener())
 
     context("Testing CLI with Avro and a local runner") {
 

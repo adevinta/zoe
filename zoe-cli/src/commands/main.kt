@@ -37,7 +37,10 @@ import com.github.ajalt.mordant.TerminalCapabilities
 import org.apache.log4j.Level
 import org.apache.log4j.LogManager
 import org.koin.core.context.loadKoinModules
+import org.koin.core.definition.Definition
+import org.koin.core.parameter.DefinitionParameters
 import org.koin.core.qualifier.named
+import org.koin.core.scope.Scope
 import org.koin.dsl.module
 import org.koin.dsl.onClose
 import java.io.File
@@ -171,12 +174,14 @@ fun mainModule(context: CliContext) = module {
     single<CliContext> { context }
 
     single<EnvConfig> {
-        ConfigUrlProviderChain(
+        val envConfig = ConfigUrlProviderChain(
             listOf(
                 EnvVarsConfigUrlProvider,
                 LocalConfigDirUrlProvider(context.configDir)
             )
         ).createConfig(context.env)
+
+        customize(envConfig)
     }
 
     single<ZoeService> {
@@ -285,6 +290,11 @@ fun mainModule(context: CliContext) = module {
     }
 
     single<ExecutorService>(named("io")) { Executors.newCachedThreadPool() } onClose { it?.shutdown() }
+}
+
+private inline fun <reified T> Scope.customize(data: T): T {
+    val customizers = getAll<(T) -> T>()
+    return customizers.fold(data) { it, customizer -> customizer(it) }
 }
 
 data class TermConfig(val output: Format, val colors: TermColors)

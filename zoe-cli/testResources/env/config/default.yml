@@ -16,17 +16,16 @@ runners:
       enabled: true
 
 clusters:
-
   default:
     topics:
       input:
         name: "input-events-topic"
         subject: "input-events-topic-com.adevinta.oss.zoe.guides.CatFact"
     props:
-      bootstrap.servers: "localhost:29092"
+      bootstrap.servers: "{provided_by_envconfig_customizer}"
       key.deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
       value.deserializer: "io.confluent.kafka.serializers.KafkaAvroDeserializer"
       key.serializer: "org.apache.kafka.common.serialization.StringSerializer"
       value.serializer: "io.confluent.kafka.serializers.KafkaAvroSerializer"
-    registry: "http://localhost:8081"
+    registry: "{provided_by_envconfig_customizer}"
 

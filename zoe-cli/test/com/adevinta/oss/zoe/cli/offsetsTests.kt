@@ -12,8 +12,7 @@ import java.util.*
 
 class ConsumerGroupsTest : ExpectSpec({
 
-    // spin up docker compose
-    listener(DockerComposeEnv(testDockerCompose()))
+    listener(TestcontainersListener())
 
     context("Testing Consumer groups offsets commands") {
         val topic = "topic-${UUID.randomUUID()}"
