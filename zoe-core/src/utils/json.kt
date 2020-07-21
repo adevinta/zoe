@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 interface JsonSearch {
     fun validate(expr: String)
-    fun search(obj: JsonNode, expr: String): JsonNode
+    fun query(obj: JsonNode, expr: String): JsonNode
 }
 
 class JmespathImpl : JsonSearch {
@@ -26,7 +26,7 @@ class JmespathImpl : JsonSearch {
         }
     }
 
-    override fun search(obj: JsonNode, expr: String): JsonNode {
+    override fun query(obj: JsonNode, expr: String): JsonNode {
         val compiled = getOrCompile(expr)
         return compiled.search(obj)
     }
@@ -47,7 +47,7 @@ class JqImpl : JsonSearch {
         }
     }
 
-    override fun search(obj: JsonNode, expr: String): JsonNode {
+    override fun query(obj: JsonNode, expr: String): JsonNode {
         val compiled = getOrCompile(expr)
         val results = ArrayList<JsonNode>().apply {
             compiled.apply(scope, obj) { add(it) }
@@ -63,4 +63,4 @@ class JqImpl : JsonSearch {
 }
 
 fun JsonSearch.match(obj: JsonNode, filters: List<String>): Boolean =
-    filters.all { expr -> search(obj, expr).asBoolean() }
+    filters.all { expr -> query(obj, expr).asBoolean() }

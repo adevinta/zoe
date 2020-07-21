@@ -133,7 +133,17 @@ class TopicsConsume : CliktCommand(
             .convert { Duration.parse(it) }
             .default(Duration.ofHours(1))
 
-    private val filters: List<String> by option("-f", "--filter", help = "Jmespath expression filters").multiple()
+    private val filters: List<String> by option(
+        "-f",
+        "--filter",
+        help = "Use jmespath / jq filte expressions against records content"
+    ).multiple()
+
+    private val metadataFilters: List<String> by option(
+        "--filter-meta",
+        help = "Use jmespath / jq filter expressions against records metadata (headers, key, etc.)"
+    ).multiple()
+
     private val formatter by option("--formatter").default("raw")
     private val query: String? by option("--query", help = "Jmespath query to execute on each record")
 
@@ -166,7 +176,14 @@ class TopicsConsume : CliktCommand(
         by option(
             "-v",
             "--verbose",
-            help = "Use this flag to have the offsets, timestamp and other informations along with the message"
+            help = "Use this flag to have the offsets, timestamp and other informations along with the message",
+            hidden = true
+        ).flag(default = false).deprecated("use --with-meta instead", error = true)
+
+    private val withMeta: Boolean
+        by option(
+            "--with-meta",
+            help = "Use this flag to have the record metadata (offsets, headers, ...) along with the content"
         ).flag(default = false)
 
     private val topic: TopicAliasOrRealName
@@ -196,6 +213,7 @@ class TopicsConsume : CliktCommand(
                     topic = topic,
                     from = from,
                     filters = filters,
+                    metadataFilters = metadataFilters,
                     query = query,
                     parallelism = parallelism,
                     numberOfRecordsPerBatch = recordsPerBatch,
@@ -207,7 +225,7 @@ class TopicsConsume : CliktCommand(
                 .onEach { if (it is RecordOrProgress.Progress && !continuously) log(it.range) }
                 .filter { it is RecordOrProgress.Record }
                 .map { it as RecordOrProgress.Record }
-                .map { if (verbose) it.record.toJsonNode() else it.record.formatted }
+                .map { if (verbose || withMeta) it.record.toJsonNode() else it.record.content }
                 .take(maxRecords)
 
         ctx.term.output.format(records) { echo(it) }

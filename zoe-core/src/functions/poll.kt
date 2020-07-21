@@ -27,11 +27,12 @@ import java.time.Duration
  * Polls records from kafka
  */
 val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
-    val jsonQuery = config.jsonQueryDialect.getImplementation()
+    val queryEngine = config.jsonQueryDialect.createInstance()
 
     // validate filters and select statement
-    val filters = config.filter.also { it.forEach(jsonQuery::validate) }
-    val query = config.query?.also(jsonQuery::validate)
+    val filters = config.filter.also { it.forEach(queryEngine::validate) }
+    val filtersMeta = config.filterMeta.also { it.forEach(queryEngine::validate) }
+    val query = config.query?.also(queryEngine::validate)
 
     val jsonifier = Jsonifiers.get(config.jsonifier)
 
@@ -52,18 +53,28 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
 
         val filtered =
             records
-                .map {
+                .map { record ->
                     PolledRecord(
-                        key = it.key()?.toString(),
-                        offset = it.offset(),
-                        timestamp = it.timestamp(),
-                        partition = it.partition(),
-                        topic = it.topic(),
-                        formatted = it.value()?.let { rec -> jsonifier.format(rec) } ?: NullNode.getInstance()
+                        meta = RecordMetadata(
+                            key = record.key()?.toString(),
+                            offset = record.offset(),
+                            timestamp = record.timestamp(),
+                            partition = record.partition(),
+                            topic = record.topic(),
+                            headers = record.headers()
+                                .groupBy { it.key() }
+                                .mapValues { it.value.map { header -> header.value().toString(Charsets.UTF_8) } }
+                        ),
+                        content = record.value()?.let { rec -> jsonifier.format(rec) } ?: NullNode.getInstance()
                     )
                 }
-                .filter { jsonQuery.match(it.formatted, filters = filters) }
-                .map { if (query == null) it else it.copy(formatted = jsonQuery.search(it.formatted, expr = query)) }
+                .filter {
+                    with(queryEngine) {
+                        match(it.content, filters = filters)
+                            && (filtersMeta.isEmpty() || match(it.meta.toJsonNode(), filters = filtersMeta))
+                    }
+                }
+                .map { if (query == null) it else it.copy(content = queryEngine.query(it.content, expr = query)) }
                 .take(config.numberOfRecords)
                 .toList()
 
@@ -80,12 +91,17 @@ data class PollResponse(
 )
 
 data class PolledRecord(
+    val meta: RecordMetadata,
+    val content: JsonNode
+)
+
+data class RecordMetadata(
     val key: String?,
     val offset: Long,
     val timestamp: Long,
     val partition: Int,
     val topic: String,
-    val formatted: JsonNode
+    val headers: Map<String, List<String>>
 )
 
 private fun Consumer<*, *>.subscribe(topic: String, subscription: Subscription) = when (subscription) {
@@ -233,7 +249,8 @@ data class PollConfig(
     val timeoutMs: Long = 10000,
     val numberOfRecords: Int = 3,
     val jsonifier: String,
-    val jsonQueryDialect: JsonQueryDialect = JsonQueryDialect.Jmespath
+    val jsonQueryDialect: JsonQueryDialect = JsonQueryDialect.Jmespath,
+    val filterMeta: List<String> = listOf()
 )
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
@@ -248,7 +265,7 @@ sealed class Subscription {
 
 enum class JsonQueryDialect { Jmespath, Jq }
 
-fun JsonQueryDialect.getImplementation(): JsonSearch = when (this) {
+fun JsonQueryDialect.createInstance(): JsonSearch = when (this) {
     JsonQueryDialect.Jmespath -> JmespathImpl()
     JsonQueryDialect.Jq -> JqImpl()
 }
