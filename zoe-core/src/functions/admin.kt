@@ -67,7 +67,12 @@ val listTopics = zoeFunction<AdminConfig, ListTopicsResponse>(name = "topics") {
 val createTopic = zoeFunction<CreateTopicRequest, CreateTopicResponse>(name = "createTopic") { config ->
     admin(config.props).use { cli ->
         cli
-            .createTopics(listOf(NewTopic(config.name, config.partitions, config.replicationFactor.toShort())))
+            .createTopics(
+                listOf(
+                    NewTopic(config.name, config.partitions, config.replicationFactor.toShort())
+                        .apply { config.topicConfig?.takeIf { it.isNotEmpty() }?.let(this::configs) }
+                )
+            )
             .all()
             .get()
 
@@ -416,6 +421,7 @@ data class CreateTopicRequest(
     val name: String,
     val partitions: Int,
     val replicationFactor: Int,
+    val topicConfig: Map<String, String>?,
     val props: Map<String, String>
 )
 

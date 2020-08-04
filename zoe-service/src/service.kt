@@ -244,7 +244,8 @@ class ZoeService(
         cluster: String,
         topic: TopicAliasOrRealName,
         partitions: Int,
-        replicationFactor: Int
+        replicationFactor: Int,
+        config: Map<String, String>
     ): CreateTopicResponse {
         val clusterConfig = getCluster(cluster)
         val topicName = clusterConfig.getTopicConfig(topic, subjectOverride = null).name
@@ -253,7 +254,8 @@ class ZoeService(
                 name = topicName,
                 partitions = partitions,
                 replicationFactor = replicationFactor,
-                props = clusterConfig.getCompletedProps()
+                props = clusterConfig.getCompletedProps(),
+                topicConfig = config
             )
         )
     }

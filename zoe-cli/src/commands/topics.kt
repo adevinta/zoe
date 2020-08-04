@@ -86,7 +86,22 @@ class TopicsDescribe : CliktCommand(name = "describe", help = "describe a topic"
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-class TopicsCreate : CliktCommand(name = "create", help = "Create a topic"), KoinComponent {
+class TopicsCreate : CliktCommand(
+    name = "create",
+    help = "Create a topic",
+    epilog = with(globalTermColors) {
+        """```
+        |Examples:
+        |
+        |  Create a topic with a 5 partitions and a replication factor of 1:
+        |  > ${bold("zoe topics create my-topic --partitions 5 --replication-factor 1")}
+        |
+        |  Specify additional configuration parameters:
+        |  > ${bold("zoe topics create my-topic --partitions 5 --replication-factor 1 --config retention.ms=3600 " +
+            "--config cleanup.policy=compact\n")}
+        |```""".trimMargin()
+    }
+), KoinComponent {
 
     private val topic
         by argument("topic", help = "Topic name (real or alias)").convert { TopicAliasOrRealName(it) }
@@ -95,11 +110,15 @@ class TopicsCreate : CliktCommand(name = "create", help = "Create a topic"), Koi
     private val replicationFactor
         by option("-r", "--replication-factor", help = "Replication factor").int().default(1)
 
+    private val topicConfig: Map<String, String>
+        by option("-c", "--config", help = "specify additional topic configuration (cf. examples below)")
+            .associate()
+
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val response = service.createTopic(ctx.cluster, topic, partitions, replicationFactor)
+        val response = service.createTopic(ctx.cluster, topic, partitions, replicationFactor, config = topicConfig)
         ctx.term.output.format(response.toJsonNode()) { echo(it) }
     }
 }
