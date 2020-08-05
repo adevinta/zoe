@@ -61,7 +61,7 @@ class ZoeService(
     ): ProduceResponse {
         val clusterConfig = getCluster(cluster)
         val topicConfig = clusterConfig.getTopicConfig(topic, subjectOverride = subject)
-        val props = clusterConfig.getCompletedProps()
+        val props = clusterConfig.getCompletedProps(topicConfig)
 
         val dejsonifierConfig = dejsonifier ?: clusterConfig.inferDejsonifierConfig(topicConfig)
 
@@ -98,8 +98,8 @@ class ZoeService(
     ): Flow<RecordOrProgress> = flow {
 
         val clusterConfig = getCluster(cluster)
-        val topicName = clusterConfig.getTopicConfig(topic, subjectOverride = null).name
-        val completedProps = clusterConfig.getCompletedProps()
+        val topicConfig = clusterConfig.getTopicConfig(topic, subjectOverride = null)
+        val completedProps = clusterConfig.getCompletedProps(topicConfig)
 
         val resolvedFilters = filters.map { resolveExpression(it) }
         val resolvedMetaFilters = metadataFilters.map { resolveExpression(it) }
@@ -108,7 +108,7 @@ class ZoeService(
 
         val partitionGroups: Collection<List<ConsumptionRange>> =
             determineConsumptionRange(
-                topic = topicName,
+                topic = topicConfig.name,
                 props = completedProps,
                 from = from,
                 stopCondition = stopCondition
@@ -117,7 +117,7 @@ class ZoeService(
         val recordFlows = partitionGroups.map { rangeGroup ->
             readRange(
                 props = completedProps,
-                topic = topicName,
+                topic = topicConfig.name,
                 filter = resolvedFilters,
                 filterMeta = resolvedMetaFilters,
                 query = resolvedQuery,
@@ -230,7 +230,7 @@ class ZoeService(
      */
     suspend fun listTopics(cluster: String, userTopicsOnly: Boolean): ListTopicsResponse {
         val clusterConfig = getCluster(cluster)
-        val response = runner.topics(AdminConfig(clusterConfig.getCompletedProps()))
+        val response = runner.topics(AdminConfig(clusterConfig.getCompletedProps(null)))
         return when {
             !userTopicsOnly -> response
             else -> response.copy(topics = response.topics.filter { !it.internal && it.topic !in internalTopics })
@@ -245,17 +245,17 @@ class ZoeService(
         topic: TopicAliasOrRealName,
         partitions: Int,
         replicationFactor: Int,
-        config: Map<String, String>
+        additionalTopicConfig: Map<String, String>
     ): CreateTopicResponse {
         val clusterConfig = getCluster(cluster)
-        val topicName = clusterConfig.getTopicConfig(topic, subjectOverride = null).name
+        val topicConfig = clusterConfig.getTopicConfig(topic, subjectOverride = null)
         return runner.createTopic(
             CreateTopicRequest(
-                name = topicName,
+                name = topicConfig.name,
                 partitions = partitions,
                 replicationFactor = replicationFactor,
-                props = clusterConfig.getCompletedProps(),
-                topicConfig = config
+                topicConfig = additionalTopicConfig,
+                props = clusterConfig.getCompletedProps(topicConfig)
             )
         )
     }
@@ -282,13 +282,13 @@ class ZoeService(
         timestamp: Long
     ): List<TopicPartitionOffset> {
         val clusterConfig = getCluster(cluster)
-        val props = clusterConfig.getCompletedProps()
-        val topicName = clusterConfig.getTopicConfig(topic, subjectOverride = null).name
+        val topicConfig = clusterConfig.getTopicConfig(topic, subjectOverride = null)
+        val props = clusterConfig.getCompletedProps(topicConfig)
 
         val query = OffsetQuery.Timestamp(timestamp, id = "query")
 
         return runner
-            .queryOffsets(OffsetQueriesRequest(props, topicName, queries = listOf(query)))
+            .queryOffsets(OffsetQueriesRequest(props, topicConfig.name, queries = listOf(query)))
             .responses[query.id]
             ?: throw IllegalStateException("response not found for query '$query'")
     }
@@ -299,7 +299,7 @@ class ZoeService(
     suspend fun listGroups(cluster: String, groups: List<GroupAliasOrRealName>): ListGroupsResponse {
         val clusterConfig = getCluster(cluster)
         val groupsToSearch = groups.map { clusterConfig.getConsumerGroup(it) }
-        return runner.groups(GroupsConfig(clusterConfig.getCompletedProps(), groupsToSearch))
+        return runner.groups(GroupsConfig(clusterConfig.getCompletedProps(null), groupsToSearch))
     }
 
     /**
@@ -308,7 +308,7 @@ class ZoeService(
     suspend fun groupOffsets(cluster: String, group: GroupAliasOrRealName): GroupOffsetsResponse {
         val clusterConfig = getCluster(cluster)
         val groupToSearch = clusterConfig.getConsumerGroup(group)
-        return runner.offsets(GroupConfig(clusterConfig.getCompletedProps(), groupToSearch))
+        return runner.offsets(GroupConfig(clusterConfig.getCompletedProps(null), groupToSearch))
     }
 
     /**
@@ -363,8 +363,8 @@ class ZoeService(
     private suspend fun getCluster(name: String): Cluster =
         requireNotNull(configStore.cluster(name).await()) { "cluster config not found : $name" }
 
-    private fun Cluster.getCompletedProps(): Map<String, String> =
-        props
+    private fun Cluster.getCompletedProps(topic: Topic?): Map<String, String> =
+        (props + (topic?.propsOverride ?: emptyMap()))
             .let(secrets::resolveSecrets)
             .toMutableMap()
             .apply { if (registry != null) putIfAbsent("schema.registry.url", registry) }
@@ -488,8 +488,8 @@ data class RunnerVersionData(
 
 private fun Cluster.getTopicConfig(aliasOrRealName: TopicAliasOrRealName, subjectOverride: String?) =
     when (val retrievedTopic = topics[aliasOrRealName.value]) {
-        null -> Topic(aliasOrRealName.value, subjectOverride)
-        else -> Topic(retrievedTopic.name, (subjectOverride ?: retrievedTopic.subject))
+        null -> Topic(aliasOrRealName.value, subjectOverride, emptyMap())
+        else -> retrievedTopic.copy(subject = subjectOverride ?: retrievedTopic.subject)
     }
 
 fun Cluster.inferDejsonifierConfig(topic: Topic): DejsonifierConfig {

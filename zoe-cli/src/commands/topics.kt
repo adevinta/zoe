@@ -118,7 +118,7 @@ class TopicsCreate : CliktCommand(
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val response = service.createTopic(ctx.cluster, topic, partitions, replicationFactor, config = topicConfig)
+        val response = service.createTopic(ctx.cluster, topic, partitions, replicationFactor, additionalTopicConfig = topicConfig)
         ctx.term.output.format(response.toJsonNode()) { echo(it) }
     }
 }
