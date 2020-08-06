@@ -41,7 +41,11 @@ data class ClusterConfig(
     val groups: Map<String, String> = mapOf()
 )
 
-data class TopicConfig(val name: String, val subject: String? = null)
+data class TopicConfig(
+    val name: String,
+    val subject: String? = null,
+    val propsOverride: Map<String, String> = emptyMap()
+)
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
@@ -74,7 +78,7 @@ sealed class SecretsProviderConfig {
     data class AwsSecretsManager(
         val region: String?,
         val credentials: AwsCredentialsConfig = AwsCredentialsConfig.Default
-    ): SecretsProviderConfig()
+    ) : SecretsProviderConfig()
 }
 
 data class RunnersSection(
@@ -142,7 +146,7 @@ fun AwsCredentialsConfig.resolve(): AWSCredentialsProvider = when (this) {
     is AwsCredentialsConfig.Static -> AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretAccessKey))
 }
 
-fun TopicConfig.toDomain(): Topic = Topic(name = name, subject = subject)
+fun TopicConfig.toDomain(): Topic = Topic(name = name, subject = subject, propsOverride = propsOverride)
 fun ClusterConfig.toDomain(): Cluster = Cluster(
     registry = registry,
     topics = topics.mapValues { it.value.toDomain() },

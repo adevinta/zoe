@@ -39,7 +39,7 @@ data class Cluster(
     val groups: Map<GroupAlias, ConsumerGroup> = mapOf()
 )
 
-data class Topic(val name: String, val subject: String?)
+data class Topic(val name: String, val subject: String?, val propsOverride: Map<String, String>)
 data class ConsumerGroup(val name: String)
 
 typealias TopicAlias = String

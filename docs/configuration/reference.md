@@ -38,6 +38,10 @@ clusters:
       topic-alias:
         name: full-name-of-the-topic-in-the-cluster
         subject: subject-name-of-the-topic
+        # Override any kafka client property that is specific to a topic
+        propsOverride:
+          key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 # Runners configuration
 runners:
