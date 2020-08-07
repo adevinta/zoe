@@ -29,7 +29,7 @@ By default, zoe consumes 5 records starting from the last hour.
 
 ## Displaying records metadata
 
-To display the records' metadata (key, offset, timestamp, partition, topic, headers), use the `--with-meta` option as the following:
+To display the records' metadata (record headers, key, offset, timestamp, partition, topic), use the `--with-meta` option as the following:
 
 ```bash tab="command"
 zoe -v --cluster local topics consume input -n 5 --with-meta
@@ -41,6 +41,7 @@ zoe -v --cluster local topics consume input -n 5 --with-meta
 {"meta": {"key":"591d9b2f227c1a0020d26823", "offset":3, "timestamp":3596700800645, "partition":0, "topic":"input","headers":{"traceId":"5b3ae7fa-2a8b-494b-a81c-1c759a479867"}},"content":{"_id":"591d9b2f227c1a0020d26823","text":"Every year, nearly four million cats are eaten in ...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":4,"userUpvoted":null}
 {"meta": {"key":"59951d5ef2db18002031693c", "offset":1, "timestamp":4596700800645, "partition":1, "topic":"input","headers":{"traceId":"6b3ae7fa-2a8b-494b-a81c-1c759a479867"}},"content":{"_id":"59951d5ef2db18002031693c","text":"America’s cats, including housecats that adventure...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":4,"userUpvoted":null}
 {"meta": {"key":"5a4d76916ef087002174c28b", "offset":2, "timestamp":5596700800645, "partition":1, "topic":"input","headers":{"traceId":"7b3ae7fa-2a8b-494b-a81c-1c759a479867"}},"content":{"_id":"5a4d76916ef087002174c28b","text":"A cat’s nose pad is ridged with a unique pattern, ...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":4,"userUpvoted":null}
+```
 
 ### Controlling the time range
 
@@ -189,4 +190,12 @@ zoe -v --cluster local topics consume input --with-meta --filter-meta "offset ==
 
 ```json tab="output"
 {"meta": {"key":"59951d5ef2db18002031693c", "offset":1, "timestamp":4596700800645, "partition":1, "topic":"input","headers":{"traceId":"6b3ae7fa-2a8b-494b-a81c-1c759a479867"}},"content":{"_id":"59951d5ef2db18002031693c","text":"America’s cats, including housecats that adventure...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":4,"userUpvoted":null}
+```
+
+Record headers can also be used for filtering. The following command show an example of filtering records based on header values:
+
+```bash tab="command"
+zoe --cluster local topics consume input \
+    --with-meta \
+    --filter-meta "headers.traceId == '123123'"
 ```
