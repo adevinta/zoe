@@ -17,7 +17,7 @@ The special `common.yml` configuration file is supposed to contain configuration
 
 ## Environment variables substitutions
 
-It is possible to use environment variables inside the zoe yaml or json configuration files and zoe will lookup those variables at runtime from the environment and does an automatic substitution.
+It is possible to use environment variables inside the zoe yaml or json configuration files and zoe will automatically substitute those variables at runtime from the environment.
 
 The following example shows the use of an environment variable inside a yaml configuraiton file:
 
