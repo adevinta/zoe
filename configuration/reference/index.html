@@ -36,6 +36,10 @@
       <span class="nt">topic-alias</span><span class="p">:</span>
         <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">full-name-of-the-topic-in-the-cluster</span>
         <span class="nt">subject</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">subject-name-of-the-topic</span>
+        <span class="c1"># Override any kafka client property that is specific to a topic</span>
+        <span class="nt">propsOverride</span><span class="p">:</span>
+          <span class="nt">key.deserializer</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">org.apache.kafka.common.serialization.StringDeserializer</span>
+          <span class="nt">value.deserializer</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">org.apache.kafka.common.serialization.StringDeserializer</span>
 
 <span class="c1"># Runners configuration</span>
 <span class="nt">runners</span><span class="p">:</span>
