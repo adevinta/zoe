@@ -11,7 +11,7 @@ docker run --rm -v $HOME/zoe-docker:/root/.zoe adevinta/zoe-cli:latest --help
 You can also use a release specific image:
 
 ```bash
-docker run --rm -v $HOME/zoe-docker:/root/.zoe adevinta/zoe-cli:0.23.0 --help
+docker run --rm -v $HOME/zoe-docker:/root/.zoe adevinta/zoe-cli:0.26.0 --help
 ```
 
 ## Creating a launcher
