@@ -17,6 +17,8 @@ import com.adevinta.oss.zoe.service.utils.userError
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import org.apache.commons.text.StringSubstitutor
+import org.apache.commons.text.lookup.StringLookupFactory
 import java.io.File
 import java.net.URL
 
@@ -80,7 +82,9 @@ class LocalConfigDirUrlProvider(private val directory: File) : ConfigUrlProvider
 
 private fun loadConfigFromUrl(url: URL): JsonNode {
     logger.info("loading config from url : $url")
-    val content = url.readBytes()
+    val content = with(StringSubstitutor(StringLookupFactory.INSTANCE.environmentVariableStringLookup())) {
+        replace(String(url.readBytes()))
+    }
     val parsed = if (url.path.endsWith(".yml")) yaml.readTree(content) else json.readTree(content)
     return parsed ?: NullNode.getInstance()
 }
