@@ -27,6 +27,21 @@ zoe -v --cluster local topics consume input
 
 By default, zoe consumes 5 records starting from the last hour.
 
+## Displaying records metadata
+
+To display the records' metadata (key, offset, timestamp, partition, topic, headers), use the `--with-meta` option as the following:
+
+```bash tab="command"
+zoe -v --cluster local topics consume input -n 5 --with-meta
+```
+
+```json tab="output"
+{"meta": {"key":"5b199196ce456e001424256a", "offset":1, "timestamp":1596700800645, "partition":0, "topic":"input","headers":{"traceId":"3b3ae7fa-2a8b-494b-a81c-1c759a479867"}},"content":{"_id":"5b199196ce456e001424256a","text":"Cats can distinguish different flavors in water.","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":6,"userUpvoted":null}
+{"meta": {"key":"5b1b411d841d9700146158d9", "offset":2, "timestamp":2596700800645, "partition":0, "topic":"input","headers":{"traceId":"4b3ae7fa-2a8b-494b-a81c-1c759a479867"}},"content":{"_id":"5b1b411d841d9700146158d9","text":"The Egyptian Mau’s name is derived from the Middle...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":5,"userUpvoted":null}
+{"meta": {"key":"591d9b2f227c1a0020d26823", "offset":3, "timestamp":3596700800645, "partition":0, "topic":"input","headers":{"traceId":"5b3ae7fa-2a8b-494b-a81c-1c759a479867"}},"content":{"_id":"591d9b2f227c1a0020d26823","text":"Every year, nearly four million cats are eaten in ...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":4,"userUpvoted":null}
+{"meta": {"key":"59951d5ef2db18002031693c", "offset":1, "timestamp":4596700800645, "partition":1, "topic":"input","headers":{"traceId":"6b3ae7fa-2a8b-494b-a81c-1c759a479867"}},"content":{"_id":"59951d5ef2db18002031693c","text":"America’s cats, including housecats that adventure...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":4,"userUpvoted":null}
+{"meta": {"key":"5a4d76916ef087002174c28b", "offset":2, "timestamp":5596700800645, "partition":1, "topic":"input","headers":{"traceId":"7b3ae7fa-2a8b-494b-a81c-1c759a479867"}},"content":{"_id":"5a4d76916ef087002174c28b","text":"A cat’s nose pad is ridged with a unique pattern, ...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":4,"userUpvoted":null}
+
 ### Controlling the time range
 
 We can control the number of output records (`-n`) and the starting time of the consumption (`--from`).
@@ -163,3 +178,15 @@ zoe --cluster my-production-cluster \
 ```
 
 This command will not work as is on your computer at this stage because this requires additional work to configure access to a kubernetes cluster with zoe. But there is a tutorial available in this documentation to try out zoe with a kubernetes cluster using Minikube.
+
+### Filtering data based on metadata
+
+Just like Zoe can use [Jmespath expressions](https://jmespath.org/) to filter record content with the `--filter` option, it can also filter records based on their metadata using the `--filter-meta` option.
+
+```bash tab="command"
+zoe -v --cluster local topics consume input --with-meta --filter-meta "offset == \`1\` && partition == \`1\`"
+```
+
+```json tab="output"
+{"meta": {"key":"59951d5ef2db18002031693c", "offset":1, "timestamp":4596700800645, "partition":1, "topic":"input","headers":{"traceId":"6b3ae7fa-2a8b-494b-a81c-1c759a479867"}},"content":{"_id":"59951d5ef2db18002031693c","text":"America’s cats, including housecats that adventure...","type":"cat","user":{"_id":"5a9ac18c7478810ea6c06381","name":{"first":"Alex","last":"Wohlbruck"}},"upvotes":4,"userUpvoted":null}
+```

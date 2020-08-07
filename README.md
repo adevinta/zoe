@@ -22,6 +22,7 @@ Here are some of the most interesting features of zoe :
 
 - Consume kafka topics from a specific point in time (ex. using `--from 'PT5h` from the last 5 hours).
 - Filter data based on content (ex. using `--filter "id == '12345'"` filters records with the selected id).
+- Filter data based on record metadata and record headers (ex. using `--filter-meta "offset == '95' && partition == '0'"` finds record on given partition with the given offset).
 - Supports offloading consumption of data to multiple lambda functions, kubernetes pods, etc. for parallelism (ex. adding `--runner kubernetes` would offload all the requests to a configured kubernetes cluster).
 - Monitor consumer groups' offsets.
 - Upload avro schemas from a `.avsc` or `.avdl` file using different naming strategies.
