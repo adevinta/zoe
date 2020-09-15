@@ -26,6 +26,7 @@ clusters:
 
   my-cluster:
     props:
+         
       bootstrap.servers: ${BOOTSTRAP_SERVER}
       key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value.deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
