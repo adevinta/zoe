@@ -243,7 +243,7 @@ data class Progress(
 data class PollConfig(
     val topic: String,
     val subscription: Subscription,
-    val props: Map<String, String> = mapOf(),
+    val props: Map<String, String?> = mapOf(),
     val filter: List<String> = listOf(),
     val query: String? = null,
     val timeoutMs: Long = 10000,

@@ -94,7 +94,7 @@ data class ProduceConfig(
     val timestampPath: String?,
     val data: List<JsonNode>,
     val dryRun: Boolean,
-    val props: Map<String, String>,
+    val props: Map<String, String?>,
     val jsonQueryDialect: JsonQueryDialect = JsonQueryDialect.Jmespath
 )
 

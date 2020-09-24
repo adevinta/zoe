@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import java.time.Duration
 
-fun SecretsProvider.resolveSecrets(dict: Map<String, String>): Map<String, String> = when (this) {
+fun SecretsProvider.resolveSecrets(dict: Map<String, String?>): Map<String, String?> = when (this) {
     is NoopSecretsProvider -> dict
     else -> dict.mapValues { secretOrRaw(it.value) }
 }
@@ -35,7 +35,8 @@ fun SecretsProvider.resolveSecrets(node: JsonNode): JsonNode = when (node) {
     else -> node
 }
 
-fun SecretsProvider.secretOrRaw(value: String): String = if (isSecret(value)) decipher(value) else value
+fun SecretsProvider.secretOrRaw(value: String?): String? =
+    value?.takeIf { isSecret(value) }?.let(this::decipher) ?: value
 
 fun SecretsProvider.withLogging() =
     SecretsProviderWithLogging(this)

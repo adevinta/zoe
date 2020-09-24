@@ -134,7 +134,7 @@ class ZoeService(
 
     private suspend fun determineConsumptionRange(
         topic: String,
-        props: Map<String, String>,
+        props: Map<String, String?>,
         from: ConsumeFrom,
         stopCondition: StopCondition
     ): List<ConsumptionRange> {
@@ -363,7 +363,7 @@ class ZoeService(
     private suspend fun getCluster(name: String): Cluster =
         requireNotNull(configStore.cluster(name).await()) { "cluster config not found : $name" }
 
-    private fun Cluster.getCompletedProps(topic: Topic?): Map<String, String> =
+    private fun Cluster.getCompletedProps(topic: Topic?): Map<String, String?> =
         (props + (topic?.propsOverride ?: emptyMap()))
             .let(secrets::resolveSecrets)
             .toMutableMap()
@@ -373,7 +373,7 @@ class ZoeService(
         groups[aliasOrRealName.value]?.name ?: aliasOrRealName.value
 
     private fun readRange(
-        props: Map<String, String>,
+        props: Map<String, String?>,
         topic: String,
         filter: List<String>,
         filterMeta: List<String>,
