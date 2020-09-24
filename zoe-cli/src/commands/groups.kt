@@ -17,14 +17,11 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.runBlocking
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+
 class GroupsCommand : CliktCommand(
     name = "groups",
     help = "Inspect consumer groups, their members and lag",
@@ -34,8 +31,6 @@ class GroupsCommand : CliktCommand(
     override fun run() {}
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class ListGroupsCommand : CliktCommand(name = "list"), KoinComponent {
 
     private val ctx by inject<CliContext>()
@@ -46,8 +41,6 @@ class ListGroupsCommand : CliktCommand(name = "list"), KoinComponent {
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class DescribeGroupCommand : CliktCommand(name = "describe"), KoinComponent {
     private val group by argument("group", help = "Group to target").convert { GroupAliasOrRealName(it) }
 
@@ -62,8 +55,6 @@ class DescribeGroupCommand : CliktCommand(name = "describe"), KoinComponent {
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class GroupMembersCommand : CliktCommand(name = "members"), KoinComponent {
     private val group by argument("group", help = "Group to target").convert { GroupAliasOrRealName(it) }
 
@@ -78,8 +69,6 @@ class GroupMembersCommand : CliktCommand(name = "members"), KoinComponent {
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class GroupOffsetsCommand : CliktCommand(name = "offsets"), KoinComponent {
     private val group by argument("group", help = "Group to target").convert { GroupAliasOrRealName(it) }
 
@@ -92,8 +81,6 @@ class GroupOffsetsCommand : CliktCommand(name = "offsets"), KoinComponent {
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 fun groupsCommands() = GroupsCommand().subcommands(
     ListGroupsCommand(),
     DescribeGroupCommand(),

@@ -27,8 +27,6 @@ import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -43,8 +41,7 @@ import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.roundToInt
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+
 class TopicsCommand : CliktCommand(
     name = "topics",
     help = "Inspect, produce or consume from topics",
@@ -54,8 +51,7 @@ class TopicsCommand : CliktCommand(
     override fun run() {}
 }
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+
 class TopicsList : CliktCommand(name = "list", help = "list topics"), KoinComponent {
 
     private val all by option("-a", "--all", help = "Also list internal topics").flag(default = false)
@@ -69,8 +65,6 @@ class TopicsList : CliktCommand(name = "list", help = "list topics"), KoinCompon
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class TopicsDescribe : CliktCommand(name = "describe", help = "describe a topic"), KoinComponent {
 
     private val topic by argument("topic", help = "Topic to read (real or alias)").convert { TopicAliasOrRealName(it) }
@@ -84,8 +78,6 @@ class TopicsDescribe : CliktCommand(name = "describe", help = "describe a topic"
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class TopicsCreate : CliktCommand(
     name = "create",
     help = "Create a topic",
@@ -123,8 +115,6 @@ class TopicsCreate : CliktCommand(
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class TopicsConsume : CliktCommand(
     name = "consume",
     help = "Consumes messages from a topic",
@@ -271,8 +261,6 @@ class TopicsConsume : CliktCommand(
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class TopicsProduce : CliktCommand(
     name = "produce",
     help = "produce messages into topics",
@@ -360,8 +348,6 @@ class TopicsProduce : CliktCommand(
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 fun topicsCommand() = TopicsCommand().subcommands(
     TopicsConsume(),
     TopicsList(),

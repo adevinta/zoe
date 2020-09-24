@@ -10,21 +10,14 @@ package com.adevinta.oss.zoe.cli
 
 import com.adevinta.oss.zoe.cli.commands.*
 import com.adevinta.oss.zoe.cli.utils.useResource
-import com.fasterxml.jackson.databind.JsonMappingException
-import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.core.subcommands
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
-import java.lang.Exception
 import kotlin.system.exitProcess
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+
 fun <T> withZoe(customizeContext: Context.Builder.() -> Unit = {}, action: (ZoeCommandLine) -> T): T =
     useResource(resource = startKoin { }, onClose = { stopKoin() }) {
 
@@ -43,8 +36,6 @@ fun <T> withZoe(customizeContext: Context.Builder.() -> Unit = {}, action: (ZoeC
         action(command)
     }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 fun main(args: Array<String>) {
     val returnCode = withZoe { command ->
         command

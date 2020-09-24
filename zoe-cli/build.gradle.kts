@@ -6,6 +6,8 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+@file:Suppress("UnstableApiUsage")
+
 import com.adevinta.oss.gradle.plugins.DistributionWithRuntimeExtension
 import com.adevinta.oss.gradle.plugins.DistributionWithRuntimePlugin
 import com.adevinta.oss.gradle.plugins.JPackageTask
@@ -132,12 +134,17 @@ tasks {
         }
     }
 
+    @Suppress("UnstableApiUsage")
     val processResources by getting(ProcessResources::class) {
         dependsOn(generateVersionFile)
     }
 
     compileKotlin {
         kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.freeCompilerArgs = listOf(
+            "-Xopt-in=kotlinx.coroutines.FlowPreview",
+            "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+        )
     }
 
     compileTestKotlin {
@@ -196,9 +203,9 @@ dependencies {
     implementation("log4j:log4j:1.2.17")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.0.7") // for kotest framework
-    testImplementation("io.kotest:kotest-assertions-core-jvm:4.0.7") // for kotest core jvm assertions
-    testImplementation("io.kotest:kotest-property-jvm:4.0.7") // for kotest property test
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.2.0")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.2.0")
+    testImplementation("io.kotest:kotest-property-jvm:4.2.0")
     testImplementation(platform("org.testcontainers:testcontainers-bom:1.14.3")) //import bom
     testImplementation("org.testcontainers:testcontainers")
 }

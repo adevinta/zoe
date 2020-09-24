@@ -68,7 +68,7 @@ class TopicBuilder(
         val effectivePartition = partition ?: Random.nextInt(from = 0, until = partitions)
         val effectiveOffset =
             offset
-                ?: messages.filter { it.partition == effectivePartition }.map { it.offset }.max()?.let { it + 1 }
+                ?: messages.filter { it.partition == effectivePartition }.map { it.offset }.maxOrNull()?.let { it + 1 }
                 ?: 0
 
         messages.add(

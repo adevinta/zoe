@@ -41,7 +41,8 @@ class ZoeRunnerSimulator(val state: RunnerState) : ZoeRunner {
                 TopicDescription(
                     topic = it.name,
                     internal = false,
-                    partitions = it.partitions.toList()
+                    partitions = it.partitions.toList(),
+                    config = emptyMap()
                 )
             }
         )
@@ -75,11 +76,14 @@ class ZoeRunnerSimulator(val state: RunnerState) : ZoeRunner {
                 .asSequence()
                 .map {
                     PolledRecord(
-                        key = it.key,
-                        offset = it.offset,
-                        timestamp = it.timestamp,
-                        partition = it.partition,
-                        topic = topic.name,
+                        meta = RecordMetadata(
+                            key = it.key,
+                            offset = it.offset,
+                            timestamp = it.timestamp,
+                            partition = it.partition,
+                            topic = topic.name,
+                            headers = emptyMap(),
+                        ),
                         content = it.content
                     )
                 }
@@ -94,9 +98,9 @@ class ZoeRunnerSimulator(val state: RunnerState) : ZoeRunner {
                         earliestOffset = topic.earliestOffset(partition)!!,
                         latestOffset = topic.latestOffset(partition)!!,
                         progress = Progress(
-                            currentOffset = partitionRecords.maxBy { it.offset }?.offset!!,
-                            currentTimestamp = partitionRecords.maxBy { it.offset }?.timestamp!!,
-                            startOffset = partitionRecords.minBy { it.offset }?.offset!!,
+                            currentOffset = partitionRecords.maxByOrNull { it.offset }?.offset!!,
+                            currentTimestamp = partitionRecords.maxByOrNull { it.offset }?.timestamp!!,
+                            startOffset = partitionRecords.minByOrNull { it.offset }?.offset!!,
                             recordsCount = partitionRecords.size.toLong()
                         )
                     )
@@ -172,7 +176,7 @@ data class Message(
     val content: JsonNode
 )
 
-fun RunnerState.clusterFromProps(props: Map<String, String>) =
+fun RunnerState.clusterFromProps(props: Map<String, String?>) =
     clusters.find { it.name == props["bootstrap.servers"] }
 
 fun Topic.messagesForPartitions(requestedPartitions: Set<Int>): List<Message> =
@@ -186,5 +190,5 @@ fun Topic.messagesForPartitions(requestedPartitions: Set<Int>): List<Message> =
         .flatten()
 
 
-fun Topic.earliestOffset(partition: Int): Long? = messagesForPartitions(setOf(partition)).map { it.offset }.min()
-fun Topic.latestOffset(partition: Int): Long? = messagesForPartitions(setOf(partition)).map { it.offset }.max()
+fun Topic.earliestOffset(partition: Int): Long? = messagesForPartitions(setOf(partition)).map { it.offset }.minOrNull()
+fun Topic.latestOffset(partition: Int): Long? = messagesForPartitions(setOf(partition)).map { it.offset }.maxOrNull()

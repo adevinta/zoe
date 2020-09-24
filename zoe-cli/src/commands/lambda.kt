@@ -31,8 +31,6 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.defaultLazy
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import java.io.File
@@ -50,8 +48,7 @@ class LambdaCommand : CliktCommand(name = "lambda", help = "Manage the AWS Lambd
     override fun run() {}
 }
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+
 class DescribeLambda : CliktCommand(name = "describe", help = "Describe the currently deployed lambda"), KoinComponent {
     private val environment by inject<EnvConfig>()
     private val ctx by inject<CliContext>()
@@ -75,8 +72,7 @@ class DescribeLambda : CliktCommand(name = "describe", help = "Describe the curr
     }
 }
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+
 class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an AWS lambda"), KoinComponent {
 
     private val ctx by inject<CliContext>()
@@ -163,8 +159,7 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
     }
 }
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+
 class DestroyLambda : CliktCommand(name = "destroy", help = "destroy lambda infrastructure"), KoinComponent {
 
     private val environment by inject<EnvConfig>()
@@ -499,8 +494,6 @@ internal fun AmazonCloudFormation.waitForChangeset(
     }
 )
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 fun lambdaCommands() = LambdaCommand().subcommands(
     DescribeLambda(),
     DeployLambda(),

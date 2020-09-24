@@ -29,16 +29,13 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.switch
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import java.io.InputStream
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+
 class SchemasCommand : CliktCommand(
     name = "schemas",
     help = "List, describe or deploy schemas",
@@ -48,8 +45,6 @@ class SchemasCommand : CliktCommand(
     override fun run() {}
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class ListSchemas : CliktCommand(name = "list"), KoinComponent {
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()
@@ -60,8 +55,6 @@ class ListSchemas : CliktCommand(name = "list"), KoinComponent {
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class DescribeSchema : CliktCommand(name = "describe"), KoinComponent {
     private val subject: String by argument("subject", help = "Subject name to describe")
 
@@ -76,8 +69,6 @@ class DescribeSchema : CliktCommand(name = "describe"), KoinComponent {
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class DeploySchema : CliktCommand(
     name = "deploy",
     help = """Deploy a schema to the registry""",
@@ -168,8 +159,6 @@ class DeploySchema : CliktCommand(
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 fun schemasCommand() = SchemasCommand().subcommands(
     ListSchemas(),
     DescribeSchema(),

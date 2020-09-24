@@ -33,7 +33,13 @@ dependencies {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions {
+            jvmTarget = "1.8"
+            freeCompilerArgs = listOf(
+                "-Xopt-in=kotlinx.coroutines.FlowPreview",
+                "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+            )
+        }
     }
 
     compileTestKotlin {
