@@ -8,6 +8,7 @@
 
 package com.adevinta.oss.zoe.service
 
+import com.adevinta.oss.zoe.core.functions.JsonQueryDialect
 import com.adevinta.oss.zoe.core.functions.TopicPartitionOffset
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.config.Cluster
@@ -162,5 +163,7 @@ private fun ZoeService.readWithDefaultValues(
     numberOfRecordsPerBatch = numberOfRecordsPerBatch,
     timeoutPerBatch = timeoutPerBatch,
     formatter = formatter,
-    stopCondition = stopCondition
+    stopCondition = stopCondition,
+    metadataFilters = emptyList(),
+    dialect = JsonQueryDialect.Jmespath
 )

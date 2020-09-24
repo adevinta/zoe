@@ -203,9 +203,9 @@ dependencies {
     implementation("log4j:log4j:1.2.17")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.0.7") // for kotest framework
-    testImplementation("io.kotest:kotest-assertions-core-jvm:4.0.7") // for kotest core jvm assertions
-    testImplementation("io.kotest:kotest-property-jvm:4.0.7") // for kotest property test
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.2.0")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.2.0")
+    testImplementation("io.kotest:kotest-property-jvm:4.2.0")
     testImplementation(platform("org.testcontainers:testcontainers-bom:1.14.3")) //import bom
     testImplementation("org.testcontainers:testcontainers")
 }

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.github.ajalt.clikt.output.CliktConsole
 import io.kotest.core.listeners.TestListener
-import io.kotest.core.spec.style.ExpectScope
+import io.kotest.core.spec.style.scopes.ExpectScope
 import io.kotest.core.test.TestContext
 import io.kotest.matchers.shouldBe
 import org.testcontainers.containers.DockerComposeContainer
