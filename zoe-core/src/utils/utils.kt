@@ -23,9 +23,9 @@ import java.util.*
 val json = ObjectMapper().registerKotlinModule()
 val logger = LoggerFactory.getLogger("zoe")!!
 
-fun consumer(config: Map<String, Any>): KafkaConsumer<Any?, Any?> = KafkaConsumer(config)
-fun producer(config: Map<String, Any>): KafkaProducer<Any?, Any?> = KafkaProducer(config)
-fun admin(config: Map<String, Any>): AdminClient = AdminClient.create(config)
+fun consumer(config: Map<String, Any?>): KafkaConsumer<Any?, Any?> = KafkaConsumer(config)
+fun producer(config: Map<String, Any?>): KafkaProducer<Any?, Any?> = KafkaProducer(config)
+fun admin(config: Map<String, Any?>): AdminClient = AdminClient.create(config)
 
 inline fun <reified T> String.parseJson(): T = json.readValue(this, T::class.java)
 inline fun <reified T> JsonNode.parseJson(): T = json.treeToValue(this, T::class.java)

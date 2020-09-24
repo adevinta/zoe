@@ -247,12 +247,12 @@ val offsets = zoeFunction<GroupConfig, GroupOffsetsResponse>(name = "offsets") {
 }
 
 data class GroupsConfig(
-    val props: Map<String, String> = mapOf(),
+    val props: Map<String, String?> = mapOf(),
     val groups: List<String>
 )
 
 data class GroupConfig(
-    val props: Map<String, String> = mapOf(),
+    val props: Map<String, String?> = mapOf(),
     val group: String
 )
 
@@ -295,7 +295,7 @@ data class GroupOffset(
 )
 
 data class AdminConfig(
-    val props: Map<String, String> = mapOf()
+    val props: Map<String, String?> = mapOf()
 )
 
 data class ListSchemasConfig(
@@ -342,7 +342,7 @@ data class ListTopicsResponse(
 )
 
 data class OffsetQueriesRequest(
-    val props: Map<String, String>,
+    val props: Map<String, String?>,
     val topic: String,
     val queries: List<OffsetQuery>
 )
@@ -422,7 +422,7 @@ data class CreateTopicRequest(
     val partitions: Int,
     val replicationFactor: Int,
     val topicConfig: Map<String, String>?,
-    val props: Map<String, String>
+    val props: Map<String, String?>
 )
 
 data class CreateTopicResponse(val done: Boolean)

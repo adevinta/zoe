@@ -35,7 +35,7 @@ class InMemoryConfigStore(
 data class Cluster(
     val registry: String?,
     val topics: Map<TopicAlias, Topic> = mapOf(),
-    val props: Map<String, String>,
+    val props: Map<String, String?>,
     val groups: Map<GroupAlias, ConsumerGroup> = mapOf()
 )
 
