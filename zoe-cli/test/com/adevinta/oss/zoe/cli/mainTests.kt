@@ -10,12 +10,8 @@ import io.kotest.matchers.maps.shouldNotBeEmpty
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import java.util.*
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class MainTest : ExpectSpec({
 
     // spin up docker compose

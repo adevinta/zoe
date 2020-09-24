@@ -15,8 +15,6 @@ import com.adevinta.oss.zoe.service.config.InMemoryConfigStore
 import com.adevinta.oss.zoe.service.secrets.NoopSecretsProvider
 import com.adevinta.oss.zoe.service.simulator.simulator
 import com.adevinta.oss.zoe.service.storage.LocalFsKeyValueStore
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
@@ -24,8 +22,6 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 object ZoeServiceTest : Spek({
 
     describe("Service can read data using several subscription strategies") {
@@ -145,8 +141,6 @@ object ZoeServiceTest : Spek({
     }
 })
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 private fun ZoeService.readWithDefaultValues(
     cluster: String,
     topic: String,

@@ -16,8 +16,6 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.runBlocking
 import org.koin.core.KoinComponent
 import org.koin.core.inject
@@ -37,8 +35,7 @@ class VersionPrint : CliktCommand(name = "print", help = "Print current version"
     }
 }
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+
 class VersionCheck : CliktCommand(name = "check", help = "Check zoe client and remote version"), KoinComponent {
 
     private val noCache: Boolean by option("--no-cache", help = "Do not use cache").flag(default = false)
@@ -52,8 +49,6 @@ class VersionCheck : CliktCommand(name = "check", help = "Check zoe client and r
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 fun versionCommands() = VersionCommand().subcommands(
     VersionCheck(),
     VersionPrint()

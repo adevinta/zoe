@@ -6,6 +6,8 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+@file:Suppress("UnstableApiUsage")
+
 import com.adevinta.oss.gradle.plugins.DistributionWithRuntimeExtension
 import com.adevinta.oss.gradle.plugins.DistributionWithRuntimePlugin
 import com.adevinta.oss.gradle.plugins.JPackageTask
@@ -132,12 +134,17 @@ tasks {
         }
     }
 
+    @Suppress("UnstableApiUsage")
     val processResources by getting(ProcessResources::class) {
         dependsOn(generateVersionFile)
     }
 
     compileKotlin {
         kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.freeCompilerArgs = listOf(
+            "-Xopt-in=kotlinx.coroutines.FlowPreview",
+            "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+        )
     }
 
     compileTestKotlin {

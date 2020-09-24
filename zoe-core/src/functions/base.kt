@@ -8,9 +8,9 @@
 
 package com.adevinta.oss.zoe.core.functions
 
+import com.adevinta.oss.zoe.core.utils.json
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
-import com.adevinta.oss.zoe.core.utils.json
 import java.io.InputStream
 import java.io.OutputStream
 

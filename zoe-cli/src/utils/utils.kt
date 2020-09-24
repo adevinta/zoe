@@ -25,12 +25,14 @@ import com.jakewharton.picnic.BorderStyle
 import com.jakewharton.picnic.Table
 import com.jakewharton.picnic.TextAlignment
 import com.jakewharton.picnic.table
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.selects.whileSelect
 import java.io.ByteArrayOutputStream
 import java.io.Closeable
@@ -85,7 +87,7 @@ fun <T> retryUntilNotNull(timeoutMs: Long, onTimeoutMsg: String?, block: () -> T
     throw TimeoutException(onTimeoutMsg)
 }
 
-@ExperimentalCoroutinesApi
+
 fun fetch(input: InputStream, streaming: Boolean): Flow<String> = flow {
     input.use {
         if (streaming) {
@@ -108,7 +110,7 @@ fun fetch(input: InputStream, streaming: Boolean): Flow<String> = flow {
     }
 }
 
-@ExperimentalCoroutinesApi
+
 fun CoroutineScope.timeoutChannel(ms: Long) = produce {
     while (isActive) {
         delay(ms)
@@ -116,8 +118,6 @@ fun CoroutineScope.timeoutChannel(ms: Long) = produce {
     }
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 fun <T> Flow<T>.batches(timeoutMs: Long, scope: CoroutineScope): Flow<List<T>> = flow {
     val channel = produceIn(scope)
     val timeout = scope.timeoutChannel(timeoutMs)

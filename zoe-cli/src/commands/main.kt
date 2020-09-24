@@ -34,8 +34,6 @@ import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.mordant.TermColors
 import com.github.ajalt.mordant.TerminalCapabilities
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import org.apache.log4j.Level
 import org.apache.log4j.LogManager
 import org.koin.core.context.loadKoinModules
@@ -47,8 +45,6 @@ import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 class ZoeCommandLine : CliktCommand(name = "zoe") {
     private val home by lazy { "${System.getenv("HOME") ?: userError("HOME not found")}/.zoe" }
     private val env: String by option("--env", "-e", help = "Environment to use", envvar = "ZOE_ENV").default("default")
@@ -126,7 +122,7 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
         val res = buildString {
             append(formatError(err))
             formatHelp(extractHelp(err))?.let { help ->
-                appendln()
+                appendLine()
                 append(help)
             }
         }
@@ -151,8 +147,8 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
                 append("""${term.colors.red("failure:")} ${err.message}""")
                 val cause = err.cause
                 if (cause != null) {
-                    appendln()
-                    appendln(term.colors.red("cause:"))
+                    appendLine()
+                    appendLine(term.colors.red("cause:"))
                     append(formatError(cause, level = level + 1))
                 }
             }
@@ -171,8 +167,6 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
 
 }
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 fun mainModule(context: CliContext) = module {
     single<CliContext> { context }
 

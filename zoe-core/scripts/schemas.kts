@@ -12,12 +12,12 @@
 @file:DependsOn("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7")
 @file:DependsOn("com.adevinta.oss:zoe-core:1.1")
 
+import com.adevinta.oss.zoe.core.FunctionsRegistry
+import com.adevinta.oss.zoe.core.functions.JsonZoeFunction
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator
-import com.adevinta.oss.zoe.core.FunctionsRegistry
-import com.adevinta.oss.zoe.core.functions.JsonZoeFunction
 
 val mapper = ObjectMapper()
 val schema = JsonSchemaGenerator(mapper)

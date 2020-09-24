@@ -28,14 +28,11 @@ import com.adevinta.oss.zoe.service.storage.putAsJson
 import com.adevinta.oss.zoe.service.storage.withNamespace
 import com.adevinta.oss.zoe.service.utils.userError
 import com.fasterxml.jackson.databind.JsonNode
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.future.await
 import java.time.Duration
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+
 class ZoeService(
     private val configStore: ConfigStore,
     private val runner: ZoeRunner,

@@ -29,8 +29,6 @@ import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.TransportConfigCallback
 import org.eclipse.jgit.transport.*
@@ -42,12 +40,11 @@ import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
+
 class ConfigCommand : CliktCommand(name = "config", help = "Inspect or initialize zoe config") {
     override fun run() {}
 }
 
-@ExperimentalCoroutinesApi
-@FlowPreview
 class ConfigInit : CliktCommand(
     name = "init",
     help = "Initialize zoe config",
@@ -277,9 +274,6 @@ private class GitSshTransport(val privateKey: File?, val passphrase: String?) : 
 
 }
 
-
-@FlowPreview
-@ExperimentalCoroutinesApi
 fun configCommands() = ConfigCommand().subcommands(
     ConfigInit(),
     ConfigClusters().subcommands(ClustersList()),

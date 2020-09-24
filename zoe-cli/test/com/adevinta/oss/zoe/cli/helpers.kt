@@ -9,8 +9,6 @@ import io.kotest.core.listeners.TestListener
 import io.kotest.core.spec.style.ExpectScope
 import io.kotest.core.test.TestContext
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import org.testcontainers.containers.DockerComposeContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.File
@@ -33,8 +31,6 @@ class MockConsole : CliktConsole {
 
 data class ZoeOutput(val stdout: JsonNode?, val stderr: List<String>, val error: Throwable?)
 
-@FlowPreview
-@ExperimentalCoroutinesApi
 suspend fun ExpectScope.zoe(
     vararg command: String,
     configDir: String = testConfDir.resolve("config").absolutePath,

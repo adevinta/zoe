@@ -33,7 +33,7 @@ import java.util.function.Supplier
 /**
  * A [ZoeRunner] implementation that launches kafka clients inside kubernetes pods.
  */
-@ExperimentalCoroutinesApi
+
 class KubernetesRunner(
     override val name: String,
     private val client: NamespacedKubernetesClient,
@@ -230,7 +230,7 @@ class KubernetesRunner(
 
 data class WatcherEvent(val action: Watcher.Action, val resource: Pod?)
 
-@ExperimentalCoroutinesApi
+
 fun Watchable<Watch, Watcher<Pod>>.watchAsFlow(): Flow<WatcherEvent> = callbackFlow {
     val watcher =
         CompletableFuture
@@ -258,7 +258,7 @@ fun Watchable<Watch, Watcher<Pod>>.watchAsFlow(): Flow<WatcherEvent> = callbackF
 }
 
 
-@ExperimentalCoroutinesApi
+
 fun Watchable<Watch, Watcher<Pod>>.watchContinuously(): Flow<WatcherEvent> = flow {
     while (true) {
         emitAll(watchAsFlow())
