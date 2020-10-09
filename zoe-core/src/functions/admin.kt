@@ -10,10 +10,7 @@ package com.adevinta.oss.zoe.core.functions
 
 import com.adevinta.oss.zoe.core.functions.DeploySchemaResponse.ActualRunResponse
 import com.adevinta.oss.zoe.core.functions.DeploySchemaResponse.DryRunResponse
-import com.adevinta.oss.zoe.core.utils.admin
-import com.adevinta.oss.zoe.core.utils.consumer
-import com.adevinta.oss.zoe.core.utils.json
-import com.adevinta.oss.zoe.core.utils.uuid
+import com.adevinta.oss.zoe.core.utils.*
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonValue
@@ -22,8 +19,10 @@ import io.confluent.kafka.schemaregistry.avro.AvroSchema
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import org.apache.avro.Schema
 import org.apache.avro.compiler.idl.Idl
+import org.apache.kafka.clients.admin.Config
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.common.config.ConfigResource
+import org.apache.kafka.common.errors.TopicAuthorizationException
 import org.apache.kafka.common.TopicPartition as KafkaTopicPartition
 
 /**
@@ -34,15 +33,25 @@ val listTopics = zoeFunction<AdminConfig, ListTopicsResponse>(name = "topics") {
         cli.listTopics().listings().get()
             .map { it.name() }
             .let { topics ->
-                val describeTopicsFuture = cli
-                    .describeTopics(topics).all()
+                val describeTopicsFuture =
+                    cli
+                        .describeTopics(topics)
+                        .all()
 
-                val describeConfigsFuture = cli
-                    .describeConfigs(topics.map { ConfigResource(ConfigResource.Type.TOPIC, it) }).all()
+                val configResources: Map<ConfigResource, Config> =
+                    cli
+                        .describeConfigs(topics.map { ConfigResource(ConfigResource.Type.TOPIC, it) })
+                        .all()
+                        .runCatching { get() }
+                        .onFailure {
+                            when (it) {
+                                is TopicAuthorizationException -> logger.warn("not authorized to describe the config!")
+                                else -> logger.warn("unexpected error on config describe request", it)
+                            }
+                        }
+                        .getOrElse { emptyMap() }
 
-                val (kafkaTopicDescriptions, configResources) = describeTopicsFuture.get() to describeConfigsFuture.get()
-
-                kafkaTopicDescriptions.entries.map { (_, topic) ->
+                describeTopicsFuture.get().entries.map { (_, topic) ->
                     val configMap = configResources[ConfigResource(ConfigResource.Type.TOPIC, topic.name())]
                         ?.entries()
                         ?.filter { it.value().isNotEmpty() }
@@ -50,10 +59,10 @@ val listTopics = zoeFunction<AdminConfig, ListTopicsResponse>(name = "topics") {
                         ?.toMap()?.toSortedMap() ?: sortedMapOf()
 
                     TopicDescription(
-                        topic.name(),
-                        topic.isInternal,
-                        topic.partitions().map { it.partition() },
-                        configMap
+                        topic = topic.name(),
+                        internal = topic.isInternal,
+                        partitions = topic.partitions().map { it.partition() },
+                        config = configMap
                     )
                 }
             }

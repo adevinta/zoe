@@ -79,7 +79,7 @@ class DeployLambda : CliktCommand(name = "deploy", help = "Deploy zoe core as an
     private val environment by inject<EnvConfig>()
 
     private val jarUrl: URL
-        by option("--jar-url", help = "Url to the zoe jar file", hidden = true, envvar = "ZOE_JAR_URL")
+        by option("--jar-url", help = "Url to the zoe jar file", envvar = "ZOE_JAR_URL")
             .convert { URL(it) }
             .defaultLazy {
                 val baseUrl = "https://github.com/adevinta/zoe/releases/download"
