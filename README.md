@@ -1,3 +1,5 @@
+![Build](https://github.com/adevinta/zoe/workflows/Build%20test/badge.svg)
+
 # Zoe: The Kafka CLI for humans
 
 Zoe is a command line tool to interact with kafka in an easy and intuitive way. Wanna see this in action ? check out this demo...
