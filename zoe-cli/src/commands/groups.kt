@@ -17,6 +17,7 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
+import com.github.ajalt.clikt.parameters.arguments.optional
 import kotlinx.coroutines.runBlocking
 import org.koin.core.KoinComponent
 import org.koin.core.inject
@@ -70,14 +71,10 @@ class GroupMembersCommand : CliktCommand(name = "members"), KoinComponent {
 }
 
 class GroupOffsetsCommand : CliktCommand(name = "offsets"), KoinComponent {
-    private val group by argument("group", help = "Group to target").convert { GroupAliasOrRealName(it) }
-
-    private val ctx by inject<CliContext>()
-    private val service by inject<ZoeService>()
+    private val group by argument("group", help = "Group to target").convert { GroupAliasOrRealName(it) }.optional()
 
     override fun run() = runBlocking {
-        val offsets = service.groupOffsets(ctx.cluster, group).offsets
-        ctx.term.output.format(offsets.toJsonNode()) { echo(it) }
+        throw IllegalArgumentException("Command deprecated! Use 'zoe offsets read' instead")
     }
 }
 

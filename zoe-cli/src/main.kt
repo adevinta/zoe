@@ -27,6 +27,7 @@ fun <T> withZoe(customizeContext: Context.Builder.() -> Unit = {}, action: (ZoeC
                     topicsCommand(),
                     schemasCommand(),
                     groupsCommands(),
+                    offsetsCommands(),
                     configCommands(),
                     lambdaCommands(),
                     versionCommands()
