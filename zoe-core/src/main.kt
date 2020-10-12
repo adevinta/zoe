@@ -84,6 +84,7 @@ object FunctionsRegistry {
         add(offsets)
         add(poll)
         add(produce)
+        add(setOffsets)
     }
 
     private fun add(function: ZoeFunction) {

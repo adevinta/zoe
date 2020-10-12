@@ -309,6 +309,52 @@ class ZoeService(
     }
 
     /**
+     * Set consumer group offsets
+     */
+    suspend fun setGroupOffsets(
+        cluster: String,
+        group: GroupAliasOrRealName,
+        topic: TopicAliasOrRealName,
+        spec: OffsetSpec
+    ) {
+        val clusterConfig = getCluster(cluster)
+
+        val targetGroup = clusterConfig.getConsumerGroup(group)
+        val targetTopic = clusterConfig.getTopicConfig(topic, subjectOverride = null)
+        val props = clusterConfig.getCompletedProps(targetTopic)
+
+        val offsets = when (spec) {
+            is OffsetSpec.Static -> spec.offsets
+            is OffsetSpec.Query ->
+                runner
+                    .queryOffsets(OffsetQueriesRequest(props, targetTopic.name, listOf(spec.query)))
+                    .responses
+                    .getValue(spec.query.id)
+                    .mapNotNull {
+                        when {
+                            spec.onlyForPartitions != null && it.partition in spec.onlyForPartitions -> null
+                            it.offset == null -> {
+                                logger.info("offset not found for partition: ${it.partition} (${spec.query})")
+                                null
+                            }
+                            else -> it.partition to it.offset!!
+                        }
+                    }
+                    .toMap()
+
+        }
+
+        runner.setOffsets(
+            SetOffsetRequest(
+                props = props,
+                topic = targetTopic.name,
+                groupId = targetGroup,
+                offsets = offsets
+            )
+        )
+    }
+
+    /**
      * Check zoe version with remote. Useful when used against a lambda runner.
      */
     suspend fun checkVersion(useCache: Boolean): RunnerVersionData {
@@ -482,6 +528,11 @@ data class RunnerVersionData(
     val mismatch: Boolean,
     val timestamp: Long
 )
+
+sealed class OffsetSpec {
+    data class Static(val offsets: Map<Int, Long>) : OffsetSpec()
+    data class Query(val query: OffsetQuery, val onlyForPartitions: Set<Int>?) : OffsetSpec()
+}
 
 private fun Cluster.getTopicConfig(aliasOrRealName: TopicAliasOrRealName, subjectOverride: String?) =
     when (val retrievedTopic = topics[aliasOrRealName.value]) {

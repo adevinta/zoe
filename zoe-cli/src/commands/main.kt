@@ -281,9 +281,7 @@ fun mainModule(context: CliContext) = module {
     }
 
     singleCloseable<KeyValueStore> {
-        LocalFsKeyValueStore(
-            root = File("${context.home}/storage/${context.env}")
-        ).withInMemoryBuffer()
+        LocalFsKeyValueStore(root = File("${context.home}/storage/${context.env}")).withInMemoryBuffer()
     }
 
     single<ExecutorService>(named("io")) { Executors.newCachedThreadPool() } onClose { it?.shutdown() }

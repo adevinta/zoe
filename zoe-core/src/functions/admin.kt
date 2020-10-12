@@ -19,10 +19,13 @@ import io.confluent.kafka.schemaregistry.avro.AvroSchema
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import org.apache.avro.Schema
 import org.apache.avro.compiler.idl.Idl
+import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.Config
 import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.errors.TopicAuthorizationException
+import org.apache.kafka.clients.admin.OffsetSpec as KafkaOffsetSpec
 import org.apache.kafka.common.TopicPartition as KafkaTopicPartition
 
 /**
@@ -141,6 +144,20 @@ val queryOffsets = zoeFunction<OffsetQueriesRequest, OffsetQueriesResponse>(name
         }
 
         OffsetQueriesResponse(responses = responses.toMap())
+    }
+}
+
+/**
+ * Get offsets from a specific timestamp
+ */
+val setOffsets = zoeFunction<SetOffsetRequest, SetOffsetResponse>(name = "setOffsets") { request ->
+    admin(request.props).use { adm ->
+        val offsets = request.offsets.entries.associate { (partition, offset) ->
+            KafkaTopicPartition(request.topic, partition) to OffsetAndMetadata(offset)
+        }
+
+        adm.alterConsumerGroupOffsets(request.groupId, offsets).all().get()
+        SetOffsetResponse(succeeded = true)
     }
 }
 
@@ -356,6 +373,15 @@ data class OffsetQueriesRequest(
     val queries: List<OffsetQuery>
 )
 
+data class SetOffsetRequest(
+    val props: Map<String, String?>,
+    val topic: String,
+    val groupId: String,
+    val offsets: Map<Int, Long>
+)
+
+data class SetOffsetResponse(val succeeded: Boolean)
+
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
     JsonSubTypes.Type(value = OffsetQuery.Timestamp::class, name = "timestamp"),
@@ -417,7 +443,7 @@ fun SubjectNameStrategy.subjectName(schema: Schema): String = when (this) {
     }
 }
 
-fun SchemaContent.parsed(): AvroSchema = when (this) {
+private fun SchemaContent.parsed(): AvroSchema = when (this) {
     is SchemaContent.AvscSchema -> AvroSchema(Schema.Parser().parse(content))
     is SchemaContent.AvdlSchema -> {
         val protocol = Idl(content.byteInputStream(Charsets.UTF_8)).CompilationUnit()
@@ -425,6 +451,12 @@ fun SchemaContent.parsed(): AvroSchema = when (this) {
         AvroSchema(protocol.getType(fqdn) ?: throw IllegalArgumentException("schema '$name' not found in avdl"))
     }
 }
+
+private fun AdminClient.listOffsetsAndMetadata(topic: String, partitions: List<Int>, spec: KafkaOffsetSpec) =
+    listOffsets(partitions.associate { KafkaTopicPartition(topic, it) to spec })
+        .all()
+        .get()
+        .mapValues { OffsetAndMetadata(it.value.offset()) }
 
 data class CreateTopicRequest(
     val name: String,
