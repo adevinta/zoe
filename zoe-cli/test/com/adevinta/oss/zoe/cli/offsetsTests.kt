@@ -12,8 +12,6 @@ import java.util.*
 
 class ConsumerGroupsTest : ExpectSpec({
 
-    listener(TestcontainersListener())
-
     context("Testing Consumer groups offsets commands") {
         val topic = "topic-${UUID.randomUUID()}"
         val group = "group-${UUID.randomUUID()}"

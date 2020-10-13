@@ -1,8 +1,6 @@
 package com.adevinta.oss.zoe.cli
 
 import com.adevinta.oss.zoe.core.utils.logger
-import io.kotest.core.listeners.TestListener
-import io.kotest.core.spec.Spec
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.Network
@@ -20,7 +18,14 @@ object TestcontainersContext {
     lateinit var schemaRegistry: SchemaRegistryContainer
         private set
 
-    fun start() {
+    /**
+     * Automatically start containers during app start.
+     */
+    init {
+        start()
+    }
+
+    private fun start() {
         val network = Network.newNetwork()
         val logConsumer = Slf4jLogConsumer(logger)
 
@@ -32,11 +37,6 @@ object TestcontainersContext {
         schemaRegistry = SchemaRegistryContainer(kafka)
             .withLogConsumer(logConsumer)
             .apply { start() }
-    }
-
-    fun stop() {
-        schemaRegistry.stop()
-        kafka.stop()
     }
 }
 
@@ -56,9 +56,4 @@ class SchemaRegistryContainer(kafka: KafkaContainer) :
 
     val url
         get() = "http://localhost:" + getMappedPort(8081)
-}
-
-class TestcontainersListener : TestListener {
-    override suspend fun beforeSpec(spec: Spec) = TestcontainersContext.start()
-    override suspend fun afterSpec(spec: Spec) = TestcontainersContext.stop()
 }

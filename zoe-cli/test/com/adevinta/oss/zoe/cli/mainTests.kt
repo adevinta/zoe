@@ -14,8 +14,6 @@ import java.util.*
 
 class MainTest : ExpectSpec({
 
-    listener(TestcontainersListener())
-
     context("Testing CLI with Avro and a local runner") {
 
         context("a new topic is created") {
