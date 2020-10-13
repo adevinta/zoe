@@ -30,7 +30,8 @@ fun <T> withZoe(customizeContext: Context.Builder.() -> Unit = {}, action: (ZoeC
                     offsetsCommands(),
                     configCommands(),
                     lambdaCommands(),
-                    versionCommands()
+                    versionCommands(),
+                    aliasesCommand(),
                 )
                 .context(customizeContext)
 
