@@ -208,4 +208,5 @@ dependencies {
     testImplementation("io.kotest:kotest-property-jvm:4.2.0")
     testImplementation(platform("org.testcontainers:testcontainers-bom:1.14.3")) //import bom
     testImplementation("org.testcontainers:testcontainers")
+    testImplementation("org.testcontainers:kafka")
 }
