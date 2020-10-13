@@ -25,7 +25,7 @@ import org.koin.core.inject
 
 class GroupsCommand : CliktCommand(
     name = "groups",
-    help = "Inspect consumer groups, their members and lag",
+    help = "Inspect consumer groups",
     printHelpOnEmptyArgs = true
 ) {
 

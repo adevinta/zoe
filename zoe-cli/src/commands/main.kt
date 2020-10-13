@@ -58,6 +58,8 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
         envvar = "ZOE_CLUSTER"
     ).default("default")
 
+    override fun aliases(): Map<String, List<String>> = AliasesCommand.aliases(home)
+
     private val runner: RunnerName?
         by option("--runner", "-r", help = "Runner to use").choice(
             RunnerName.Lambda.code to RunnerName.Lambda,

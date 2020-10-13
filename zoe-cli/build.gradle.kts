@@ -157,7 +157,7 @@ tasks {
             events = setOf(TestLogEvent.FAILED, TestLogEvent.PASSED)
             showExceptions = true
             exceptionFormat = TestExceptionFormat.FULL
-            showStandardStreams = true
+            showStandardStreams = project.findProperty("tests.verbose")?.toString()?.toBoolean() ?: false
         }
     }
 }
