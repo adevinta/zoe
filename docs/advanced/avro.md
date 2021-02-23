@@ -14,7 +14,7 @@ clusters:
       bootstrap.servers: my-cluster.example.com:9094
       key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value.deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
-      schema.registry.url: https://kafka-dampbar-registry-internal.storage.mpi-internal.com
+      schema.registry.url: http://my-registry.example.com
 ```
 
 Then, it's possible to consume avro data using the following command :
