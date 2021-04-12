@@ -60,7 +60,7 @@ class ZoeService(
         val topicConfig = clusterConfig.getTopicConfig(topic, subjectOverride = subject)
         val props = clusterConfig.getCompletedProps(topicConfig)
 
-        val dejsonifierConfig = dejsonifier ?: clusterConfig.inferDejsonifierConfig(topicConfig)
+        val dejsonifierConfig = dejsonifier ?: inferDejsonifierConfig(props, topicConfig)
 
         return runner.produce(
             ProduceConfig(
@@ -540,15 +540,16 @@ private fun Cluster.getTopicConfig(aliasOrRealName: TopicAliasOrRealName, subjec
         else -> retrievedTopic.copy(subject = subjectOverride ?: retrievedTopic.subject)
     }
 
-fun Cluster.inferDejsonifierConfig(topic: Topic): DejsonifierConfig {
+fun inferDejsonifierConfig(props: Map<String, String?>, topic: Topic): DejsonifierConfig {
     val deserializer = props["value.deserializer"]
         ?: throw DejsonifierNotInferrable(error = "couldn't infer data type", reason = Reason.MissingValueDeserializer)
+
+    val registry = props["schema.registry.url"]
 
     return when (deserializer) {
         "io.confluent.kafka.serializers.KafkaAvroDeserializer" -> {
             val msgInCaseOfError =
-                "inferred avro data type (because KafkaAvroDeserializer is used) " +
-                    "but couldn't build the data converter"
+                "inferred avro data type (because KafkaAvroDeserializer is used) but couldn't build the data converter"
 
             DejsonifierConfig.Avro(
                 registry = registry ?: throw DejsonifierNotInferrable(
