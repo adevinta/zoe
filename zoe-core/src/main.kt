@@ -78,6 +78,7 @@ object FunctionsRegistry {
         add(listTopics)
         add(createTopic)
         add(listSchemas)
+        add(describeSchema)
         add(queryOffsets)
         add(listGroups)
         add(deploySchema)
