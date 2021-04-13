@@ -166,7 +166,15 @@ val setOffsets = zoeFunction<SetOffsetRequest, SetOffsetResponse>(name = "setOff
  */
 val listSchemas = zoeFunction<ListSchemasConfig, ListSchemasResponse>(name = "listSchemas") { config ->
     val registry = CachedSchemaRegistryClient(config.registry, 10)
-    ListSchemasResponse(registry.allSubjects.toList())
+    val regex = config.regexFilter?.toRegex()
+    val limit = config.limit
+    val subjects =
+        registry
+            .allSubjects
+            .let { if (regex != null) it.filter { subject -> subject matches regex } else it }
+            .let { if (limit != null) it.take(limit) else it }
+            .toList()
+    ListSchemasResponse(subjects)
 }
 
 /**
@@ -359,7 +367,9 @@ data class DescribeSchemaResponse(
 )
 
 data class ListSchemasConfig(
-    val registry: String
+    val registry: String,
+    val regexFilter: String?,
+    val limit: Int?
 )
 
 data class ListSchemasResponse(

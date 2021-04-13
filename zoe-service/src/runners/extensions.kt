@@ -29,7 +29,7 @@ suspend fun ZoeRunner.poll(config: PollConfig): PollResponse {
 }
 
 suspend fun ZoeRunner.listSchemas(config: ListSchemasConfig): ListSchemasResponse {
-    logger.info("listing schemas...")
+    logger.info("listing schemas ${config.regexFilter?.let { "matching pattern: $it" } ?: ""}")
     return launch(listSchemas.name(), config.toJsonString()).parseJson()
 }
 

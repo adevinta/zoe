@@ -193,10 +193,10 @@ class ZoeService(
     /**
      * List schemas from the registry
      */
-    suspend fun listSchemas(cluster: String): ListSchemasResponse {
+    suspend fun listSchemas(cluster: String, filter: Regex?, limit: Int?): ListSchemasResponse {
         val clusterConfig = getCluster(cluster)
         requireNotNull(clusterConfig.registry) { "registry must not be null in config to use the listSchemas function" }
-        return runner.listSchemas(ListSchemasConfig(clusterConfig.registry))
+        return runner.listSchemas(ListSchemasConfig(clusterConfig.registry, filter?.toString(), limit))
     }
 
     /**

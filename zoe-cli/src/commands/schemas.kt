@@ -23,12 +23,10 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
-import com.github.ajalt.clikt.parameters.options.default
-import com.github.ajalt.clikt.parameters.options.flag
-import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.switch
+import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
+import com.github.ajalt.clikt.parameters.types.int
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.koin.core.KoinComponent
@@ -49,8 +47,14 @@ class ListSchemas : CliktCommand(name = "list"), KoinComponent {
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()
 
+    private val filter: Regex?
+        by option("-m", "--matching", help = "Filter only subject names matching the given pattern")
+            .convert { it.toRegex() }
+
+    private val limit: Int? by option("-n", "--limit", help = "Limit the number of returned results").int()
+
     override fun run() = runBlocking {
-        val subjects = service.listSchemas(ctx.cluster).subjects
+        val subjects = service.listSchemas(ctx.cluster, filter, limit).subjects
         ctx.term.output.format(mapOf("subjects" to subjects).toJsonNode()) { echo(it) }
     }
 }
