@@ -75,15 +75,19 @@ private object JsonNodeToBytes : Dejsonifier() {
     override fun dejsonify(input: JsonNode): Any = json.writeValueAsBytes(input)
 }
 
+private object JsonNodeToString : Dejsonifier() {
+    override fun dejsonify(input: JsonNode): Any = json.writeValueAsString(input)
+}
+
 private fun Dejsonifier.Companion.fromConfig(config: DejsonifierConfig): Dejsonifier = when (config) {
     is DejsonifierConfig.Avro -> JsonNodeToGenericRecord(
         schema = CachedSchemaRegistryClient(config.registry, 10)
             .getLatestSchemaMetadata(config.subject)
             .schema
             .let { Schema.Parser().parse(it) }
-
     )
-    is DejsonifierConfig.Raw -> JsonNodeToBytes
+    is DejsonifierConfig.Str -> JsonNodeToString
+    is DejsonifierConfig.Bytes -> JsonNodeToBytes
 }
 
 data class ProduceConfig(
@@ -101,11 +105,13 @@ data class ProduceConfig(
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
     JsonSubTypes.Type(value = DejsonifierConfig.Avro::class, name = "avro"),
-    JsonSubTypes.Type(value = DejsonifierConfig.Raw::class, name = "raw")
+    JsonSubTypes.Type(value = DejsonifierConfig.Bytes::class, name = "bytes"),
+    JsonSubTypes.Type(value = DejsonifierConfig.Bytes::class, name = "str")
 )
 sealed class DejsonifierConfig {
     data class Avro(val registry: String, val subject: String) : DejsonifierConfig()
-    object Raw : DejsonifierConfig()
+    object Bytes : DejsonifierConfig()
+    object Str : DejsonifierConfig()
 }
 
 data class SkippedRecord(

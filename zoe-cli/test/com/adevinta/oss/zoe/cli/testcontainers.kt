@@ -5,6 +5,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.utility.DockerImageName
 
 private const val kafkaVersion = "5.5.1"
 
@@ -29,7 +30,7 @@ object TestcontainersContext {
         val network = Network.newNetwork()
         val logConsumer = Slf4jLogConsumer(logger)
 
-        kafka = KafkaContainer(kafkaVersion)
+        kafka = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka").withTag(kafkaVersion))
             .withNetwork(network)
             .withLogConsumer(logConsumer)
             .apply { start() }

@@ -541,13 +541,13 @@ private fun Cluster.getTopicConfig(aliasOrRealName: TopicAliasOrRealName, subjec
     }
 
 fun inferDejsonifierConfig(props: Map<String, String?>, topic: Topic): DejsonifierConfig {
-    val deserializer = props["value.deserializer"]
+    val serializer = props["value.serializer"]
         ?: throw DejsonifierNotInferrable(error = "couldn't infer data type", reason = Reason.MissingValueDeserializer)
 
     val registry = props["schema.registry.url"]
 
-    return when (deserializer) {
-        "io.confluent.kafka.serializers.KafkaAvroDeserializer" -> {
+    return when (serializer) {
+        "io.confluent.kafka.serializers.KafkaAvroSerializer" -> {
             val msgInCaseOfError =
                 "inferred avro data type (because KafkaAvroDeserializer is used) but couldn't build the data converter"
 
@@ -562,7 +562,8 @@ fun inferDejsonifierConfig(props: Map<String, String?>, topic: Topic): Dejsonifi
                 )
             )
         }
-        else -> DejsonifierConfig.Raw
+        "org.apache.kafka.common.serialization.StringSerializer" -> DejsonifierConfig.Str
+        else -> DejsonifierConfig.Bytes
     }
 }
 
