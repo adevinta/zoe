@@ -28,9 +28,14 @@ suspend fun ZoeRunner.poll(config: PollConfig): PollResponse {
     return launch(poll.name(), config.toJsonString()).parseJson()
 }
 
-suspend fun ZoeRunner.schemas(config: ListSchemasConfig): ListSchemasResponse {
-    logger.info("requesting schemas...")
+suspend fun ZoeRunner.listSchemas(config: ListSchemasConfig): ListSchemasResponse {
+    logger.info("listing schemas ${config.regexFilter?.let { "matching pattern: $it" } ?: ""}")
     return launch(listSchemas.name(), config.toJsonString()).parseJson()
+}
+
+suspend fun ZoeRunner.describeSchema(config: DescribeSchemaConfig): DescribeSchemaResponse {
+    logger.info("describing schema: ${config.subject}")
+    return launch(describeSchema.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.produce(config: ProduceConfig): ProduceResponse {

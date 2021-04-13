@@ -164,19 +164,32 @@ val setOffsets = zoeFunction<SetOffsetRequest, SetOffsetResponse>(name = "setOff
 /**
  * Lambda function to list schemas
  */
-val listSchemas = zoeFunction<ListSchemasConfig, ListSchemasResponse>(name = "schemas") { config ->
+val listSchemas = zoeFunction<ListSchemasConfig, ListSchemasResponse>(name = "listSchemas") { config ->
     val registry = CachedSchemaRegistryClient(config.registry, 10)
-
-    val subjects = registry.allSubjects.map {
-        SchemaDescription(
-            subject = it,
-            versions = registry.getAllVersions(it),
-            latest = registry.getLatestSchemaMetadata(it).schema
-        )
-    }
-
+    val regex = config.regexFilter?.toRegex()
+    val limit = config.limit
+    val subjects =
+        registry
+            .allSubjects
+            .let { if (regex != null) it.filter { subject -> subject matches regex } else it }
+            .let { if (limit != null) it.take(limit) else it }
+            .toList()
     ListSchemasResponse(subjects)
 }
+
+/**
+ * Lambda function to describe a schema
+ */
+val describeSchema = zoeFunction<DescribeSchemaConfig, DescribeSchemaResponse>(name = "describeSchema") { config ->
+    val registry = CachedSchemaRegistryClient(config.registry, 10)
+
+    DescribeSchemaResponse(
+        subject = config.subject,
+        versions = registry.getAllVersions(config.subject),
+        latest = registry.getLatestSchemaMetadata(config.subject).schema
+    )
+}
+
 
 /**
  * Deploys an avro schema
@@ -324,10 +337,6 @@ data class AdminConfig(
     val props: Map<String, String?> = mapOf()
 )
 
-data class ListSchemasConfig(
-    val registry: String
-)
-
 data class DeploySchemaConfig(
     val registry: String,
     val schema: SchemaContent,
@@ -346,14 +355,25 @@ sealed class DeploySchemaResponse {
         DeploySchemaResponse()
 }
 
-data class SchemaDescription(
+data class DescribeSchemaConfig(
+    val registry: String,
+    val subject: String
+)
+
+data class DescribeSchemaResponse(
     val subject: String,
     val versions: List<Int>,
     val latest: String
 )
 
+data class ListSchemasConfig(
+    val registry: String,
+    val regexFilter: String?,
+    val limit: Int?
+)
+
 data class ListSchemasResponse(
-    val subjects: List<SchemaDescription>
+    val subjects: List<String>
 )
 
 data class TopicDescription(
