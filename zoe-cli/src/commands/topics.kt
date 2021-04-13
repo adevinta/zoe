@@ -37,7 +37,7 @@ import java.lang.Integer.MAX_VALUE
 import java.lang.Integer.min
 import java.text.SimpleDateFormat
 import java.time.Duration
-import java.time.ZonedDateTime
+import java.time.ZonedDateTime.now
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -137,10 +137,7 @@ class TopicsConsume : CliktCommand(
         |```""".trimMargin()
     }
 ), KoinComponent {
-    private val from: Duration
-        by option(help = "Amount of time to go back in the past")
-            .convert { Duration.parse(it) }
-            .default(Duration.ofHours(1))
+    private val from: Duration? by option(help = "Amount of time to go back in the past").convert { Duration.parse(it) }
 
     private val filters: List<String> by option(
         "-f",
@@ -210,10 +207,13 @@ class TopicsConsume : CliktCommand(
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val from = ConsumeFrom.Timestamp(ts = ZonedDateTime.now().minus(from).toEpochSecond() * 1000)
-        val stop = if (continuously) StopCondition.Continuously else StopCondition.TopicEnd
         val maxRecords = maxRecords ?: (if (continuously) MAX_VALUE else 5)
-        val recordsPerBatch = recordsPerBatch ?: min(maxRecords, if (continuously) 20 else 1000)
+        val from = when (from) {
+            null -> ConsumeFrom.Earliest
+            else -> ConsumeFrom.Timestamp(ts = now().minus(from).toEpochSecond() * 1000)
+        }
+        val stop = if (continuously) StopCondition.Continuously else StopCondition.TopicEnd
+        val recordsPerBatch = recordsPerBatch ?: min(maxRecords, if (continuously) 20 else 100)
 
         val records =
             service
