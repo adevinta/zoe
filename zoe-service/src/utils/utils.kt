@@ -9,11 +9,10 @@
 package com.adevinta.oss.zoe.service.utils
 
 import com.adevinta.oss.zoe.core.utils.logger
-import com.amazonaws.ClientConfiguration
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.AWSLambdaClientBuilder
 import kotlinx.coroutines.future.await
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.lambda.LambdaAsyncClient
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
@@ -31,18 +30,12 @@ fun userError(message: String, help: String? = null): Nothing {
 
 fun Throwable.withHelpMessage(help: String) = HelpWrappedError(help = help, original = this)
 
-fun lambdaClient(credentials: AWSCredentialsProvider, awsRegion: String?): AWSLambda =
-    AWSLambdaClientBuilder
-        .standard()
-        .withCredentials(credentials)
-        .let { if (awsRegion != null) it.withRegion(awsRegion) else it }
-        .withClientConfiguration(
-            ClientConfiguration()
-                .withMaxErrorRetry(0)
-                .withConnectionTimeout(Timeout)
-                .withRequestTimeout(Timeout)
-                .withSocketTimeout(Timeout)
-        )
+fun lambdaClient(credentials: AwsCredentialsProvider, awsRegion: Region?): LambdaAsyncClient =
+    LambdaAsyncClient
+        .builder()
+        .credentialsProvider(credentials)
+        .let { if (awsRegion != null) it.region(awsRegion) else it }
+        .overrideConfiguration { config -> config.retryPolicy { it.numRetries(0) } }
         .build()
 
 fun loadFileFromResources(path: String): String? =

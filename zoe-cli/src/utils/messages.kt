@@ -4,7 +4,7 @@ import com.adevinta.oss.zoe.cli.config.ConfigUrlProvider
 import com.adevinta.oss.zoe.cli.config.ConfigUrlProviderChain
 import com.adevinta.oss.zoe.cli.config.LocalConfigDirUrlProvider
 import com.adevinta.oss.zoe.service.DejsonifierNotInferrable
-import com.amazonaws.services.lambda.model.ResourceNotFoundException
+import software.amazon.awssdk.services.lambda.model.ResourceNotFoundException
 
 object HelpMessages {
     private const val DocUrl = "https://adevinta.github.io/zoe"
