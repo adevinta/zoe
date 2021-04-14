@@ -12,20 +12,17 @@ import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.core.utils.toJsonString
 import com.adevinta.oss.zoe.service.utils.lambdaClient
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.services.lambda.AWSLambda
-import com.amazonaws.services.lambda.model.InvokeRequest
 import kotlinx.coroutines.future.await
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ExecutorService
-import java.util.function.Supplier
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+import software.amazon.awssdk.core.SdkBytes
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.lambda.LambdaAsyncClient
 
 class LambdaZoeRunner(
     override val name: String,
     private val version: String,
     private val suffix: String?,
-    private val executor: ExecutorService,
-    private val client: AWSLambda
+    private val client: LambdaAsyncClient
 ) : ZoeRunner {
 
     companion object {
@@ -40,41 +37,40 @@ class LambdaZoeRunner(
         name: String,
         version: String,
         suffix: String?,
-        executor: ExecutorService,
-        awsCredentials: AWSCredentialsProvider,
-        awsRegion: String?
+        awsCredentials: AwsCredentialsProvider,
+        awsRegion: Region?
     ) : this(
         name = name,
         version = version,
         suffix = suffix,
-        executor = executor,
         client = lambdaClient(awsCredentials, awsRegion)
     )
 
-    override suspend fun launch(function: String, payload: String): String = CompletableFuture.supplyAsync(
-        Supplier {
-            val response = client.invoke(
-                InvokeRequest().apply {
-                    functionName = functionName(version, suffix)
-                    setPayload(
-                        mapOf(
-                            "function" to function,
-                            "payload" to payload.toJsonNode()
-                        ).toJsonString()
+    override suspend fun launch(function: String, payload: String): String {
+        val response =
+            client
+                .invoke {
+                    it.functionName(functionName(version, suffix))
+                    it.payload(
+                        SdkBytes.fromString(
+                            mapOf(
+                                "function" to function,
+                                "payload" to payload.toJsonNode()
+                            ).toJsonString(),
+                            Charsets.UTF_8
+                        )
                     )
                 }
-            )
+                .await()
 
-            val parsed = String(response.payload.array(), Charsets.UTF_8)
+        val parsed = response.payload().asUtf8String()
 
-            if (response.functionError != null) {
-                throw parsed.parseJson<LambdaExecutionError>().toZoeRunnerException()
-            }
+        if (response.functionError() != null) {
+            throw parsed.parseJson<LambdaExecutionError>().toZoeRunnerException()
+        }
 
-            parsed
-        },
-        executor
-    ).await()
+        return parsed
+    }
 
     override fun close() {}
 

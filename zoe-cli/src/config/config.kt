@@ -13,11 +13,6 @@ import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.config.Cluster
 import com.adevinta.oss.zoe.service.config.ConsumerGroup
 import com.adevinta.oss.zoe.service.config.Topic
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonValue
@@ -25,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
+import software.amazon.awssdk.auth.credentials.*
 
 data class EnvConfig(
     val runners: RunnersSection,
@@ -73,7 +69,7 @@ sealed class SecretsProviderConfig {
 
     data class EnvVars(val prepend: String?, val append: String?) : SecretsProviderConfig()
 
-    data class Exec(val command: String, val timeoutMs: Long = 60000) : SecretsProviderConfig()
+    data class Exec(val command: List<String>, val timeoutMs: Long = 60000) : SecretsProviderConfig()
 
     data class AwsSecretsManager(
         val region: String?,
@@ -140,10 +136,15 @@ sealed class AwsCredentialsConfig {
     data class Static(val accessKey: String, val secretAccessKey: String) : AwsCredentialsConfig()
 }
 
-fun AwsCredentialsConfig.resolve(): AWSCredentialsProvider = when (this) {
-    is AwsCredentialsConfig.Default -> DefaultAWSCredentialsProviderChain()
-    is AwsCredentialsConfig.Profile -> ProfileCredentialsProvider(name)
-    is AwsCredentialsConfig.Static -> AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretAccessKey))
+fun AwsCredentialsConfig.resolve(): AwsCredentialsProvider = when (this) {
+    is AwsCredentialsConfig.Default -> DefaultCredentialsProvider.create()
+    is AwsCredentialsConfig.Profile -> ProfileCredentialsProvider.create(name)
+    is AwsCredentialsConfig.Static -> StaticCredentialsProvider.create(
+        AwsBasicCredentials.create(
+            accessKey,
+            secretAccessKey
+        )
+    )
 }
 
 fun TopicConfig.toDomain(): Topic = Topic(name = name, subject = subject, propsOverride = propsOverride)

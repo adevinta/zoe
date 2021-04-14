@@ -15,14 +15,10 @@ import com.adevinta.oss.zoe.service.storage.getAsJson
 import com.adevinta.oss.zoe.service.storage.putAsJson
 import com.adevinta.oss.zoe.service.utils.exec
 import com.adevinta.oss.zoe.service.utils.userError
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
-import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest
-import com.schibsted.security.strongbox.sdk.impl.DefaultSimpleSecretsGroup
-import com.schibsted.security.strongbox.sdk.types.Region
-import com.schibsted.security.strongbox.sdk.types.SecretsGroupIdentifier
 import kotlinx.coroutines.runBlocking
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import java.io.Closeable
 import java.time.Duration
 
@@ -84,36 +80,12 @@ object NoopSecretsProvider : SecretsProvider {
     override fun decipher(secret: String): String = secret
 }
 
-class StrongboxProvider(
-    private val credentials: AWSCredentialsProvider,
-    private val region: String,
-    private val defaultGroup: String
-) : SecretsProvider {
-    private val secretsPattern = Regex("""secret(?::([a-zA-Z0-9_\-.]+))?(?::([a-zA-Z0-9_\-.]+))?:(\w+)""")
-
-    override fun decipher(secret: String): String {
-        val matches =
-            secretsPattern.matchEntire(secret) ?: userError("secret not parsable by ${StrongboxProvider::class.java}")
-
-        val (profile, parsedGroup, secretName) = matches.destructured
-
-        val credentials = if (profile.isNotEmpty()) ProfileCredentialsProvider(profile) else credentials
-        val group = if (parsedGroup.isNotEmpty()) parsedGroup else defaultGroup
-
-        logger.info("fetching secret : $secretName (group: $group, profile : $profile)")
-
-        return DefaultSimpleSecretsGroup(SecretsGroupIdentifier(Region.fromName(region), group), credentials)
-            .getStringSecret(secretName)
-            .orElseThrow { IllegalArgumentException("'$secretName' not found") }
-    }
-}
-
 class EnvVarsSecretProvider(private val append: String, private val prepend: String) : SecretsProvider {
     private val secretsPattern = Regex("""secret(?::.+)*:(\S+)""")
 
     override fun decipher(secret: String): String {
         val matches =
-            secretsPattern.matchEntire(secret) ?: userError("secret not parsable by ${StrongboxProvider::class.java}")
+            secretsPattern.matchEntire(secret) ?: userError("secret not parsable by ${this::class.java}")
 
         val (secretName) = matches.destructured
         val completedSecretName = "$prepend$secretName$append"
@@ -128,7 +100,12 @@ class EnvVarsSecretProvider(private val append: String, private val prepend: Str
  * - the secret name
  * - the context (optional)
  */
-class ExecSecretProvider(private val command: String, private val timeout: Duration) : SecretsProvider {
+class ExecSecretProvider(private val command: List<String>, private val timeout: Duration) : SecretsProvider {
+    object ArgumentsPattern {
+        const val SecretName = "{secretName}"
+        const val Context = "{context}"
+    }
+
     private val secretsPattern = Regex("""secret(?::([a-zA-Z0-9_\-.]+))?:(\w+)""")
 
     override fun decipher(secret: String): String {
@@ -137,9 +114,16 @@ class ExecSecretProvider(private val command: String, private val timeout: Durat
         )
 
         val (context, secretName) = matches.destructured
+        val resolvedCommand = command.map {
+            when (it) {
+                ArgumentsPattern.SecretName -> secretName
+                ArgumentsPattern.Context -> context
+                else -> it
+            }
+        }
 
         val result = exec(
-            command = arrayOf(command, secretName, context),
+            command = arrayOf(*resolvedCommand.toTypedArray()),
             failOnError = true,
             timeout = timeout
         )
@@ -152,16 +136,16 @@ class ExecSecretProvider(private val command: String, private val timeout: Durat
  * A [SecretsProvider] implementation that retrieves secrets from AWS secrets manager
  */
 class AwsSecretsManagerProvider(
-    credentials: AWSCredentialsProvider,
-    private val region: String?
+    credentials: AwsCredentialsProvider,
+    private val region: Region?
 ) : SecretsProvider {
     private val secretsPattern = Regex("""secret(?::.+)*:(\S+)""")
 
     private val client =
-        AWSSecretsManagerClientBuilder
-            .standard()
-            .let { region?.let(it::withRegion) ?: it }
-            .withCredentials(credentials)
+        SecretsManagerClient
+            .builder()
+            .let { builder -> region?.let(builder::region) ?: builder }
+            .credentialsProvider(credentials)
             .build()
 
     override fun decipher(secret: String): String {
@@ -172,8 +156,8 @@ class AwsSecretsManagerProvider(
         val (secretName) = matches.destructured
 
         return client
-            .getSecretValue(GetSecretValueRequest().withSecretId(secretName))
-            ?.secretString
+            .getSecretValue { it.secretId(secretName) }
+            ?.secretString()
             ?: userError("secret not found: $secretName")
     }
 

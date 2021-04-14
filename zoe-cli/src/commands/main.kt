@@ -37,12 +37,11 @@ import com.github.ajalt.mordant.TerminalCapabilities
 import org.apache.log4j.Level
 import org.apache.log4j.LogManager
 import org.koin.core.context.loadKoinModules
-import org.koin.core.definition.Definition
-import org.koin.core.parameter.DefinitionParameters
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.dsl.module
 import org.koin.dsl.onClose
+import software.amazon.awssdk.regions.Region
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.ExecutorService
@@ -217,9 +216,8 @@ fun mainModule(context: CliContext) = module {
                     name = RunnerName.Lambda.code,
                     version = ctx.version,
                     suffix = nameSuffix,
-                    executor = ioPool,
                     awsCredentials = credentials.resolve(),
-                    awsRegion = awsRegion
+                    awsRegion = awsRegion?.let { Region.of(it) }
                 )
             }
 
@@ -255,11 +253,8 @@ fun mainModule(context: CliContext) = module {
         val provider = when (val secrets = config.secrets) {
             null -> NoopSecretsProvider
 
-            is SecretsProviderConfig.Strongbox -> StrongboxProvider(
-                credentials = secrets.credentials.resolve(),
-                region = secrets.region,
-                defaultGroup = secrets.group
-            )
+            is SecretsProviderConfig.Strongbox ->
+                throw IllegalArgumentException("strongbox provider is not supported anymore")
 
             is SecretsProviderConfig.EnvVars -> EnvVarsSecretProvider(
                 append = secrets.append ?: "",
@@ -273,7 +268,7 @@ fun mainModule(context: CliContext) = module {
 
             is SecretsProviderConfig.AwsSecretsManager -> AwsSecretsManagerProvider(
                 credentials = secrets.credentials.resolve(),
-                region = secrets.region
+                region = secrets.region?.let { Region.of(it) }
             )
 
             else -> userError("no secrets provider matched : $secrets")

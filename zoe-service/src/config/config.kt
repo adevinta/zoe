@@ -9,11 +9,10 @@
 package com.adevinta.oss.zoe.service.config
 
 import com.adevinta.oss.zoe.service.expressions.RegisteredExpression
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import software.amazon.awssdk.services.s3.S3AsyncClient
 import java.util.concurrent.CompletableFuture
 
-val s3: AmazonS3 by lazy { AmazonS3ClientBuilder.defaultClient() }
+val s3: S3AsyncClient by lazy { S3AsyncClient.create() }
 
 interface ConfigStore {
     fun cluster(name: String): CompletableFuture<Cluster?>

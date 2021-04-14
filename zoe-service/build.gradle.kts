@@ -12,11 +12,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.6")
 
-    implementation("com.amazonaws:aws-java-sdk-s3:1.11.779")
-    implementation("com.amazonaws:aws-java-sdk-lambda:1.11.779")
-    implementation("com.schibsted.security:strongbox-sdk:0.2.21")
-    implementation("com.amazonaws:aws-java-sdk-secretsmanager:1.11.779")
-
+    implementation(platform("software.amazon.awssdk:bom:2.15.9"))
+    implementation("software.amazon.awssdk:lambda")
+    implementation("software.amazon.awssdk:s3")
+    implementation("software.amazon.awssdk:secretsmanager")
 
     implementation("org.slf4j:slf4j-log4j12:1.7.30")
     implementation("log4j:log4j:1.2.17")

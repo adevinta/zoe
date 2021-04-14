@@ -9,11 +9,6 @@
 package com.adevinta.oss.zoe.cli.utils
 
 import com.adevinta.oss.zoe.core.utils.logger
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.services.cloudformation.AmazonCloudFormation
-import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
-import com.amazonaws.services.identitymanagement.AmazonIdentityManagement
-import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClientBuilder
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
@@ -34,6 +29,10 @@ import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.selects.whileSelect
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.cloudformation.CloudFormationAsyncClient
+import software.amazon.awssdk.services.iam.IamAsyncClient
 import java.io.ByteArrayOutputStream
 import java.io.Closeable
 import java.io.InputStream
@@ -46,18 +45,19 @@ import java.util.zip.ZipOutputStream
 
 val yaml = ObjectMapper(YAMLFactory()).registerKotlinModule()
 
-fun iamClient(credentials: AWSCredentialsProvider, awsRegion: String?): AmazonIdentityManagement =
-    AmazonIdentityManagementClientBuilder
-        .standard()
-        .withCredentials(credentials)
-        .let { if (awsRegion != null) it.withRegion(awsRegion) else it }
+fun iamClient(credentials: AwsCredentialsProvider, awsRegion: Region?): IamAsyncClient =
+    IamAsyncClient
+        .builder()
+        .credentialsProvider(credentials)
+        .region(Region.AWS_GLOBAL)
+//        .let { if (awsRegion != null) it.region(awsRegion) else it }
         .build()
 
-fun cfClient(credentials: AWSCredentialsProvider, awsRegion: String?): AmazonCloudFormation =
-    AmazonCloudFormationClientBuilder
-        .standard()
-        .withCredentials(credentials)
-        .let { if (awsRegion != null) it.withRegion(awsRegion) else it }
+fun cfClient(credentials: AwsCredentialsProvider, awsRegion: Region?): CloudFormationAsyncClient =
+    CloudFormationAsyncClient
+        .builder()
+        .credentialsProvider(credentials)
+        .let { if (awsRegion != null) it.region(awsRegion) else it }
         .build()
 
 fun zipEntries(entries: Map<String, Path>): ByteArray = ByteArrayOutputStream().use { stream ->
@@ -82,6 +82,22 @@ fun <T> retryUntilNotNull(timeoutMs: Long, onTimeoutMsg: String?, block: () -> T
         }
 
         Thread.sleep(3000)
+    } while (System.currentTimeMillis() - start < timeoutMs)
+
+    throw TimeoutException(onTimeoutMsg)
+}
+
+suspend fun <T> retrySuspendingUntilNotNull(timeoutMs: Long, onTimeoutMsg: String?, block: suspend () -> T?): T {
+    val start = System.currentTimeMillis()
+
+    do {
+        val result = block.invoke()
+
+        if (result != null) {
+            return result
+        }
+
+        delay(timeMillis = 3000)
     } while (System.currentTimeMillis() - start < timeoutMs)
 
     throw TimeoutException(onTimeoutMsg)

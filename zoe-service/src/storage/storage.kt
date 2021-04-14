@@ -12,11 +12,14 @@ import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.service.config.s3
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
+import software.amazon.awssdk.core.async.AsyncRequestBody
+import software.amazon.awssdk.core.async.AsyncResponseTransformer
+import software.amazon.awssdk.services.s3.model.GetObjectRequest
+import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import java.io.Closeable
 import java.io.File
 import java.nio.file.Files
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.function.Supplier
 
@@ -128,34 +131,43 @@ class LocalFsKeyValueStore(private var root: File) : KeyValueStore {
 class AwsFsKeyValueStore(
     private val bucket: String,
     private var prefix: String,
-    private val executor: ExecutorService
 ) : KeyValueStore {
 
-    private suspend fun <T> submit(block: () -> T): T =
-        CompletableFuture.supplyAsync(Supplier { block() }, executor).await()
-
-    override suspend fun put(key: String, value: ByteArray): Unit = submit {
-        s3.putObject(bucket, "$prefix/$key", String(value))
-    }
-
-    override suspend fun delete(key: String): ByteArray? = submit {
-        val existing = runBlocking { get(key) }
-        s3.deleteObject(bucket, "$prefix/$key")
-        existing
-    }
-
-    override suspend fun get(key: String): ByteArray? = submit {
+    override suspend fun put(key: String, value: ByteArray): Unit {
         s3
-            .runCatching { getObject(bucket, "$prefix/$key").objectContent.use { it.readBytes() } }
-            .getOrElse {
-                logger.warn("couldn't fetch key '$key' in namespace '$prefix' : '${it.message}'")
-                null
-            }
+            .putObject(
+                PutObjectRequest.builder().bucket(bucket).key("$prefix/$key").build(),
+                AsyncRequestBody.fromBytes(value)
+            )
+            .await()
     }
 
-    override suspend fun listKeys(): Iterable<String> = submit {
+    override suspend fun delete(key: String): ByteArray? {
+        val existing = get(key)
+        s3.deleteObject { it.bucket(bucket).key("$prefix/$key") }.await()
+        return existing
+    }
+
+    override suspend fun get(key: String): ByteArray? =
+        try {
+            s3
+                .getObject(
+                    GetObjectRequest.builder().bucket(bucket).key("$prefix/$key").build(),
+                    AsyncResponseTransformer.toBytes()
+                )
+                .await()
+                .asByteArray()
+        } catch (err: Exception) {
+            logger.warn("couldn't fetch key '$key' in namespace '$prefix' : '${err.message}'")
+            null
+        }
+
+    override suspend fun listKeys(): Iterable<String> {
         val root = "$prefix/"
-        s3.listObjectsV2(bucket, root).objectSummaries.map { it.key.replaceFirst(root, "") }
+        return s3.listObjectsV2 { it.bucket(bucket).prefix(root) }
+            .await()
+            .contents()
+            .map { it.key().replaceFirst(root, "") }
     }
 
     override fun useNamespace(namespace: String) {
