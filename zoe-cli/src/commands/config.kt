@@ -8,16 +8,17 @@
 
 package com.adevinta.oss.zoe.cli.commands
 
-import com.adevinta.oss.zoe.cli.config.*
+import com.adevinta.oss.zoe.cli.config.ClusterConfig
+import com.adevinta.oss.zoe.cli.config.EnvConfig
+import com.adevinta.oss.zoe.cli.config.RunnerName
+import com.adevinta.oss.zoe.cli.config.RunnersSection
 import com.adevinta.oss.zoe.cli.utils.globalTermColors
 import com.adevinta.oss.zoe.cli.utils.yaml
 import com.adevinta.oss.zoe.core.utils.buildJson
-import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.utils.userError
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
@@ -138,7 +139,6 @@ class ConfigInit : CliktCommand(
                                 "key.serializer" to "org.apache.kafka.common.serialization.StringSerializer",
                                 "value.serializer" to "org.apache.kafka.common.serialization.ByteArraySerializer"
                             ),
-                            topics = mapOf("input" to TopicConfig("input-topic", null)),
                             registry = null
                         )
                     ),
@@ -147,12 +147,11 @@ class ConfigInit : CliktCommand(
                     secrets = null
                 )
 
-                val jsonValue: JsonNode = json.valueToTree(config)
-
                 yaml.setSerializationInclusion(JsonInclude.Include.NON_NULL)
                     .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
+                    .setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
                     .writerWithDefaultPrettyPrinter()
-                    .writeValue(target, jsonValue)
+                    .writeValue(target, config)
             }
         }
     }

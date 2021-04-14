@@ -211,7 +211,7 @@ fun mainModule(context: CliContext) = module {
             get<SecretsProvider>().resolveSecretsInJsonSerializable(get<EnvConfig>().runners)
 
         when (context.runner ?: runnersSectionWithSecrets.default) {
-            RunnerName.Lambda -> with(runnersSectionWithSecrets.config.lambda) {
+            RunnerName.Lambda -> with(runnersSectionWithSecrets.config().lambda) {
                 LambdaZoeRunner(
                     name = RunnerName.Lambda.code,
                     version = ctx.version,
@@ -227,7 +227,7 @@ fun mainModule(context: CliContext) = module {
             )
 
             RunnerName.Kubernetes -> {
-                val kubeConfig = runnersSectionWithSecrets.config.kubernetes
+                val kubeConfig = runnersSectionWithSecrets.config().kubernetes
 
                 KubernetesRunner(
                     name = RunnerName.Kubernetes.code,

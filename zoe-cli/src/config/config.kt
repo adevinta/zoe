@@ -64,7 +64,7 @@ sealed class SecretsProviderConfig {
     data class Strongbox(
         val region: String,
         val group: String,
-        val credentials: AwsCredentialsConfig = AwsCredentialsConfig.Default
+        val credentials: AwsCredentialsConfig? = null
     ) : SecretsProviderConfig()
 
     data class EnvVars(val prepend: String?, val append: String?) : SecretsProviderConfig()
@@ -73,14 +73,16 @@ sealed class SecretsProviderConfig {
 
     data class AwsSecretsManager(
         val region: String?,
-        val credentials: AwsCredentialsConfig = AwsCredentialsConfig.Default
+        val credentials: AwsCredentialsConfig? = null
     ) : SecretsProviderConfig()
 }
 
 data class RunnersSection(
-    val default: RunnerName = RunnerName.Lambda,
-    val config: RunnersConfig = RunnersConfig()
+    val default: RunnerName = RunnerName.Local,
+    val config: RunnersConfig? = null
 )
+
+fun RunnersSection.config(): RunnersConfig = RunnersConfig()
 
 data class RunnersConfig(
     val lambda: LambdaRunnerConfig = LambdaRunnerConfig(),
@@ -91,7 +93,7 @@ data class RunnersConfig(
 data class LambdaRunnerConfig(
     val nameSuffix: String? = null,
     val deploy: LambdaDeployConfig? = null,
-    val credentials: AwsCredentialsConfig = AwsCredentialsConfig.Default,
+    val credentials: AwsCredentialsConfig? = null,
     val awsRegion: String? = null,
     val enabled: Boolean = false
 )
@@ -136,7 +138,8 @@ sealed class AwsCredentialsConfig {
     data class Static(val accessKey: String, val secretAccessKey: String) : AwsCredentialsConfig()
 }
 
-fun AwsCredentialsConfig.resolve(): AwsCredentialsProvider = when (this) {
+fun AwsCredentialsConfig?.resolve(): AwsCredentialsProvider = when (this) {
+    null -> DefaultCredentialsProvider.create()
     is AwsCredentialsConfig.Default -> DefaultCredentialsProvider.create()
     is AwsCredentialsConfig.Profile -> ProfileCredentialsProvider.create(name)
     is AwsCredentialsConfig.Static -> StaticCredentialsProvider.create(
