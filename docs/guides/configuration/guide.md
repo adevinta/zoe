@@ -122,8 +122,8 @@ You can store configuration values that are shared across all the environments i
 
 ```yaml tab="~/.zoe/config/common.yml"
 secrets:
-  provider: "strongbox"
-  region: "eu-west-1"
+  provider: "exec"
+  command: [ "my-command", "{secretName}", "{context}" ]
 
 runners:
   default: lambda 

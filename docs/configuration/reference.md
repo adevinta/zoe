@@ -6,7 +6,7 @@ clusters:
 
   # Cluster alias (used with the --cluster option to refer to this cluster config)
   subito:
-    
+
     # Kafka clients properties that will be injected to all Kafka clients by Zoe at runtime
     # For more information on available properties : 
     #   - consumer : https://kafka.apache.org/documentation/#consumerconfigs
@@ -19,16 +19,16 @@ clusters:
       sasl.jaas.config: secret:JAAS_CONFIG
       security.protocol: SASL_SSL
       sasl.mechanism: SCRAM-SHA-256
-    
+
     # Schema registry address of the cluster. Will be used by zoe when interacting with the schema registry (schemas list, describe and deploy command)
     # When this property is set, zoe automatically injects the property 'schema.registry.url' into the Kafka clients props.
     registry: https://my-registry.example.com
-    
+
     # A list of consumer groups keyed by their alias. Useful when using the 'zoe groups' command to interact with consumer groups.
     # When you need to refer to a consumer group, you can use the alias instead of the full name of the consumer group.
     groups:
       my-group: long-consumer-group-name
-    
+
     # Topics config section. Basically a dictionary with the topic's alias as the key and the topic's configuration as the value.
     # The topic's configuration basically includes :
     #   - name: the full name of the topic
@@ -51,7 +51,7 @@ runners:
 
   # Runners configuration
   config:
-    
+
     # The kubernetes runner configuration
     kubernetes:
       # Kubernetes context to use
@@ -72,8 +72,8 @@ runners:
 
       # This section sets the deployment context of the lambda function. Mainly used with the 'zoe lambda deploy' command.
       deploy:
-        subnets: ["subnet-xxxxxx"]
-        securityGroups: ["sg-yyyyy"]
+        subnets: [ "subnet-xxxxxx" ]
+        securityGroups: [ "sg-yyyyy" ]
         memory: 512
         timeout: 500
 
@@ -94,8 +94,7 @@ expressions:
 # Secrets provider
 # Cf. The secrets provider guide in the Advanced usage section. 
 secrets:
-  provider: "strongbox"
-  region: "eu-west-1"
-  group: my.group
+  provider: "exec"
+  command: [ "my-command", "{secretName}", "{context}" ]
 
 ```
