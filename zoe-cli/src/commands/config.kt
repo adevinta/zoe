@@ -48,8 +48,15 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 
-class ConfigCommand : CliktCommand(name = "config", help = "Inspect or initialize zoe config") {
-    override fun run() {}
+class ConfigCommand : NoOpCliktCommand(name = "config", help = "Inspect or initialize zoe config") {
+    init {
+        subcommands(
+            ConfigInit(),
+            ConfigClusters(),
+            ConfigEnvironments(),
+            ConfigDefaults()
+        )
+    }
 }
 
 class ConfigInit : CliktCommand(
@@ -80,7 +87,10 @@ class ConfigInit : CliktCommand(
 
     private val ctx by inject<CliContext>()
 
-    private val recreate: Boolean by option("--recreate", help = "Recreate the configuration folder from scratch").flag(
+    private val recreate: Boolean by option(
+        "--recreate",
+        help = "Recreate the configuration folder from scratch"
+    ).flag(
         default = false
     )
 
@@ -163,76 +173,82 @@ class ConfigInit : CliktCommand(
     }
 }
 
-class ConfigClusters : CliktCommand(name = "clusters") {
-    override fun run() {}
+class ConfigClusters : NoOpCliktCommand(name = "clusters") {
+
+    init {
+        subcommands(List(), SetDefault())
+    }
+
+    class List : CliktCommand(name = "list", help = "List configured clusters"), KoinComponent {
+        private val ctx by inject<CliContext>()
+        private val env by inject<EnvConfig>()
+
+        override fun run() {
+            val response = env.clusters.map { (name, config) ->
+                mapOf(
+                    "cluster" to name,
+                    "brokers" to config.props["bootstrap.servers"],
+                    "registry" to config.registry,
+                    "topics" to config.topics.map { (alias, topic) ->
+                        buildJson {
+                            put("alias", alias)
+                            put("name", topic.name)
+                        }
+                    },
+                    "groups" to config.groups
+                )
+            }
+
+            ctx.term.output.format(response.toJsonNode()) { echo(it) }
+        }
+    }
+
+    class SetDefault : CliktCommand(name = "set-default", help = "Set the default cluster"), KoinComponent {
+        private val provider: DefaultsProvider = get()
+        private val defaults: ZoeDefaults = get()
+
+        private val cluster: String by argument("cluster")
+
+        override fun run() = runBlocking {
+            provider.persist(defaults.copy(cluster = cluster))
+        }
+    }
 }
 
-class ClustersList : CliktCommand(name = "list", help = "List configured clusters"), KoinComponent {
-    private val ctx by inject<CliContext>()
-    private val env by inject<EnvConfig>()
+class ConfigEnvironments : NoOpCliktCommand(name = "environments"), KoinComponent {
 
-    override fun run() {
-        val response = env.clusters.map { (name, config) ->
-            mapOf(
-                "cluster" to name,
-                "brokers" to config.props["bootstrap.servers"],
-                "registry" to config.registry,
-                "topics" to config.topics.map { (alias, topic) ->
-                    buildJson {
-                        put("alias", alias)
-                        put("name", topic.name)
-                    }
-                },
-                "groups" to config.groups
-            )
+    init {
+        subcommands(List(), SetDefault())
+    }
+
+    class List : CliktCommand(name = "list", help = "List environments"), KoinComponent {
+        private val ctx by inject<CliContext>()
+
+        override fun run() {
+            val environments = ctx.configDir
+                .takeIf { it.exists() && it.isDirectory }
+                ?.listFiles()
+                ?.map { it.nameWithoutExtension }
+                ?.filter { it != "common" }
+                ?: emptyList()
+
+            ctx.term.output.format(environments.toJsonNode()) { echo(it) }
         }
 
-        ctx.term.output.format(response.toJsonNode()) { echo(it) }
+    }
+
+    class SetDefault : CliktCommand(name = "set-default", help = "Set the default environment"), KoinComponent {
+        private val provider: DefaultsProvider = get()
+        private val defaults: ZoeDefaults = get()
+
+        private val environment: String by argument("environment")
+
+        override fun run() = runBlocking {
+            provider.persist(defaults.copy(environment = environment))
+        }
     }
 }
 
-class SetDefaultCluster : CliktCommand(name = "set-default"), KoinComponent {
-    private val defaultsProvider: DefaultsProvider = get()
-    private val defaults: ZoeDefaults = get()
-
-    private val cluster: String by argument("cluster")
-
-    override fun run() = runBlocking {
-        defaultsProvider.persist(defaults.copy(cluster = cluster))
-    }
-
-}
-
-class ConfigEnvironments : CliktCommand(name = "environments"), KoinComponent {
-    override fun run() {}
-}
-
-class EnvironmentsList : CliktCommand(name = "list"), KoinComponent {
-    private val ctx by inject<CliContext>()
-
-    override fun run() {
-        val environments = ctx.configDir
-            .takeIf { it.exists() && it.isDirectory }
-            ?.listFiles()
-            ?.map { it.nameWithoutExtension }
-            ?.filter { it != "common" }
-            ?: emptyList()
-
-        ctx.term.output.format(environments.toJsonNode()) { echo(it) }
-    }
-
-}
-
-class SetDefaultEnvironment : CliktCommand(name = "set-default"), KoinComponent {
-    private val provider: DefaultsProvider = get()
-    private val defaults: ZoeDefaults = get()
-
-    private val environment: String by argument("environment")
-
-    override fun run() = runBlocking {
-        provider.persist(defaults.copy(environment = environment))
-    }
-}
 
 class ConfigDefaults : NoOpCliktCommand(name = "defaults", help = "Manage zoe defaults") {
     init {
@@ -248,23 +264,21 @@ class ConfigDefaults : NoOpCliktCommand(name = "defaults", help = "Manage zoe de
         private val provider: DefaultsProvider = get()
         private val defaults: ZoeDefaults = get()
 
-        private val format: ContentFormat by option(
+        private val format: EditingFormat by option(
             "--format",
             help = "Preferred editing format (json or yml)"
-        ).choice(choices = ContentFormat.values().associateBy { it.code }).default(ContentFormat.Yaml)
-
-        enum class ContentFormat(val code: String) { Json("json"), Yaml("yaml") }
+        ).choice(choices = EditingFormat.values().associateBy { it.code }).default(EditingFormat.Yaml)
 
         override fun run() {
             val edited = TermUi.editText(
                 when (format) {
-                    ContentFormat.Json -> json.writerWithDefaultPrettyPrinter().writeValueAsString(defaults)
-                    ContentFormat.Yaml -> yamlPrettyWriter.writeValueAsString(defaults)
+                    EditingFormat.Json -> json.writerWithDefaultPrettyPrinter().writeValueAsString(defaults)
+                    EditingFormat.Yaml -> yamlPrettyWriter.writeValueAsString(defaults)
                 },
                 requireSave = true,
                 extension = when (format) {
-                    ContentFormat.Json -> ".json"
-                    ContentFormat.Yaml -> ".yml"
+                    EditingFormat.Json -> ".json"
+                    EditingFormat.Yaml -> ".yml"
                 }
             )
 
@@ -277,6 +291,7 @@ class ConfigDefaults : NoOpCliktCommand(name = "defaults", help = "Manage zoe de
     }
 }
 
+enum class EditingFormat(val code: String) { Json("json"), Yaml("yaml") }
 
 sealed class LoadFrom(name: String) : OptionGroup(name) {
     class Local : LoadFrom("Options to load from local") {
@@ -345,9 +360,4 @@ private class GitSshTransport(val privateKey: File?, val passphrase: String?) : 
     }
 }
 
-fun configCommands() = ConfigCommand().subcommands(
-    ConfigInit(),
-    ConfigClusters().subcommands(ClustersList(), SetDefaultCluster()),
-    ConfigEnvironments().subcommands(EnvironmentsList(), SetDefaultEnvironment()),
-    ConfigDefaults()
-)
+fun configCommands() = ConfigCommand()
