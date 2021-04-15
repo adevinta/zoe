@@ -9,6 +9,7 @@
 package com.adevinta.oss.zoe.cli.commands
 
 import com.adevinta.oss.zoe.cli.config.Format
+import com.adevinta.oss.zoe.cli.config.ZoeDefaults
 import com.adevinta.oss.zoe.cli.utils.batches
 import com.adevinta.oss.zoe.cli.utils.fetch
 import com.adevinta.oss.zoe.cli.utils.globalTermColors
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.koin.core.KoinComponent
+import org.koin.core.get
 import org.koin.core.inject
 import java.io.InputStream
 import java.lang.Integer.MAX_VALUE
@@ -89,8 +91,12 @@ class TopicsCreate : CliktCommand(
         |  > ${bold("zoe topics create my-topic --partitions 5 --replication-factor 1")}
         |
         |  Specify additional configuration parameters:
-        |  > ${bold("zoe topics create my-topic --partitions 5 --replication-factor 1 --config retention.ms=3600 " +
-            "--config cleanup.policy=compact\n")}
+        |  > ${
+            bold(
+                "zoe topics create my-topic --partitions 5 --replication-factor 1 --config retention.ms=3600 " +
+                    "--config cleanup.policy=compact\n"
+            )
+        }
         |```""".trimMargin()
     }
 ), KoinComponent {
@@ -110,7 +116,8 @@ class TopicsCreate : CliktCommand(
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val response = service.createTopic(ctx.cluster, topic, partitions, replicationFactor, additionalTopicConfig = topicConfig)
+        val response =
+            service.createTopic(ctx.cluster, topic, partitions, replicationFactor, additionalTopicConfig = topicConfig)
         ctx.term.output.format(response.toJsonNode()) { echo(it) }
     }
 }
@@ -137,6 +144,8 @@ class TopicsConsume : CliktCommand(
         |```""".trimMargin()
     }
 ), KoinComponent {
+    private val defaults: ZoeDefaults = get()
+
     private val from: Duration? by option(help = "Amount of time to go back in the past").convert { Duration.parse(it) }
 
     private val filters: List<String> by option(
@@ -197,11 +206,8 @@ class TopicsConsume : CliktCommand(
 
     private val dialect: JsonQueryDialect
         by option("--dialect", help = "Json query dialect to use with `--query` and `--filter`")
-            .choice(
-                "jq" to JsonQueryDialect.Jq,
-                "jmespath" to JsonQueryDialect.Jmespath
-            )
-            .default(JsonQueryDialect.Jmespath)
+            .choice(JsonQueryDialect.values().associateBy { it.code })
+            .default(defaults.topic.consume.jsonQueryDialect)
 
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()
@@ -273,9 +279,11 @@ class TopicsProduce : CliktCommand(
         |  > ${bold("""echo '[{"id": "1", "msg": "hello"}]' | zoe -c local topics produce -t input --from-stdin""")}
         |  
         |  Use streaming mode to accept records one by one (does not require input to be a json array):
-        |  > ${bold(
-            """echo '{"id": "1", "msg": "hello"}' | zoe -c local topics produce -t input --from-stdin --streaming"""
-        )}
+        |  > ${
+            bold(
+                """echo '{"id": "1", "msg": "hello"}' | zoe -c local topics produce -t input --from-stdin --streaming"""
+            )
+        }
         |  
         |  Use the id field of the input messages to determine the Kafka record key:
         |  > ${bold("""echo '[{"id": "1", "msg": "hello"}]' | zoe -c local topics produce -t input --from-stdin --key-path 'id'""")}

@@ -11,6 +11,7 @@ package com.adevinta.oss.zoe.core.functions
 import com.adevinta.oss.zoe.core.utils.*
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import org.apache.avro.generic.GenericDatumWriter
@@ -30,8 +31,8 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
     val queryEngine = config.jsonQueryDialect.createInstance()
 
     // validate filters and select statement
-    val filters = config.filter.also { it.forEach(queryEngine::validate) }
-    val filtersMeta = config.filterMeta.also { it.forEach(queryEngine::validate) }
+    val filters = config.filter.onEach(queryEngine::validate)
+    val filtersMeta = config.filterMeta.onEach(queryEngine::validate)
     val query = config.query?.also(queryEngine::validate)
 
     val jsonifier = Jsonifiers.get(config.jsonifier)
@@ -263,7 +264,7 @@ sealed class Subscription {
     data class AssignPartitions(val partitions: Map<Int, Long>) : Subscription()
 }
 
-enum class JsonQueryDialect { Jmespath, Jq }
+enum class JsonQueryDialect(@JsonValue val code: String) { Jmespath("jmespath"), Jq("jq") }
 
 fun JsonQueryDialect.createInstance(): JsonSearch = when (this) {
     JsonQueryDialect.Jmespath -> JmespathImpl()

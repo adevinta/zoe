@@ -66,7 +66,7 @@ class SecretsProviderWithCache(
                 deciphered
             }
             else -> {
-                logger.debug("secret retrieved from cache: $secret")
+                logger.info("secret retrieved from cache: $secret")
                 cached
             }
         }

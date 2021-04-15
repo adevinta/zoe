@@ -82,7 +82,7 @@ data class RunnersSection(
     val config: RunnersConfig? = null
 )
 
-fun RunnersSection.config(): RunnersConfig = RunnersConfig()
+fun RunnersSection.configOrDefault(): RunnersConfig = config ?: RunnersConfig()
 
 data class RunnersConfig(
     val lambda: LambdaRunnerConfig = LambdaRunnerConfig(),
@@ -162,8 +162,8 @@ enum class RunnerName(@JsonValue val code: String) {
     Lambda("lambda"), Local("local"), Kubernetes("kubernetes")
 }
 
-enum class Format {
-    Json, JsonPretty, Raw, Table;
+enum class Format(@JsonValue val code: String) {
+    Json("json"), JsonPretty("json-pretty"), Raw("raw"), Table("table");
 
     fun format(content: JsonNode, foreach: (String) -> Unit) = when (this) {
         Raw -> foreach(content.toString())

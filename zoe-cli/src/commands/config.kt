@@ -8,33 +8,39 @@
 
 package com.adevinta.oss.zoe.cli.commands
 
-import com.adevinta.oss.zoe.cli.config.ClusterConfig
-import com.adevinta.oss.zoe.cli.config.EnvConfig
-import com.adevinta.oss.zoe.cli.config.RunnerName
-import com.adevinta.oss.zoe.cli.config.RunnersSection
+import com.adevinta.oss.zoe.cli.config.*
 import com.adevinta.oss.zoe.cli.utils.globalTermColors
 import com.adevinta.oss.zoe.cli.utils.yaml
+import com.adevinta.oss.zoe.cli.utils.yamlPrettyWriter
 import com.adevinta.oss.zoe.core.utils.buildJson
+import com.adevinta.oss.zoe.core.utils.json
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.utils.userError
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.output.TermUi
+import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.groups.groupChoice
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
+import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
+import kotlinx.coroutines.runBlocking
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.TransportConfigCallback
 import org.eclipse.jgit.transport.*
 import org.eclipse.jgit.util.FS
 import org.koin.core.KoinComponent
+import org.koin.core.get
 import org.koin.core.inject
 import java.io.File
 import java.nio.file.FileAlreadyExistsException
@@ -185,6 +191,18 @@ class ClustersList : CliktCommand(name = "list", help = "List configured cluster
     }
 }
 
+class SetDefaultCluster : CliktCommand(name = "set-default"), KoinComponent {
+    private val defaultsProvider: DefaultsProvider = get()
+    private val defaults: ZoeDefaults = get()
+
+    private val cluster: String by argument("cluster")
+
+    override fun run() = runBlocking {
+        defaultsProvider.persist(defaults.copy(cluster = cluster))
+    }
+
+}
+
 class ConfigEnvironments : CliktCommand(name = "environments"), KoinComponent {
     override fun run() {}
 }
@@ -193,17 +211,72 @@ class EnvironmentsList : CliktCommand(name = "list"), KoinComponent {
     private val ctx by inject<CliContext>()
 
     override fun run() {
-        val envs = ctx.configDir
+        val environments = ctx.configDir
             .takeIf { it.exists() && it.isDirectory }
             ?.listFiles()
             ?.map { it.nameWithoutExtension }
             ?.filter { it != "common" }
             ?: emptyList()
 
-        ctx.term.output.format(envs.toJsonNode()) { echo(it) }
+        ctx.term.output.format(environments.toJsonNode()) { echo(it) }
     }
 
 }
+
+class SetDefaultEnvironment : CliktCommand(name = "set-default"), KoinComponent {
+    private val provider: DefaultsProvider = get()
+    private val defaults: ZoeDefaults = get()
+
+    private val environment: String by argument("environment")
+
+    override fun run() = runBlocking {
+        provider.persist(defaults.copy(environment = environment))
+    }
+}
+
+class ConfigDefaults : NoOpCliktCommand(name = "defaults", help = "Manage zoe defaults") {
+    init {
+        subcommands(Init(), Edit())
+    }
+
+    class Init : CliktCommand(name = "init", help = "Initialize the zoe defaults file"), KoinComponent {
+        private val provider: DefaultsProvider = get()
+        override fun run() = runBlocking { provider.persist(ZoeDefaults()) }
+    }
+
+    class Edit : CliktCommand(name = "edit", help = "Open an editor to edit the defaults file"), KoinComponent {
+        private val provider: DefaultsProvider = get()
+        private val defaults: ZoeDefaults = get()
+
+        private val format: ContentFormat by option(
+            "--format",
+            help = "Preferred editing format (json or yml)"
+        ).choice(choices = ContentFormat.values().associateBy { it.code }).default(ContentFormat.Yaml)
+
+        enum class ContentFormat(val code: String) { Json("json"), Yaml("yaml") }
+
+        override fun run() {
+            val edited = TermUi.editText(
+                when (format) {
+                    ContentFormat.Json -> json.writerWithDefaultPrettyPrinter().writeValueAsString(defaults)
+                    ContentFormat.Yaml -> yamlPrettyWriter.writeValueAsString(defaults)
+                },
+                requireSave = true,
+                extension = when (format) {
+                    ContentFormat.Json -> ".json"
+                    ContentFormat.Yaml -> ".yml"
+                }
+            )
+
+            when {
+                edited.isNullOrBlank() -> logger.warn("Leaving defaults unchanged (empty or unsaved content)")
+                else -> runBlocking { provider.persist(yaml.readValue(edited)) }
+            }
+        }
+
+    }
+}
+
 
 sealed class LoadFrom(name: String) : OptionGroup(name) {
     class Local : LoadFrom("Options to load from local") {
@@ -270,11 +343,11 @@ private class GitSshTransport(val privateKey: File?, val passphrase: String?) : 
         }
 
     }
-
 }
 
 fun configCommands() = ConfigCommand().subcommands(
     ConfigInit(),
-    ConfigClusters().subcommands(ClustersList()),
-    ConfigEnvironments().subcommands(EnvironmentsList())
+    ConfigClusters().subcommands(ClustersList(), SetDefaultCluster()),
+    ConfigEnvironments().subcommands(EnvironmentsList(), SetDefaultEnvironment()),
+    ConfigDefaults()
 )
