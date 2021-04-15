@@ -206,10 +206,7 @@ class TopicsConsume : CliktCommand(
 
     private val dialect: JsonQueryDialect
         by option("--dialect", help = "Json query dialect to use with `--query` and `--filter`")
-            .choice(
-                "jq" to JsonQueryDialect.Jq,
-                "jmespath" to JsonQueryDialect.Jmespath
-            )
+            .choice(JsonQueryDialect.values().associateBy { it.code })
             .default(defaults.topic.consume.jsonQueryDialect)
 
     private val ctx by inject<CliContext>()

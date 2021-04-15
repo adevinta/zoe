@@ -4,7 +4,6 @@ import com.adevinta.oss.zoe.cli.utils.yaml
 import com.adevinta.oss.zoe.cli.utils.yamlPrettyWriter
 import com.adevinta.oss.zoe.cli.zoeHome
 import com.adevinta.oss.zoe.core.functions.JsonQueryDialect
-import com.adevinta.oss.zoe.service.utils.userError
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,7 +13,7 @@ import java.io.File
 
 interface DefaultsProvider {
     suspend fun defaults(): ZoeDefaults
-    suspend fun persist(defaults: ZoeDefaults, overwrite: Boolean)
+    suspend fun persist(defaults: ZoeDefaults)
 }
 
 data class ZoeDefaults(
@@ -35,26 +34,19 @@ class HomeFileDefaultsProvider : DefaultsProvider {
     override suspend fun defaults(): ZoeDefaults = withContext(Dispatchers.IO) {
         source
             .takeIf { it.exists() }
-            ?.let {
-                yaml
-                    .runCatching { readValue<ZoeDefaults>(it) }
-                    .onFailure { err ->
-                        logger.warn(
-                            "Unable to load defaults from '$source'. " +
-                                "If the problem persists, delete the file manually. (err: $err)"
-                        )
-                    }
-                    .getOrNull()
+            ?.runCatching { yaml.readValue<ZoeDefaults>(this) }
+            ?.onFailure { err ->
+                logger.warn(
+                    "Unable to load defaults from '$source'. " +
+                        "If the problem persists, delete the file manually. (err: $err)"
+                )
             }
+            ?.getOrNull()
             ?: ZoeDefaults()
     }
 
-    override suspend fun persist(defaults: ZoeDefaults, overwrite: Boolean) =
+    override suspend fun persist(defaults: ZoeDefaults) =
         withContext(Dispatchers.IO) {
-            if (!overwrite && source.exists()) {
-                userError("cannot save defaults: file already exist '$source'")
-            }
-
             logger.info("saving defaults at: $source")
             yamlPrettyWriter.writeValue(source, defaults)
         }

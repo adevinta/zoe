@@ -67,20 +67,11 @@ class ZoeCommandLine : CliktCommand(name = "zoe"), KoinComponent {
     override fun aliases(): Map<String, List<String>> = AliasesCommand.aliases(zoeHome)
 
     private val runner: RunnerName?
-        by option("--runner", "-r", help = "Runner to use").choice(
-            RunnerName.Lambda.code to RunnerName.Lambda,
-            RunnerName.Local.code to RunnerName.Local,
-            RunnerName.Kubernetes.code to RunnerName.Kubernetes
-        )
+        by option("--runner", "-r", help = "Runner to use").choice(RunnerName.values().associateBy { it.code })
 
     private val outputFormat: Format
         by option("-o", "--output", help = "Output format")
-            .choice(
-                "raw" to Format.Raw,
-                "json" to Format.Json,
-                "json-p" to Format.JsonPretty,
-                "table" to Format.Table
-            )
+            .choice(Format.values().associateBy { it.code })
             .default(defaults.outputFormat)
 
     private val colorize by option("-C", "--colorize", help = "Force terminal colors").flag(default = false)

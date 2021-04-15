@@ -198,7 +198,7 @@ class SetDefaultCluster : CliktCommand(name = "set-default"), KoinComponent {
     private val cluster: String by argument("cluster")
 
     override fun run() = runBlocking {
-        defaultsProvider.persist(defaults.copy(cluster = cluster), overwrite = true)
+        defaultsProvider.persist(defaults.copy(cluster = cluster))
     }
 
 }
@@ -224,13 +224,13 @@ class EnvironmentsList : CliktCommand(name = "list"), KoinComponent {
 }
 
 class SetDefaultEnvironment : CliktCommand(name = "set-default"), KoinComponent {
-    private val defaultsProvider: DefaultsProvider = get()
+    private val provider: DefaultsProvider = get()
     private val defaults: ZoeDefaults = get()
 
     private val environment: String by argument("environment")
 
     override fun run() = runBlocking {
-        defaultsProvider.persist(defaults.copy(environment = environment), overwrite = true)
+        provider.persist(defaults.copy(environment = environment))
     }
 }
 
@@ -241,7 +241,7 @@ class ConfigDefaults : NoOpCliktCommand(name = "defaults", help = "Manage zoe de
 
     class Init : CliktCommand(name = "init", help = "Initialize the zoe defaults file"), KoinComponent {
         private val provider: DefaultsProvider = get()
-        override fun run() = runBlocking { provider.persist(ZoeDefaults(), overwrite = true) }
+        override fun run() = runBlocking { provider.persist(ZoeDefaults()) }
     }
 
     class Edit : CliktCommand(name = "edit", help = "Open an editor to edit the defaults file"), KoinComponent {
@@ -270,7 +270,7 @@ class ConfigDefaults : NoOpCliktCommand(name = "defaults", help = "Manage zoe de
 
             when {
                 edited.isNullOrBlank() -> logger.warn("Leaving defaults unchanged (empty or unsaved content)")
-                else -> runBlocking { provider.persist(yaml.readValue(edited), overwrite = true) }
+                else -> runBlocking { provider.persist(yaml.readValue(edited)) }
             }
         }
 
