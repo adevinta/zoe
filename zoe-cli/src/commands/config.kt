@@ -52,6 +52,7 @@ class ConfigCommand : NoOpCliktCommand(name = "config", help = "Inspect or initi
     init {
         subcommands(
             ConfigInit(),
+            ConfigEdit(),
             ConfigClusters(),
             ConfigEnvironments(),
             ConfigDefaults()
@@ -136,9 +137,9 @@ class ConfigInit : CliktCommand(
             }
 
             else -> {
-                logger.info("creating a new config file...")
+                val target = ctx.configDir.resolve("${ctx.env}.yml")
 
-                val target = ctx.configDir.toPath().resolve("default.yml").toFile()
+                logger.info("creating a new config file in: $target")
 
                 if (target.exists() && !overwrite) {
                     logger.info("config file '${target.absolutePath}' already exists ! (--overwrite to recreate)")
@@ -172,6 +173,48 @@ class ConfigInit : CliktCommand(
         }
     }
 }
+
+class ConfigEdit : CliktCommand(
+    name = "edit",
+    help = "Edit the config file of a specific environment (chosen using -e flag)"
+), KoinComponent {
+
+    private val ctx by inject<CliContext>()
+
+    override fun run() {
+        val target = ctx.configDir.resolve("${ctx.env}.yml")
+
+        if (!target.exists()) {
+            userError(
+                message = "config file not found: $target",
+                help = "You may want to initialize your config first for the specified environment: zoe -e ${ctx.env} config init"
+            )
+        }
+
+        val content = target.readText(charset = Charsets.UTF_8)
+        val header = "## NOTE: editing $target\n\n"
+
+        val edited = TermUi.editText(
+            text = "$header${content}",
+            requireSave = true,
+            extension = ".yml"
+        )?.replaceFirst(header, "")
+
+        if (edited.isNullOrBlank()) {
+            logger.info("leaving file unchanged (empty or unsaved content)")
+            return
+        }
+
+        // validate config
+        yaml
+            .runCatching { readValue<EnvConfig>(edited) }
+            .getOrElse { userError("Invalid config after edition: $it") }
+
+        logger.info("saving config into: $target")
+        target.writeText(charset = Charsets.UTF_8, text = edited)
+    }
+}
+
 
 class ConfigClusters : NoOpCliktCommand(name = "clusters") {
 
