@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.github.ajalt.mordant.TermColors
 import com.jakewharton.picnic.BorderStyle
@@ -44,13 +45,21 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 val yaml = ObjectMapper(YAMLFactory()).registerKotlinModule()
+val yamlPrettyWriter =
+    ObjectMapper(
+        YAMLFactory.builder()
+            .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+            .enable(YAMLGenerator.Feature.INDENT_ARRAYS)
+            .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+            .build()
+    ).registerKotlinModule()
+
 
 fun iamClient(credentials: AwsCredentialsProvider, awsRegion: Region?): IamAsyncClient =
     IamAsyncClient
         .builder()
         .credentialsProvider(credentials)
         .region(Region.AWS_GLOBAL)
-//        .let { if (awsRegion != null) it.region(awsRegion) else it }
         .build()
 
 fun cfClient(credentials: AwsCredentialsProvider, awsRegion: Region?): CloudFormationAsyncClient =

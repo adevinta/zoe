@@ -12,6 +12,7 @@ import com.adevinta.oss.zoe.cli.config.*
 import com.adevinta.oss.zoe.cli.utils.help
 import com.adevinta.oss.zoe.cli.utils.loadFileFromResources
 import com.adevinta.oss.zoe.cli.utils.singleCloseable
+import com.adevinta.oss.zoe.cli.zoeHome
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.ZoeService
@@ -36,7 +37,9 @@ import com.github.ajalt.mordant.TermColors
 import com.github.ajalt.mordant.TerminalCapabilities
 import org.apache.log4j.Level
 import org.apache.log4j.LogManager
+import org.koin.core.KoinComponent
 import org.koin.core.context.loadKoinModules
+import org.koin.core.get
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.dsl.module
@@ -47,17 +50,21 @@ import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class ZoeCommandLine : CliktCommand(name = "zoe") {
-    private val home by lazy { "${System.getenv("HOME") ?: userError("HOME not found")}/.zoe" }
-    private val env: String by option("--env", "-e", help = "Environment to use", envvar = "ZOE_ENV").default("default")
+class ZoeCommandLine : CliktCommand(name = "zoe"), KoinComponent {
+    private val defaults: ZoeDefaults = get()
+
+    private val env: String
+        by option("--env", "-e", help = "Environment to use", envvar = "ZOE_ENV")
+            .default(defaults.environment)
+
     private val cluster: String by option(
         "--cluster",
         "-c",
         help = "Target cluster",
         envvar = "ZOE_CLUSTER"
-    ).default("default")
+    ).default(defaults.cluster)
 
-    override fun aliases(): Map<String, List<String>> = AliasesCommand.aliases(home)
+    override fun aliases(): Map<String, List<String>> = AliasesCommand.aliases(zoeHome)
 
     private val runner: RunnerName?
         by option("--runner", "-r", help = "Runner to use").choice(
@@ -74,14 +81,14 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
                 "json-p" to Format.JsonPretty,
                 "table" to Format.Table
             )
-            .default(Format.Raw)
+            .default(defaults.outputFormat)
 
     private val colorize by option("-C", "--colorize", help = "Force terminal colors").flag(default = false)
 
     private val configDir
         by option("--config-dir", help = "Directory where config files are", envvar = "ZOE_CONFIG_DIR")
             .file()
-            .defaultLazy { File("$home/config") }
+            .defaultLazy { File("$zoeHome/config") }
 
     private val verbosity: Int
         by option("-v", help = "verbose mode (can be set multiple times)").counted()
@@ -106,7 +113,7 @@ class ZoeCommandLine : CliktCommand(name = "zoe") {
         loadKoinModules(
             mainModule(
                 CliContext(
-                    home = home,
+                    home = zoeHome,
                     runner = runner,
                     cluster = cluster,
                     configDir = configDir,
@@ -211,7 +218,7 @@ fun mainModule(context: CliContext) = module {
             get<SecretsProvider>().resolveSecretsInJsonSerializable(get<EnvConfig>().runners)
 
         when (context.runner ?: runnersSectionWithSecrets.default) {
-            RunnerName.Lambda -> with(runnersSectionWithSecrets.config().lambda) {
+            RunnerName.Lambda -> with(runnersSectionWithSecrets.configOrDefault().lambda) {
                 LambdaZoeRunner(
                     name = RunnerName.Lambda.code,
                     version = ctx.version,
@@ -227,7 +234,7 @@ fun mainModule(context: CliContext) = module {
             )
 
             RunnerName.Kubernetes -> {
-                val kubeConfig = runnersSectionWithSecrets.config().kubernetes
+                val kubeConfig = runnersSectionWithSecrets.configOrDefault().kubernetes
 
                 KubernetesRunner(
                     name = RunnerName.Kubernetes.code,

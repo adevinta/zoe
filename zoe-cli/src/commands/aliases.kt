@@ -2,14 +2,12 @@ package com.adevinta.oss.zoe.cli.commands
 
 import com.adevinta.oss.zoe.cli.utils.globalTermColors
 import com.adevinta.oss.zoe.cli.utils.yaml
+import com.adevinta.oss.zoe.cli.utils.yamlPrettyWriter
 import com.adevinta.oss.zoe.core.utils.buildJson
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
@@ -150,14 +148,6 @@ private interface AliasesManager {
 }
 
 private class YamlFileSourcedAliasesManager(private val path: File) : AliasesManager {
-    private val writer = ObjectMapper(
-        YAMLFactory.builder()
-            .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-            .enable(YAMLGenerator.Feature.INDENT_ARRAYS)
-            .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-            .build()
-    )
-
     override suspend fun add(aliases: Map<String, List<String>>) = writeAliases(loadAliases() + aliases)
     override suspend fun remove(aliases: List<String>) = writeAliases(loadAliases() - aliases)
     override suspend fun removeAll() = writeAliases(emptyMap())
@@ -174,7 +164,7 @@ private class YamlFileSourcedAliasesManager(private val path: File) : AliasesMan
     }
 
     private suspend fun writeAliases(aliases: Map<String, List<String>>) =
-        withContext(Dispatchers.IO) { writer.writeValue(path, aliases) }
+        withContext(Dispatchers.IO) { yamlPrettyWriter.writeValue(path, aliases) }
 
 }
 

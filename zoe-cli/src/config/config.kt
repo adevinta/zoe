@@ -82,7 +82,7 @@ data class RunnersSection(
     val config: RunnersConfig? = null
 )
 
-fun RunnersSection.config(): RunnersConfig = RunnersConfig()
+fun RunnersSection.configOrDefault(): RunnersConfig = config ?: RunnersConfig()
 
 data class RunnersConfig(
     val lambda: LambdaRunnerConfig = LambdaRunnerConfig(),

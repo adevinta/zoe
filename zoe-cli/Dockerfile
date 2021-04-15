@@ -8,10 +8,10 @@
 
 FROM adoptopenjdk:11-jre-openj9
 
-ENV ZOE_HOME=/zoe
-ENV ZOE_JAR_PATH=${ZOE_HOME}/lib/zoe-cli-final.jar
+ENV ZOE_INSTALL_DIR=/zoe
+ENV ZOE_JAR_PATH=${ZOE_INSTALL_DIR}/lib/zoe-cli-final.jar
 
-COPY build/install/zoe-cli-shadow ${ZOE_HOME}
+COPY build/install/zoe-cli-shadow ${ZOE_INSTALL_DIR}
 
 ENV JAVA_OPTS="-client -Xshareclasses -Xshareclasses:name=zoe -Xshareclasses:cacheDir=/tmp/zoe_cache"
 

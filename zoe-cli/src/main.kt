@@ -9,17 +9,34 @@
 package com.adevinta.oss.zoe.cli
 
 import com.adevinta.oss.zoe.cli.commands.*
+import com.adevinta.oss.zoe.cli.config.DefaultsProvider
+import com.adevinta.oss.zoe.cli.config.HomeFileDefaultsProvider
+import com.adevinta.oss.zoe.cli.config.ZoeDefaults
 import com.adevinta.oss.zoe.cli.utils.useResource
+import com.adevinta.oss.zoe.service.utils.userError
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.core.subcommands
+import kotlinx.coroutines.runBlocking
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import kotlin.system.exitProcess
 
+val zoeHome: String by lazy {
+    System.getenv("ZOE_HOME") ?: "${System.getenv("HOME") ?: userError("HOME not found")}/.zoe"
+}
 
 fun <T> withZoe(customizeContext: Context.Builder.() -> Unit = {}, action: (ZoeCommandLine) -> T): T =
-    useResource(resource = startKoin { }, onClose = { stopKoin() }) {
+    useResource(resource = startKoin { }, onClose = { stopKoin() }) { koin ->
+
+        // Load defaults
+        koin.modules(
+            module {
+                single<DefaultsProvider> { HomeFileDefaultsProvider() }
+                single<ZoeDefaults>(createdAtStart = true) { runBlocking { get<DefaultsProvider>().defaults() } }
+            }
+        )
 
         val command =
             ZoeCommandLine()
