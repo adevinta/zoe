@@ -39,7 +39,13 @@ Here are some of the most interesting features of zoe :
 
 ## Install
 
-Go to the [install](docs/install/overview.md) page for instructions on how to install the Zoe CLI.
+For Linux & MacOs, you can use brew to install zoe:
+
+```bash
+brew install adevinta/homebrew-zoe/zoe
+```
+
+Go to the [install](docs/install/overview.md) page for instructions on other platforms.
 
 ## Quickstart
 
