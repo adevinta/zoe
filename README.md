@@ -39,7 +39,7 @@ Here are some of the most interesting features of zoe :
 
 ## Install
 
-For Linux & MacOs, you can use brew to install zoe:
+For Linux & MacOS, the simplest way is to use brew to install zoe:
 
 ```bash
 brew install adevinta/homebrew-zoe/zoe
