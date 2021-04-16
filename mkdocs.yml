@@ -43,6 +43,7 @@ nav:
       - 'Using avro and schema registry': advanced/avro.md
       - 'Registered expressions': advanced/expressions.md
       - 'Overriding defaults': advanced/defaults.md
+      - 'Using aliases': advanced/aliases.md
       - 'Secrets provider':
           - 'Overview': advanced/secrets/overview.md
           - 'Environment variables provider': advanced/secrets/envvars.md
