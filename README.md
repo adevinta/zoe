@@ -15,14 +15,6 @@ the future).
 
 You can try zoe from your browser using our [new Katacoda tutorials](https://www.katacoda.com/wlezzar/courses/zoe).
 
-## Status
-
-Zoe has been open sourced very recently. It is actively being improved towards stabilization. Documentation is also in
-progress. That said, we are already using it at Adevinta and you can already start trying it if you are not afraid of
-digging into the code to solve some eventual undocumented problems :) .
-
-If you encounter any bugs, or you have any questions, please raise an issue on the repository.
-
 ## Key features
 
 Here are some of the most interesting features of zoe :
@@ -108,6 +100,10 @@ zoe --runner kubernetes \
 ## Documentation
 
 The full documentation can be found on the [website](https://adevinta.github.io/zoe).
+
+## Need help?
+
+If you are encountering a bug or have any question, please open a Github issue in the repository.
 
 ## Maintainers
 

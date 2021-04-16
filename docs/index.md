@@ -23,6 +23,22 @@ Here are some of the most interesting features of zoe :
 
 Go to the [install section](install/overview.md) for instructions on how to install the zoe CLI.
 
+## Quickstart
+
+```bash
+# Initialize zoe configuration
+zoe config init
+
+# The generated config points to a local kafka cluster (localhost:29092). You can edit it using the following command
+zoe config edit
+
+# You can inspect the list of clusters you have in your config
+zoe -o table config clusters list
+
+# You can now use zoe to interact with the clusters
+zoe -o table topics list
+```
+
 ## Sample commands
 
 Read 10 records from the `input` topic from the `local` kafka cluster (aliases for topics and clusters are set in the configuration) :
@@ -133,12 +149,6 @@ zoe -o table -v -c my-cluster groups offsets my-consumer-group-name
 │ my-topic │ 0         │ 50027346      │ 50027347  │ 1   │          │
 └──────────┴───────────┴───────────────┴───────────┴─────┴──────────┘
 ```
-
-## Status
-
-Zoe has been open sourced very recently. It is actively being improved towards stabilization. Documentation is also in progress. That said, we are already using it at Adevinta and you can already start trying it if you are not afraid of digging into the code to solve some eventual undocumented problems :) .
-
-If you encounter any issue or you have any question, please do not hesitate to open an issue on the github repository. 
 
 ## Maintainers
 
