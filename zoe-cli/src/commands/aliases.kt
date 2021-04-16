@@ -97,7 +97,7 @@ class AliasesCommand : NoOpCliktCommand(name = "aliases", help = "Manage zoe ali
             |Examples:
             |
             |  Add an alias named 'ptl' for '-e pro topics list':
-            |  > ${bold("""zoe aliases add --name tl -- -e pro topics list""")}
+            |  > ${bold("""zoe aliases add --name ptl -- -e pro topics list""")}
             |  
             |  Then you can use it using:
             |  > ${bold("""zoe ptl""")}
