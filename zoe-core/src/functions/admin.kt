@@ -28,48 +28,63 @@ import org.apache.kafka.common.errors.TopicAuthorizationException
 import org.apache.kafka.clients.admin.OffsetSpec as KafkaOffsetSpec
 import org.apache.kafka.common.TopicPartition as KafkaTopicPartition
 
+private val internalTopics = setOf("__confluent.support.metrics")
+
 /**
- * Lambda function to list the kafka topics
+ * Lambda function to list topics.
  */
-val listTopics = zoeFunction<AdminConfig, ListTopicsResponse>(name = "topics") { config ->
-    admin(config.props).use { cli ->
-        cli.listTopics().listings().get()
-            .map { it.name() }
-            .let { topics ->
-                val describeTopicsFuture =
-                    cli
-                        .describeTopics(topics)
-                        .all()
+val listTopics = zoeFunction<ListTopicsRequest, ListTopicsResponse>(name = "listTopics") { req ->
+    admin(req.props).use { cli ->
+        val regex = req.regexFilter?.toRegex()
+        val limit = req.limit
+        val topics =
+            cli
+                .listTopics()
+                .listings()
+                .get()
+                .asSequence()
+                .filter { if (req.userTopicsOnly) !it.isInternal && it.name() !in internalTopics else true }
+                .let { if (regex != null) it.filter { topic -> topic.name() matches regex } else it }
+                .let { if (limit != null) it.take(limit) else it }
+                .map { it.name() }
+                .toList()
 
-                val configResources: Map<ConfigResource, Config> =
-                    cli
-                        .describeConfigs(topics.map { ConfigResource(ConfigResource.Type.TOPIC, it) })
-                        .all()
-                        .runCatching { get() }
-                        .onFailure {
-                            when (it) {
-                                is TopicAuthorizationException -> logger.warn("not authorized to describe the config!")
-                                else -> logger.warn("unexpected error on config describe request", it)
-                            }
-                        }
-                        .getOrElse { emptyMap() }
+        ListTopicsResponse(topics)
+    }
+}
 
-                describeTopicsFuture.get().entries.map { (_, topic) ->
-                    val configMap = configResources[ConfigResource(ConfigResource.Type.TOPIC, topic.name())]
-                        ?.entries()
-                        ?.filter { it.value().isNotEmpty() }
-                        ?.map { it.name() to it.value() }
-                        ?.toMap()?.toSortedMap() ?: sortedMapOf()
+/**
+ * Lambda function to describe a kafka topic.
+ */
+val describeTopic = zoeFunction<DescribeTopicRequest, DescribeTopicResponse>(name = "describeTopic") { req ->
+    admin(req.props).use { cli ->
+        val description = cli.describeTopics(listOf(req.topic)).all().get().values.single()
 
-                    TopicDescription(
-                        topic = topic.name(),
-                        internal = topic.isInternal,
-                        partitions = topic.partitions().map { it.partition() },
-                        config = configMap
-                    )
+        val config: Config? =
+            cli
+                .describeConfigs(listOf(ConfigResource(ConfigResource.Type.TOPIC, req.topic)))
+                .all()
+                .runCatching { get() }
+                .onFailure {
+                    when (it) {
+                        is TopicAuthorizationException -> logger.warn("not authorized to describe the config!")
+                        else -> logger.warn("unexpected error on config describe request", it)
+                    }
                 }
-            }
-            .let { ListTopicsResponse(it) }
+                .map { it.values.single() }
+                .getOrNull()
+
+        DescribeTopicResponse(
+            topic = description.name(),
+            internal = description.isInternal,
+            partitions = description.partitions().map { it.partition() },
+            config = config
+                ?.entries()
+                ?.filter { it.value().isNotEmpty() }
+                ?.associate { it.name() to it.value() }
+                ?.toSortedMap()
+                ?: sortedMapOf()
+        )
     }
 }
 
@@ -376,15 +391,27 @@ data class ListSchemasResponse(
     val subjects: List<String>
 )
 
-data class TopicDescription(
+data class ListTopicsRequest(
+    val props: Map<String, String?>,
+    val userTopicsOnly: Boolean,
+    val regexFilter: String?,
+    val limit: Int?
+)
+
+data class ListTopicsResponse(
+    val topics: List<String>
+)
+
+data class DescribeTopicRequest(
+    val props: Map<String, String?>,
+    val topic: String,
+)
+
+data class DescribeTopicResponse(
     val topic: String,
     val internal: Boolean,
     val partitions: List<Int>,
     val config: Map<String, String>
-)
-
-data class ListTopicsResponse(
-    val topics: List<TopicDescription>
 )
 
 data class OffsetQueriesRequest(

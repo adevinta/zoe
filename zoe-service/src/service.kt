@@ -40,8 +40,6 @@ class ZoeService(
     private val secrets: SecretsProvider
 ) {
 
-    private val internalTopics = setOf("__confluent.support.metrics")
-
     /**
      * Produce a list of messages to the topic
      */
@@ -234,13 +232,16 @@ class ZoeService(
     /**
      * List topics in the cluster
      */
-    suspend fun listTopics(cluster: String, userTopicsOnly: Boolean): ListTopicsResponse {
+    suspend fun listTopics(cluster: String, filter: Regex?, userTopicsOnly: Boolean, limit: Int?): ListTopicsResponse {
         val clusterConfig = getCluster(cluster)
-        val response = runner.topics(AdminConfig(clusterConfig.getCompletedProps(null)))
-        return when {
-            !userTopicsOnly -> response
-            else -> response.copy(topics = response.topics.filter { !it.internal && it.topic !in internalTopics })
-        }
+        return runner.listTopics(
+            ListTopicsRequest(
+                clusterConfig.getCompletedProps(null),
+                userTopicsOnly,
+                regexFilter = filter?.toString(),
+                limit = limit
+            )
+        )
     }
 
     /**
@@ -270,13 +271,16 @@ class ZoeService(
     /**
      * Describe a topic
      */
-    suspend fun describeTopic(cluster: String, topic: TopicAliasOrRealName): TopicDescription? {
+    suspend fun describeTopic(cluster: String, topic: TopicAliasOrRealName): DescribeTopicResponse {
         val clusterConfig = getCluster(cluster)
+        val topicConfig = clusterConfig.getTopicConfig(topic, subjectOverride = null)
 
-        return listTopics(cluster, userTopicsOnly = false).let { response ->
-            val topicToSearch: String = clusterConfig.getTopicConfig(topic, subjectOverride = null).name
-            response.topics.find { it.topic == topicToSearch }
-        }
+        return runner.describeTopic(
+            DescribeTopicRequest(
+                clusterConfig.getCompletedProps(topicConfig),
+                topicConfig.name
+            )
+        )
     }
 
     /**

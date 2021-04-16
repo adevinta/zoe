@@ -13,9 +13,14 @@ import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonString
 
-suspend fun ZoeRunner.topics(config: AdminConfig): ListTopicsResponse {
-    logger.info("requesting topics...")
+suspend fun ZoeRunner.listTopics(config: ListTopicsRequest): ListTopicsResponse {
+    logger.info("listing topics ${config.regexFilter?.let { "matching pattern: $it" } ?: ""}")
     return launch(listTopics.name(), config.toJsonString()).parseJson()
+}
+
+suspend fun ZoeRunner.describeTopic(config: DescribeTopicRequest): DescribeTopicResponse {
+    logger.info("describing topic: ${config.topic}")
+    return launch(describeTopic.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.createTopic(config: CreateTopicRequest): CreateTopicResponse {

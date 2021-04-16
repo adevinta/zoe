@@ -38,7 +38,7 @@ class ZoeRunnerSimulator(val state: RunnerState) : ZoeRunner {
 
         return ListTopicsResponse(
             topics = cluster.topics.map {
-                TopicDescription(
+                DescribeTopicResponse(
                     topic = it.name,
                     internal = false,
                     partitions = it.partitions.toList(),
