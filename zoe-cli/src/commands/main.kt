@@ -84,7 +84,8 @@ class ZoeCommandLine : CliktCommand(name = "zoe"), KoinComponent {
     private val verbosity: Int
         by option("-v", help = "verbose mode (can be set multiple times)").counted()
 
-    private val silent by option("--silent", help = "hide non error logs").flag(default = false)
+    private val silent by option("--silent", help = "hide non error logs")
+        .flag("--no-silent", default = defaults.silent)
 
     private val term by lazy {
         TermConfig(

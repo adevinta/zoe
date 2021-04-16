@@ -20,6 +20,7 @@ data class ZoeDefaults(
     val cluster: String = "default",
     val environment: String = "default",
     val outputFormat: Format = Format.Raw,
+    val silent: Boolean = false,
     val topic: Topic = Topic(),
 ) {
     data class Topic(val consume: Consume = Consume()) {

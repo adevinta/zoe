@@ -70,6 +70,9 @@ environment: default
 # Default for: `zoe -o <value>`
 outputFormat: raw
 
+# Default for: `zoe --silent / --no-silent`
+silent: false
+
 topic:
   consume:
     # Default for: `zoe topics consume --dialect <value>`
