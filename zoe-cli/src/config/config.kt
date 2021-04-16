@@ -9,6 +9,8 @@
 package com.adevinta.oss.zoe.cli.config
 
 import com.adevinta.oss.zoe.cli.utils.toPrettyPrintedTable
+import com.adevinta.oss.zoe.cli.utils.yaml
+import com.adevinta.oss.zoe.cli.utils.yamlPrettyWriter
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import com.adevinta.oss.zoe.service.config.Cluster
 import com.adevinta.oss.zoe.service.config.ConsumerGroup
@@ -163,12 +165,13 @@ enum class RunnerName(@JsonValue val code: String) {
 }
 
 enum class Format(@JsonValue val code: String) {
-    Json("json"), JsonPretty("json-pretty"), Raw("raw"), Table("table");
+    Json("json"), JsonPretty("json-pretty"), Raw("raw"), Table("table"), Yaml("yaml");
 
     fun format(content: JsonNode, foreach: (String) -> Unit) = when (this) {
         Raw -> foreach(content.toString())
         Json -> foreach(content.toString())
         JsonPretty -> foreach(content.toPrettyString())
+        Yaml -> foreach(yamlPrettyWriter.writeValueAsString(content))
         Table -> foreach(content.toPrettyPrintedTable())
     }
 
