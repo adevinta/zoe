@@ -1,6 +1,6 @@
 package com.adevinta.oss.zoe.cli
 
-import com.adevinta.oss.zoe.core.functions.TopicDescription
+import com.adevinta.oss.zoe.core.functions.DescribeTopicResponse
 import com.adevinta.oss.zoe.core.utils.parseJson
 import com.adevinta.oss.zoe.core.utils.toJsonNode
 import io.kotest.core.spec.style.ExpectSpec
@@ -24,7 +24,7 @@ class MainTest : ExpectSpec({
             zoe("topics", "list") { it.stdout?.parseJson<List<String>>()?.shouldContain(topic) }
 
             zoe("topics", "describe", topic) {
-                it.stdout?.parseJson<TopicDescription>()?.should { topicDescription ->
+                it.stdout?.parseJson<DescribeTopicResponse>()?.should { topicDescription ->
                     topicDescription.topic.shouldBe(topic)
                     topicDescription.partitions.shouldBe(listOf(0))
                     topicDescription.internal.shouldBeFalse()

@@ -76,6 +76,7 @@ object FunctionsRegistry {
     init {
         add(version)
         add(listTopics)
+        add(describeTopic)
         add(createTopic)
         add(listSchemas)
         add(describeSchema)

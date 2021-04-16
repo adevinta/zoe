@@ -20,6 +20,7 @@ import com.adevinta.oss.zoe.service.*
 import com.adevinta.oss.zoe.service.utils.userError
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
@@ -44,13 +45,20 @@ import java.util.*
 import kotlin.math.roundToInt
 
 
-class TopicsCommand : CliktCommand(
+class TopicsCommand : NoOpCliktCommand(
     name = "topics",
     help = "Inspect, produce or consume from topics",
     printHelpOnEmptyArgs = true
 ) {
-
-    override fun run() {}
+    init {
+        subcommands(
+            TopicsConsume(),
+            TopicsList(),
+            TopicsCreate(),
+            TopicsDescribe(),
+            TopicsProduce()
+        )
+    }
 }
 
 
@@ -58,12 +66,24 @@ class TopicsList : CliktCommand(name = "list", help = "list topics"), KoinCompon
 
     private val all by option("-a", "--all", help = "Also list internal topics").flag(default = false)
 
+    private val filter: Regex?
+        by option("-m", "--matching", help = "Filter only topic names matching the given pattern")
+            .convert { it.toRegex() }
+
+    private val limit: Int? by option("-n", "--limit", help = "Limit the number of returned results").int()
+
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val response = service.listTopics(ctx.cluster, userTopicsOnly = !all).topics.map { it.topic }.toJsonNode()
-        ctx.term.output.format(response) { echo(it) }
+        val response = service.listTopics(
+            ctx.cluster,
+            userTopicsOnly = !all,
+            filter = filter,
+            limit = limit
+        )
+
+        ctx.term.output.format(response.topics.toJsonNode()) { echo(it) }
     }
 }
 
@@ -75,7 +95,7 @@ class TopicsDescribe : CliktCommand(name = "describe", help = "describe a topic"
     private val service by inject<ZoeService>()
 
     override fun run() = runBlocking {
-        val response = service.describeTopic(ctx.cluster, topic) ?: userError("topic not found : ${topic.value}")
+        val response = service.describeTopic(ctx.cluster, topic)
         ctx.term.output.format(response.toJsonNode()) { echo(it) }
     }
 }
@@ -304,9 +324,9 @@ class TopicsProduce : CliktCommand(
             .convert { TopicAliasOrRealName(it) }
             .required()
     private val subject by option("--subject", help = "Avro subject name to use")
-    private val keyPath by option("-k", "--key-path", help = "Jmespath expression to extract the key")
-    private val valuePath by option("-v", "--value-path", help = "Jmespath expression to extract the value")
-    private val timestampPath by option("--ts-path", help = "Jmespath expression to extract the timestamp")
+    private val keyPath by option("-k", "--key-path", help = "Jmespath (or jq) expression to extract the key")
+    private val valuePath by option("-v", "--value-path", help = "Jmespath (or jq) expression to extract the value")
+    private val timestampPath by option("--ts-path", help = "Jmespath (or jq) expression to extract the timestamp")
     private val streaming by option("--streaming", help = "Read data line by line continuously").flag(default = false)
     private val timeoutMs by option("--timeout", help = "Timeout in millis").long().default(Long.MAX_VALUE)
     private val fromStdin by option("--from-stdin", help = "Consume data from stdin").flag(default = false)
@@ -356,10 +376,4 @@ class TopicsProduce : CliktCommand(
     }
 }
 
-fun topicsCommand() = TopicsCommand().subcommands(
-    TopicsConsume(),
-    TopicsList(),
-    TopicsCreate(),
-    TopicsDescribe(),
-    TopicsProduce()
-)
+fun topicsCommand() = TopicsCommand()
