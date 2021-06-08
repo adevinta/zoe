@@ -180,7 +180,7 @@ val setOffsets = zoeFunction<SetOffsetRequest, SetOffsetResponse>(name = "setOff
  * Lambda function to list schemas
  */
 val listSchemas = zoeFunction<ListSchemasConfig, ListSchemasResponse>(name = "listSchemas") { config ->
-    val registry = CachedSchemaRegistryClient(config.registry, 10)
+    val registry = CachedSchemaRegistryClient(config.registry, 10, config.props)
     val regex = config.regexFilter?.toRegex()
     val limit = config.limit
     val subjects =
@@ -196,7 +196,7 @@ val listSchemas = zoeFunction<ListSchemasConfig, ListSchemasResponse>(name = "li
  * Lambda function to describe a schema
  */
 val describeSchema = zoeFunction<DescribeSchemaConfig, DescribeSchemaResponse>(name = "describeSchema") { config ->
-    val registry = CachedSchemaRegistryClient(config.registry, 10)
+    val registry = CachedSchemaRegistryClient(config.registry, 10, config.props)
 
     DescribeSchemaResponse(
         subject = config.subject,
@@ -210,7 +210,7 @@ val describeSchema = zoeFunction<DescribeSchemaConfig, DescribeSchemaResponse>(n
  * Deploys an avro schema
  */
 val deploySchema = zoeFunction<DeploySchemaConfig, DeploySchemaResponse>(name = "deploy-schema") { config ->
-    val registry = CachedSchemaRegistryClient(config.registry, 10)
+    val registry = CachedSchemaRegistryClient(config.registry, 10, config.props)
     val strategy = config.strategy
     val schema = config.schema.parsed()
     val subject = strategy.subjectName(schema.rawSchema())
@@ -354,6 +354,7 @@ data class AdminConfig(
 
 data class DeploySchemaConfig(
     val registry: String,
+    val props: Map<String, String?>,
     val schema: SchemaContent,
     val strategy: SubjectNameStrategy,
     val dryRun: Boolean
@@ -372,6 +373,7 @@ sealed class DeploySchemaResponse {
 
 data class DescribeSchemaConfig(
     val registry: String,
+    val props: Map<String, String?>,
     val subject: String
 )
 
@@ -383,6 +385,7 @@ data class DescribeSchemaResponse(
 
 data class ListSchemasConfig(
     val registry: String,
+    val props: Map<String, String?>,
     val regexFilter: String?,
     val limit: Int?
 )
