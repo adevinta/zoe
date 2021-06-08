@@ -194,7 +194,14 @@ class ZoeService(
     suspend fun listSchemas(cluster: String, filter: Regex?, limit: Int?): ListSchemasResponse {
         val clusterConfig = getCluster(cluster)
         requireNotNull(clusterConfig.registry) { "registry must not be null in config to use the listSchemas function" }
-        return runner.listSchemas(ListSchemasConfig(clusterConfig.registry, filter?.toString(), limit))
+        return runner.listSchemas(
+            ListSchemasConfig(
+                registry = clusterConfig.registry,
+                props = clusterConfig.getCompletedProps(null),
+                regexFilter = filter?.toString(),
+                limit = limit
+            )
+        )
     }
 
     /**
@@ -203,7 +210,13 @@ class ZoeService(
     suspend fun describeSchema(cluster: String, subject: String): DescribeSchemaResponse {
         val clusterConfig = getCluster(cluster)
         requireNotNull(clusterConfig.registry) { "registry must not be null in config to use the listSchemas function" }
-        return runner.describeSchema(DescribeSchemaConfig(registry = clusterConfig.registry, subject = subject))
+        return runner.describeSchema(
+            DescribeSchemaConfig(
+                registry = clusterConfig.registry,
+                props = clusterConfig.getCompletedProps(null),
+                subject = subject
+            )
+        )
     }
 
     /**
@@ -218,6 +231,7 @@ class ZoeService(
         runner.deploySchema(
             DeploySchemaConfig(
                 registry = registry ?: userError("'registry' must not be null in config to deploy schemas"),
+                props = getCompletedProps(null),
                 strategy = when (strategy) {
                     is TopicNameStrategy -> strategy.copy(topic = topics[strategy.topic]?.name ?: strategy.topic)
                     is TopicRecordNameStrategy -> strategy.copy(topic = topics[strategy.topic]?.name ?: strategy.topic)
