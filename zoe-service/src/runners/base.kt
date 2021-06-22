@@ -31,13 +31,16 @@ class ZoeRunnerException(
 fun ZoeRunnerException.Companion.fromRunFailureResponse(
     error: FailureResponse,
     runnerName: String,
-    level: Int = 0
+    level: Int = 0,
+    maxDepth: Int = 5,
 ): ZoeRunnerException = ZoeRunnerException(
     message = buildString {
         if (level <= 0) append("runner '$runnerName' failed: ")
         append("${error.errorMessage} (type: ${error.errorType})")
     },
-    cause = error.cause?.let { ZoeRunnerException.fromRunFailureResponse(error, runnerName, level = level + 1) },
+    cause = error.cause
+        ?.takeIf { level <= maxDepth }
+        ?.let { ZoeRunnerException.fromRunFailureResponse(error, runnerName, level = level + 1, maxDepth = maxDepth) },
     runnerName = runnerName,
     remoteStacktrace = error.stackTrace
 )
