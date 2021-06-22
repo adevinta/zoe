@@ -106,7 +106,7 @@ class ExecSecretProvider(private val command: List<String>, private val timeout:
         const val Context = "{context}"
     }
 
-    private val secretsPattern = Regex("""secret(?::([a-zA-Z0-9_\-.]+))?:(\w+)""")
+    private val secretsPattern = Regex("""secret(?::([a-zA-Z0-9_\-./]+))?:(\w+)""")
 
     override fun decipher(secret: String): String {
         val matches = secretsPattern.matchEntire(secret) ?: userError(
