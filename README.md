@@ -1,4 +1,5 @@
 ![Build](https://github.com/adevinta/zoe/workflows/Build%20test/badge.svg)
+[![Chocolatey](https://img.shields.io/chocolatey/v/zoe.svg)](https://chocolatey.org/packages/zoe)
 
 # Zoe: The Kafka CLI for humans
 
