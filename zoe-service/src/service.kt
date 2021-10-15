@@ -82,14 +82,14 @@ class ZoeService(
         topic: TopicAliasOrRealName,
         from: ConsumeFrom,
         filters: List<String>,
-        metadataFilters: List<String>,
         query: String?,
         parallelism: Int,
         numberOfRecordsPerBatch: Int,
         timeoutPerBatch: Long,
         formatter: String,
         stopCondition: StopCondition,
-        dialect: JsonQueryDialect
+        dialect: JsonQueryDialect,
+        metadataFieldAlias: String?,
     ): Flow<RecordOrProgress> = flow {
 
         val clusterConfig = getCluster(cluster)
@@ -97,9 +97,7 @@ class ZoeService(
         val completedProps = clusterConfig.getCompletedProps(topicConfig)
 
         val resolvedFilters = filters.map { resolveExpression(it) }
-        val resolvedMetaFilters = metadataFilters.map { resolveExpression(it) }
         val resolvedQuery = query?.let { resolveExpression(it) }
-
 
         val partitionGroups: Collection<List<ConsumptionRange>> =
             determineConsumptionRange(
@@ -114,13 +112,13 @@ class ZoeService(
                 props = completedProps,
                 topic = topicConfig.name,
                 filter = resolvedFilters,
-                filterMeta = resolvedMetaFilters,
                 query = resolvedQuery,
                 range = rangeGroup,
                 recordsPerBatch = numberOfRecordsPerBatch,
                 timeoutPerBatch = timeoutPerBatch,
                 formatter = formatter,
-                dialect = dialect
+                dialect = dialect,
+                metadataFieldAlias = metadataFieldAlias,
             )
         }
 
@@ -159,9 +157,9 @@ class ZoeService(
         val startOffsets = responses.responses[startQuery.id]
             ?: throw IllegalStateException("query result (query: '$startQuery') not found in response: $responses")
 
-        val endOffsets = endQuery?.let { responses.responses[it.id] }?.map { it.partition to it }?.toMap()
+        val endOffsets = endQuery?.let { responses.responses[it.id] }?.associate { it.partition to it }
 
-        val topicEndOffsets = responses.responses[topicEndQuery.id]?.map { it.partition to it }?.toMap()
+        val topicEndOffsets = responses.responses[topicEndQuery.id]?.associate { it.partition to it }
             ?: throw IllegalStateException("query result (query: '$endQuery') not found in response: $responses")
 
         return startOffsets.mapNotNull { (_: String, partition: Int, startOffset: Long?) ->
@@ -446,13 +444,13 @@ class ZoeService(
         props: Map<String, String?>,
         topic: String,
         filter: List<String>,
-        filterMeta: List<String>,
         query: String?,
         range: List<ConsumptionRange>,
         recordsPerBatch: Int,
         timeoutPerBatch: Long,
         formatter: String,
-        dialect: JsonQueryDialect
+        dialect: JsonQueryDialect,
+        metadataFieldAlias: String?,
     ): Flow<RecordOrProgress> = flow {
 
         var currentRange = range
@@ -462,16 +460,16 @@ class ZoeService(
             val config = PollConfig(
                 topic = topic,
                 subscription = Subscription.AssignPartitions(
-                    currentRange.map { it.partition to it.progress.nextOffset }.toMap()
+                    currentRange.associate { it.partition to it.progress.nextOffset }
                 ),
                 props = props,
                 filter = filter,
-                filterMeta = filterMeta,
                 query = query,
                 timeoutMs = timeoutPerBatch,
                 numberOfRecords = recordsPerBatch,
                 jsonifier = formatter,
-                jsonQueryDialect = dialect
+                jsonQueryDialect = dialect,
+                metadataFieldAlias = metadataFieldAlias,
             )
 
             val (records, progress) = runner.poll(config)
@@ -492,7 +490,7 @@ class ZoeService(
         progress: Iterable<PartitionProgress>,
         currentRange: List<ConsumptionRange>
     ): List<ConsumptionRange> {
-        val currentOffsets = progress.map { it.partition to it.progress }.toMap()
+        val currentOffsets = progress.associate { it.partition to it.progress }
         return currentRange
             .map {
                 it.copy(

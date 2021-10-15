@@ -161,6 +161,27 @@ class TopicsConsume : CliktCommand(
         |  Consume from the topic continuously starting from the last hour:
         |  > ${bold("""zoe -c local topics consume input --continuously --from 'PT1h'""")}
         |
+        |  Using `--expose-metadata` will make zoe inject a special field (by default, named '__metadata__') containing 
+        |  the record's metadata (i.e. headers, offset, key, etc.). This field can be used and accessed as any other 
+        |  field in the `--query` and `--filter` options. See below for examples.
+        |  
+        |  Print the `text` field of the record's content and its offset:
+        |  > ${
+            bold(
+                """zoe topics consume input \
+        |       --expose-metadata \
+        |       --query '{text: text, offset: __metadata__.offset}'""".trimMargin()
+            )
+        }
+        |
+        |  Same query as above but using a different alias for the metadata field injected:
+        |  > ${
+            bold(
+                """zoe topics consume input \
+        |       --expose-metadata --metadata-field-alias 'meta' \
+        |       --query '{text: text, offset: meta.offset}'""".trimMargin()
+            )
+        }
         |```""".trimMargin()
     }
 ), KoinComponent {
@@ -171,13 +192,17 @@ class TopicsConsume : CliktCommand(
     private val filters: List<String> by option(
         "-f",
         "--filter",
-        help = "Use jmespath / jq filte expressions against records content"
+        help = "Use jmespath / jq filter expressions against records content"
     ).multiple()
 
-    private val metadataFilters: List<String> by option(
-        "--filter-meta",
-        help = "Use jmespath / jq filter expressions against records metadata (headers, key, etc.)"
-    ).multiple()
+    private val metadataFilters: List<String> by option("--filter-meta").multiple().deprecated(
+        message = """
+                --filter-meta is deprecated and will be removed in future versions.
+                Use `--expose-metadata` to expose the `__metadata__` field in both `--filter` and `--query`.
+                See `zoe topics consume --help` for examples.
+            """.trimIndent(),
+        error = true,
+    )
 
     private val formatter by option("--formatter").default("raw")
     private val query: String? by option("--query", help = "Jmespath query to execute on each record")
@@ -207,19 +232,15 @@ class TopicsConsume : CliktCommand(
                     fail("cannot use '--continuously' with output : ${ctx.term.output}")
             }
 
-    private val verbose: Boolean
-        by option(
-            "-v",
-            "--verbose",
-            help = "Use this flag to have the offsets, timestamp and other informations along with the message",
-            hidden = true
-        ).flag(default = false).deprecated("use --with-meta instead", error = true)
-
     private val withMeta: Boolean
-        by option(
-            "--with-meta",
-            help = "Use this flag to have the record metadata (offsets, headers, ...) along with the content"
-        ).flag(default = false)
+        by option("--with-meta").flag(default = false).deprecated(
+            message = """
+                    --with-meta is deprecated and will be removed in future versions.
+                    Use `--expose-metadata` to expose the `__metadata__` field in both `--filter` and `--query`.
+                    See `zoe topics consume --help` for examples.
+                """.trimIndent(),
+            error = true,
+        )
 
     private val topic: TopicAliasOrRealName
         by argument("topic", help = "Target topic to read (alias or real)").convert { TopicAliasOrRealName(it) }
@@ -228,6 +249,21 @@ class TopicsConsume : CliktCommand(
         by option("--dialect", help = "Json query dialect to use with `--query` and `--filter`")
             .choice(JsonQueryDialect.values().associateBy { it.code })
             .default(defaults.topic.consume.jsonQueryDialect)
+
+    private val exposeRecordsMetadata: Boolean
+        by option(
+            "--expose-metadata",
+            help = """Expose the kafka records metadata (offset, headers, etc.) in a special field injected into the 
+                    | record's content. This field will be displayed as part of the output and can be accessed within 
+                    | `--query` & `--filter` queries. Use `--metadata-field-alias` to control the name of the injected field
+                    |""".trimMargin()
+        ).flag(default = defaults.topic.consume.exposeRecordsMetadata)
+
+    private val metadataFieldAlias: String
+        by option(
+            "--metadata-field-alias",
+            help = "Controls the name of the metadata field injected into the records when using --expose-metadata"
+        ).default(defaults.topic.consume.metadataFieldAlias)
 
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()
@@ -248,19 +284,18 @@ class TopicsConsume : CliktCommand(
                     topic = topic,
                     from = from,
                     filters = filters,
-                    metadataFilters = metadataFilters,
                     query = query,
                     parallelism = parallelism,
                     numberOfRecordsPerBatch = recordsPerBatch,
                     timeoutPerBatch = timeoutPerBatch,
                     formatter = formatter,
                     stopCondition = stop,
-                    dialect = dialect
+                    dialect = dialect,
+                    metadataFieldAlias = metadataFieldAlias.takeIf { exposeRecordsMetadata },
                 )
                 .onEach { if (it is RecordOrProgress.Progress && !continuously) log(it.range) }
                 .filter { it is RecordOrProgress.Record }
-                .map { it as RecordOrProgress.Record }
-                .map { if (verbose || withMeta) it.record.toJsonNode() else it.record.content }
+                .map { (it as RecordOrProgress.Record).record.content }
                 .take(maxRecords)
 
         ctx.term.output.format(records) { echo(it) }

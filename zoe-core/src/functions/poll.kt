@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.EncoderFactory
@@ -32,7 +33,6 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
 
     // validate filters and select statement
     val filters = config.filter.onEach(queryEngine::validate)
-    val filtersMeta = config.filterMeta.onEach(queryEngine::validate)
     val query = config.query?.also(queryEngine::validate)
 
     val jsonifier = Jsonifiers.get(config.jsonifier)
@@ -69,12 +69,11 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
                         content = record.value()?.let { rec -> jsonifier.format(rec) } ?: NullNode.getInstance()
                     )
                 }
-                .filter {
-                    with(queryEngine) {
-                        match(it.content, filters = filters)
-                            && (filtersMeta.isEmpty() || match(it.meta.toJsonNode(), filters = filtersMeta))
-                    }
+                .map {
+                    if (config.metadataFieldAlias == null) it
+                    else it.withMetadataInContent(fieldName = config.metadataFieldAlias)
                 }
+                .filter { record -> queryEngine.match(record.content, filters = filters) }
                 .map { if (query == null) it else it.copy(content = queryEngine.query(it.content, expr = query)) }
                 .take(config.numberOfRecords)
                 .toList()
@@ -133,6 +132,16 @@ private fun <K, V> Consumer<K, V>.pollAsSequence(timeoutMs: Long): Pair<Sequence
 
     return (records to progressListener)
 }
+
+private fun PolledRecord.withMetadataInContent(fieldName: String = "__metadata__"): PolledRecord = copy(
+    content = when (content) {
+        is ObjectNode -> content.set(fieldName, meta.toJsonNode())
+        else -> buildJson {
+            set<JsonNode>("__content__", content)
+            set<JsonNode>(fieldName, meta.toJsonNode())
+        }
+    }
+)
 
 private class ProgressListener(val consumer: Consumer<*, *>) {
 
@@ -251,7 +260,7 @@ data class PollConfig(
     val numberOfRecords: Int = 3,
     val jsonifier: String,
     val jsonQueryDialect: JsonQueryDialect = JsonQueryDialect.Jmespath,
-    val filterMeta: List<String> = listOf()
+    val metadataFieldAlias: String? = null,
 )
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
