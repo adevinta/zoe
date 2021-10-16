@@ -110,7 +110,7 @@ class DeploySchema : CliktCommand(
     private val content by argument("schema", help = "Schema json content").optional()
 
     private val type
-        by option().switch(SchemaType.values().map { "--${it.name.toLowerCase()}" to it }.toMap())
+        by option().switch(SchemaType.values().map { "--${it.name.lowercase()}" to it }.toMap())
             .default(SchemaType.Avsc)
 
     private val name

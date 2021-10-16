@@ -265,6 +265,10 @@ class TopicsConsume : CliktCommand(
             help = "Controls the name of the metadata field injected into the records when using --expose-metadata"
         ).default(defaults.topic.consume.metadataFieldAlias)
 
+    private val skipNonDeserializableRecords: Boolean
+        by option("-S", "--skip-non-deserializable-records", help = "Ignore records that are not deserializable")
+            .flag(default = false)
+
     private val ctx by inject<CliContext>()
     private val service by inject<ZoeService>()
 
@@ -292,6 +296,7 @@ class TopicsConsume : CliktCommand(
                     stopCondition = stop,
                     dialect = dialect,
                     metadataFieldAlias = metadataFieldAlias.takeIf { exposeRecordsMetadata },
+                    skipNonDeserializableRecords = skipNonDeserializableRecords,
                 )
                 .onEach { if (it is RecordOrProgress.Progress && !continuously) log(it.range) }
                 .filter { it is RecordOrProgress.Record }

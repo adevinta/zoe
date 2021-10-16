@@ -30,7 +30,7 @@ fun ConfigUrlProvider.createConfig(env: String): EnvConfig {
         System.getenv("ZOE_CONFIG_OVERRIDE")?.let(json::readTree)?.requireObjectNode() ?: json.createObjectNode()
 
     val envOverrideConfig: ObjectNode =
-        System.getenv("ZOE_CONFIG_OVERRIDE_${env.toUpperCase()}")
+        System.getenv("ZOE_CONFIG_OVERRIDE_${env.uppercase()}")
             ?.let(json::readTree)?.requireObjectNode() ?: json.createObjectNode()
 
     val envConfig: ObjectNode =
@@ -67,7 +67,7 @@ class ConfigUrlProviderChain(val providers: List<ConfigUrlProvider>) : ConfigUrl
 
 object EnvVarsConfigUrlProvider : ConfigUrlProvider {
     override fun find(env: String): URL? =
-        sequenceOf("ZOE_CONFIG_URL_${env.toUpperCase()}", "ZOE_CONFIG_URL")
+        sequenceOf("ZOE_CONFIG_URL_${env.uppercase()}", "ZOE_CONFIG_URL")
             .map { System.getenv(it)?.let(::URL) }
             .filterNotNull()
             .firstOrNull()
