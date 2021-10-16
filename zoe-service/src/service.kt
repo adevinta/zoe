@@ -90,6 +90,7 @@ class ZoeService(
         stopCondition: StopCondition,
         dialect: JsonQueryDialect,
         metadataFieldAlias: String?,
+        skipNonDeserializableRecords: Boolean,
     ): Flow<RecordOrProgress> = flow {
 
         val clusterConfig = getCluster(cluster)
@@ -119,6 +120,7 @@ class ZoeService(
                 formatter = formatter,
                 dialect = dialect,
                 metadataFieldAlias = metadataFieldAlias,
+                skipNonDeserializableRecords = skipNonDeserializableRecords,
             )
         }
 
@@ -451,6 +453,7 @@ class ZoeService(
         formatter: String,
         dialect: JsonQueryDialect,
         metadataFieldAlias: String?,
+        skipNonDeserializableRecords: Boolean,
     ): Flow<RecordOrProgress> = flow {
 
         var currentRange = range
@@ -470,6 +473,7 @@ class ZoeService(
                 jsonifier = formatter,
                 jsonQueryDialect = dialect,
                 metadataFieldAlias = metadataFieldAlias,
+                skipNonDeserializableRecords = skipNonDeserializableRecords,
             )
 
             val (records, progress) = runner.poll(config)

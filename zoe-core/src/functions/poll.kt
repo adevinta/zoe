@@ -20,8 +20,13 @@ import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.EncoderFactory
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.serialization.ByteArrayDeserializer
+import org.apache.kafka.common.serialization.Deserializer
+import org.apache.kafka.common.serialization.StringDeserializer
 import java.io.ByteArrayOutputStream
 import java.time.Duration
 
@@ -37,13 +42,17 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
 
     val jsonifier = Jsonifiers.get(config.jsonifier)
 
-    val props = HashMap(config.props).apply {
+    val props = HashMap<String, Any?>(config.props).apply {
         putIfAbsent(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1000")
         putIfAbsent(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
         putIfAbsent(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
     }
 
-    val consumer = consumer(config = props)
+    val consumer: KafkaConsumer<String, ByteArray> = KafkaConsumer(props, StringDeserializer(), ByteArrayDeserializer())
+    val deserializer =
+        ConsumerConfig(props)
+            .getConfiguredInstance(VALUE_DESERIALIZER_CLASS_CONFIG, Deserializer::class.java)
+            .apply { configure(props, false) }
 
     // subscribe to the topic
     consumer.subscribe(topic = config.topic, subscription = config.subscription)
@@ -54,7 +63,16 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
 
         val filtered =
             records
-                .map { record ->
+                .mapNotNull { record ->
+                    val deserialized =
+                        try {
+                            if (record.value() == null) null
+                            else deserializer.deserialize(record.topic(), record.headers(), record.value())
+                        } catch (error: Exception) {
+                            logger.warn("Unable to deserialize record $record: $error")
+                            if (config.skipNonDeserializableRecords) return@mapNotNull null else throw error
+                        }
+
                     PolledRecord(
                         meta = RecordMetadata(
                             key = record.key()?.toString(),
@@ -66,7 +84,7 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
                                 .groupBy { it.key() }
                                 .mapValues { it.value.map { header -> header.value().toString(Charsets.UTF_8) } }
                         ),
-                        content = record.value()?.let { rec -> jsonifier.format(rec) } ?: NullNode.getInstance()
+                        content = deserialized?.let(jsonifier::format) ?: NullNode.getInstance()
                     )
                 }
                 .map {
@@ -80,7 +98,7 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
 
         PollResponse(
             records = filtered,
-            progress = progressListener.reportProgress()
+            progress = progressListener.reportProgress(),
         )
     }
 }
@@ -261,6 +279,7 @@ data class PollConfig(
     val jsonifier: String,
     val jsonQueryDialect: JsonQueryDialect = JsonQueryDialect.Jmespath,
     val metadataFieldAlias: String? = null,
+    val skipNonDeserializableRecords: Boolean = false,
 )
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")

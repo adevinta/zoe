@@ -23,7 +23,7 @@ buildscript {
 
 plugins {
     java
-    kotlin("jvm") version "1.4.10" apply false
+    kotlin("jvm") version "1.5.30" apply false
     id("com.github.johnrengelman.shadow") version "5.2.0" apply false
     id("com.google.cloud.tools.jib") version "2.2.0" apply false
     id("com.github.ben-manes.versions") version "0.28.0"
