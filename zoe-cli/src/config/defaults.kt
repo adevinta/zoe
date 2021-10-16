@@ -24,7 +24,11 @@ data class ZoeDefaults(
     val topic: Topic = Topic(),
 ) {
     data class Topic(val consume: Consume = Consume()) {
-        data class Consume(val jsonQueryDialect: JsonQueryDialect = JsonQueryDialect.Jmespath)
+        data class Consume(
+            val jsonQueryDialect: JsonQueryDialect = JsonQueryDialect.Jmespath,
+            val exposeRecordsMetadata: Boolean = false,
+            val metadataFieldAlias: String = "__metadata__",
+        )
     }
 }
 

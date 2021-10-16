@@ -2,8 +2,8 @@
 
 # Zoe: The Kafka CLI for humans
 
-Zoe is a command-line tool to interact with Kafka in an easy and intuitive way. Wanna see this in action? check out
-this demo...
+Zoe is a command-line tool to interact with Kafka in an easy and intuitive way. Wanna see this in action? check out this
+demo...
 
 [![demo](https://asciinema.org/a/vSDNcUUaMMBkWxCSDD8u3s0No.svg)](https://asciinema.org/a/vSDNcUUaMMBkWxCSDD8u3s0No?speed=2.5&rows=35)
 
@@ -22,7 +22,8 @@ Here are some of the most interesting features of zoe :
 - Consume Kafka topics from a specific point in time (ex. using `--from 'PT5h'` from the last 5 hours).
 - Filter data based on content (ex. using `--filter "id == '12345'"` filters records with the selected id).
 - Filter data based on record metadata and record headers (ex.
-  using `--filter-meta "offset == '95' && partition == '0'"` finds record on given partition with the given offset).
+  using `--expose-metadata --filter "__metadata__.offset == '95' && __metadata__.partition == '0'"` finds records on the
+  given partition with the given offset. The same query can be done to target the record headers).
 - Supports offloading consumption of data to multiple lambda functions, Kubernetes pods, etc. for parallelism (ex.
   adding `--runner kubernetes` would offload all the requests to a configured Kubernetes cluster).
 - Monitor consumer groups' offsets.
