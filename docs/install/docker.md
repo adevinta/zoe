@@ -18,30 +18,32 @@ docker run --rm -v $HOME/zoe-docker:/root/.zoe adevinta/zoe-cli:0.26.1 --help
 
 If you want to have a native CLI experience, you can wrap the docker run call in a bash script. Here is an example on linux based systems:
 
-```bash tab="~/bin/zoe"
-#!/usr/bin/env bash
+=== "~/bin/zoe"
 
-IMAGE="adevinta/zoe:latest"
-
-# Use the host user
-DOCKER_RUN="docker container run -i --rm -v $HOME/zoe-docker:/root/.zoe"
-
-# pass zoe specific environment variables
-[[ -n "${ZOE_CLUSTER}" ]] && DOCKER_RUN="${DOCKER_RUN} -e ZOE_CLUSTER=${ZOE_CLUSTER}"
-[[ -n "${ZOE_ENV}" ]] && DOCKER_RUN="${DOCKER_RUN} -e ZOE_ENV=${ZOE_ENV}"
-[[ -n "${ZOE_CONFIG_DIR}" ]] && DOCKER_RUN="${DOCKER_RUN} -e ZOE_CONFIG_DIR=${ZOE_CONFIG_DIR}"
-[[ -n "${ZOE_STACKTRACE}" ]] && DOCKER_RUN="${DOCKER_RUN} -e ZOE_STACKTRACE=${ZOE_STACKTRACE}"
-[[ -n "${_ZOE_COMPLETE}" ]] && DOCKER_RUN="${DOCKER_RUN} -e _ZOE_COMPLETE=${_ZOE_COMPLETE}"
-
-# pass AWS secrets
-if [[ -n "${AWS_SECRET_ACCESS_KEY}" ]]; then
-    DOCKER_RUN_ME="${DOCKER_RUN_ME} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
-    DOCKER_RUN_ME="${DOCKER_RUN_ME} -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
-    DOCKER_RUN_ME="${DOCKER_RUN_ME} -e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}"
-fi
-
-exec ${DOCKER_RUN} ${IMAGE} "$@"
-```
+    ```bash
+    #!/usr/bin/env bash
+    
+    IMAGE="adevinta/zoe:latest"
+    
+    # Use the host user
+    DOCKER_RUN="docker container run -i --rm -v $HOME/zoe-docker:/root/.zoe"
+    
+    # pass zoe specific environment variables
+    [[ -n "${ZOE_CLUSTER}" ]] && DOCKER_RUN="${DOCKER_RUN} -e ZOE_CLUSTER=${ZOE_CLUSTER}"
+    [[ -n "${ZOE_ENV}" ]] && DOCKER_RUN="${DOCKER_RUN} -e ZOE_ENV=${ZOE_ENV}"
+    [[ -n "${ZOE_CONFIG_DIR}" ]] && DOCKER_RUN="${DOCKER_RUN} -e ZOE_CONFIG_DIR=${ZOE_CONFIG_DIR}"
+    [[ -n "${ZOE_STACKTRACE}" ]] && DOCKER_RUN="${DOCKER_RUN} -e ZOE_STACKTRACE=${ZOE_STACKTRACE}"
+    [[ -n "${_ZOE_COMPLETE}" ]] && DOCKER_RUN="${DOCKER_RUN} -e _ZOE_COMPLETE=${_ZOE_COMPLETE}"
+    
+    # pass AWS secrets
+    if [[ -n "${AWS_SECRET_ACCESS_KEY}" ]]; then
+        DOCKER_RUN_ME="${DOCKER_RUN_ME} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
+        DOCKER_RUN_ME="${DOCKER_RUN_ME} -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
+        DOCKER_RUN_ME="${DOCKER_RUN_ME} -e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}"
+    fi
+    
+    exec ${DOCKER_RUN} ${IMAGE} "$@"
+    ```
 
 Once this file is created, make it executable:
 

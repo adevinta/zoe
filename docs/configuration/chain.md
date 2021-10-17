@@ -40,14 +40,18 @@ With the above configuration, zoe replaces the `${BOOTSTRAP_SERVER}` and `${SCHE
 
 The following command should make the previous statement clearer:
 
-```bash tab="command"
-BOOTSTRAP_SERVER=localhost:9092 zoe -o table config clusters list
-```
+=== "Command"
 
-```json tab="output"
-┌────────────┬────────────────┬────────────────┬────────┬────────┐
-│ cluster    │ brokers        │ registry       │ topics │ groups │
-├────────────┼────────────────┼────────────────┼────────┼────────┤
-│ my-cluster │ localhost:9092 │ localhost:8081 │        │        │
-└────────────┴────────────────┴────────────────┴────────┴────────┘
-```
+    ```bash
+    BOOTSTRAP_SERVER=localhost:9092 zoe -o table config clusters list
+    ```
+
+=== "Output"
+
+    ```json
+    ┌────────────┬────────────────┬────────────────┬────────┬────────┐
+    │ cluster    │ brokers        │ registry       │ topics │ groups │
+    ├────────────┼────────────────┼────────────────┼────────┼────────┤
+    │ my-cluster │ localhost:9092 │ localhost:8081 │        │        │
+    └────────────┴────────────────┴────────────────┴────────┴────────┘
+    ```

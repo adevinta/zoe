@@ -20,20 +20,22 @@ by using the `{secretName}` and `{context}` pattern (cf. The example above).
 
 Suppose you have the following configuration:
 
-```yaml tab="default.yml"
-secrets:
-    provider: exec
-    command: [ "/fetch-secret.sh", "{context}", "{secretName}" ]
+=== "default.yml"
 
-clusters:
-
-  my-kafka-cluster:
-    props:
-      bootstrap.servers: my-kafka-cluster-staging.example.com:9092
-      security.protocol: SASL_SSL
-      sasl.mechanism: SCRAM-SHA-256
-      sasl.jaas.config: secret:pro:JAAS_CONFIG
-```
+    ```yaml
+    secrets:
+        provider: exec
+        command: [ "/fetch-secret.sh", "{context}", "{secretName}" ]
+    
+    clusters:
+    
+      my-kafka-cluster:
+        props:
+          bootstrap.servers: my-kafka-cluster-staging.example.com:9092
+          security.protocol: SASL_SSL
+          sasl.mechanism: SCRAM-SHA-256
+          sasl.jaas.config: secret:pro:JAAS_CONFIG
+    ```
 
 When using the `zoe -c my-kafka-cluster consume topics -n 10`, zoe will detect the `secret:pro:JAAS_CONFIG` string and
 tries to replace with the output of the following command:

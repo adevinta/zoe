@@ -86,9 +86,11 @@ runners:
 
 You can use [AWS Vault](https://github.com/99designs/aws-vault) to make generating STS sessions transparent with zoe by using:
 
-```bash tab="command"
-aws-vault exec my-aws-profile-with-sso -- zoe topics list
-```
+=== "Command"
+
+   ```bash
+   aws-vault exec my-aws-profile-with-sso -- zoe topics list
+   ```
 
 You can even simplify the process further by creating an alias:
 

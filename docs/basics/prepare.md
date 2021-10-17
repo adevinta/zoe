@@ -40,13 +40,17 @@ Zoe uses a central configuration file to store all the information related to th
 
 We can easily initialize a default configuration file using :
 
-```bash tab="command"
-zoe -v config init
-```
+=== "Command"
 
-```text tab="logs"
-2020-03-07 01:43:16 INFO zoe: creating a new config file...
-```
+  ```bash
+  zoe -v config init
+  ```
+
+=== "Logs"
+
+  ```text
+  2020-03-07 01:43:16 INFO zoe: creating a new config file...
+  ```
 
 This creates a default configuration file at `~/.zoe/config/default.yml` that can be used as a starting point. The file looks like the following (some optional fields have been omitted for readability):
 
@@ -76,13 +80,17 @@ The default generated configuration is already enough to interact with our local
 
 Let's use zoe to list the available topics :
 
-```bash tab="command"
-zoe --cluster local topics list
-```
+=== "Command"
 
-```json tab="output"
-["input-topic", "another-topic"]
-```
+  ```bash
+  zoe --cluster local topics list
+  ```
+
+=== "Output"
+
+  ```json
+  ["input-topic", "another-topic"]
+  ```
 
 We can see that there is 2 topics within our cluster. To avoid having to remember their names, let's add them in the configuration and give them a friendly alias:
 

@@ -17,37 +17,41 @@ In the configuration above, when zoe encounters `secret:JAAS_CONFIG`, this provi
 
 The `append` and `prepend` properties are useful when using the same secret name across different zoe [environment files](../../configuration/environments.md). Here is a typical example of a `staging.yml` and a `prod.yml` file:
 
-```yaml tab="staging.yml"
-secrets:
-    provider: env
-    append: ZOE_SECRET
-    prepend: _STAGING
+=== "staging.yml"
 
-clusters:
+    ```yaml
+    secrets:
+        provider: env
+        append: ZOE_SECRET
+        prepend: _STAGING
+    
+    clusters:
+    
+      my-kafka-cluster:
+        props:
+          bootstrap.servers: my-kafka-cluster-staging.example.com:9092
+          security.protocol: SASL_SSL
+          sasl.mechanism: SCRAM-SHA-256
+          sasl.jaas.config: secret:JAAS_CONFIG
+    ```
 
-  my-kafka-cluster:
-    props:
-      bootstrap.servers: my-kafka-cluster-staging.example.com:9092
-      security.protocol: SASL_SSL
-      sasl.mechanism: SCRAM-SHA-256
-      sasl.jaas.config: secret:JAAS_CONFIG
-```
+=== "prod.yml"
 
-```yaml tab="prod.yml"
-secrets:
-    provider: env
-    append: ZOE_SECRET
-    prepend: _PROD
-
-clusters:
-
-  my-kafka-cluster:
-    props:
-      bootstrap.servers: my-kafka-cluster-production.example.com:9092
-      security.protocol: SASL_SSL
-      sasl.mechanism: SCRAM-SHA-256
-      sasl.jaas.config: secret:JAAS_CONFIG
-```
+    ```yaml
+    secrets:
+        provider: env
+        append: ZOE_SECRET
+        prepend: _PROD
+    
+    clusters:
+    
+      my-kafka-cluster:
+        props:
+          bootstrap.servers: my-kafka-cluster-production.example.com:9092
+          security.protocol: SASL_SSL
+          sasl.mechanism: SCRAM-SHA-256
+          sasl.jaas.config: secret:JAAS_CONFIG
+    ```
 
 In this case :
 
