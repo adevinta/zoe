@@ -14,8 +14,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.burt.jmespath.Expression
 import org.apache.kafka.clients.admin.AdminClient
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -25,6 +27,10 @@ val logger = LoggerFactory.getLogger("zoe")!!
 fun consumer(config: Map<String, Any?>): KafkaConsumer<Any?, Any?> = KafkaConsumer(config)
 fun producer(config: Map<String, Any?>): KafkaProducer<Any?, Any?> = KafkaProducer(config)
 fun admin(config: Map<String, Any?>): AdminClient = AdminClient.create(config)
+fun deserializer(props: Map<String, Any?>, isKey: Boolean = false) =
+    ConsumerConfig(props)
+        .getConfiguredInstance(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, Deserializer::class.java)
+        .apply { configure(props, isKey) }
 
 inline fun <reified T> String.parseJson(): T = json.readValue(this, T::class.java)
 inline fun <reified T> JsonNode.parseJson(): T = json.treeToValue(this, T::class.java)

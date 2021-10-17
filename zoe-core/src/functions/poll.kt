@@ -20,12 +20,10 @@ import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.EncoderFactory
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.serialization.ByteArrayDeserializer
-import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import java.io.ByteArrayOutputStream
 import java.time.Duration
@@ -48,11 +46,8 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
         putIfAbsent(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
     }
 
-    val consumer: KafkaConsumer<String, ByteArray> = KafkaConsumer(props, StringDeserializer(), ByteArrayDeserializer())
-    val deserializer =
-        ConsumerConfig(props)
-            .getConfiguredInstance(VALUE_DESERIALIZER_CLASS_CONFIG, Deserializer::class.java)
-            .apply { configure(props, false) }
+    val consumer = KafkaConsumer(props, StringDeserializer(), ByteArrayDeserializer())
+    val deserializer = deserializer(props)
 
     // subscribe to the topic
     consumer.subscribe(topic = config.topic, subscription = config.subscription)
@@ -61,7 +56,7 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
         val (records, progressListener) =
             cons.pollAsSequence(config.timeoutMs)
 
-        val filtered =
+        val parsed =
             records
                 .mapNotNull { record ->
                     val deserialized =
@@ -97,7 +92,7 @@ val poll = zoeFunction<PollConfig, PollResponse>(name = "poll") { config ->
                 .toList()
 
         PollResponse(
-            records = filtered,
+            records = parsed,
             progress = progressListener.reportProgress(),
         )
     }
@@ -142,6 +137,7 @@ private fun <K, V> Consumer<K, V>.pollAsSequence(timeoutMs: Long): Pair<Sequence
         while (System.currentTimeMillis() - startTime < timeoutMs) {
             val batch = poll(Duration.ofSeconds(3))
             for (record in batch) {
+
                 progressListener.ackProgress(record)
                 yield(record)
             }
@@ -166,18 +162,18 @@ private class ProgressListener(val consumer: Consumer<*, *>) {
     private data class ConsumedRecords(
         val first: ConsumerRecord<*, *>,
         val last: ConsumerRecord<*, *>,
-        val count: Long
+        val count: Long,
     )
 
     private val consumed: MutableMap<TopicPartition, ConsumedRecords?> = mutableMapOf()
 
     fun ackProgress(record: ConsumerRecord<*, *>) {
         val part = TopicPartition(record.topic(), record.partition())
-        val previouslyConsumed = consumed[part]
+        val previous = consumed[part]
         consumed[part] = ConsumedRecords(
-            first = previouslyConsumed?.first?.takeIf { it.offset() <= record.offset() } ?: record,
-            last = previouslyConsumed?.last?.takeIf { it.offset() >= record.offset() } ?: record,
-            count = (previouslyConsumed?.count ?: 0) + 1
+            first = previous?.first?.takeIf { it.offset() <= record.offset() } ?: record,
+            last = previous?.last?.takeIf { it.offset() >= record.offset() } ?: record,
+            count = (previous?.count ?: 0) + 1,
         )
     }
 
