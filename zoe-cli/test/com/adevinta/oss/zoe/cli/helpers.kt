@@ -33,6 +33,7 @@ data class ZoeOutput(val stdout: JsonNode?, val stderr: List<String>, val error:
 suspend fun ExpectScope.zoe(
     vararg command: String,
     configDir: String = testConfDir.resolve("config").absolutePath,
+    shouldFail: Boolean = false,
     expect: suspend TestContext.(ZoeOutput) -> Unit = {}
 ): ZoeOutput {
     val mockConsole = MockConsole()
@@ -63,7 +64,9 @@ suspend fun ExpectScope.zoe(
     }
 
     expect("command '$fullCommand' should return correct result") {
-        res.error shouldBe null
+        if (!shouldFail) {
+            res.error shouldBe null
+        }
         expect(res)
     }
 

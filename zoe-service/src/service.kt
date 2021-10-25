@@ -244,6 +244,28 @@ class ZoeService(
     }
 
     /**
+     * Deletes an Avro schema or subject (all versions) from the registry
+     */
+    suspend fun deleteSchema(
+        cluster: String,
+        subject: String,
+        schemaVersion: Int?,
+        hardDelete: Boolean,
+        dryRun: Boolean
+    ): DeleteSchemaResponse = with(getCluster(cluster)) {
+        runner.deleteSchema(
+            DeleteSchemaConfig(
+                registry = registry ?: userError("'registry' must not be null in config to deploy schemas"),
+                props = getCompletedProps(null),
+                subject = subject,
+                schemaVersion = schemaVersion,
+                hardDelete = hardDelete,
+                dryRun = dryRun
+            )
+        )
+    }
+
+    /**
      * List topics in the cluster
      */
     suspend fun listTopics(cluster: String, filter: Regex?, userTopicsOnly: Boolean, limit: Int?): ListTopicsResponse {
