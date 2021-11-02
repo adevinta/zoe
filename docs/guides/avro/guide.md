@@ -168,6 +168,36 @@ Describe the schema using:
     └──────────────────────────┴──────────┴─────────────────────────────────────────────────────────────────────────────────────────────┘
     ```
 
+Delete a specific schema version using:
+
+=== "Command"
+
+
+    ```bash
+    zoe schemas delete input-events-topic-value --schema-version 1
+    ```
+
+=== "Output"
+
+    ```text
+    {"type":"actual","response":[1],"subject":"input-events-topic-value","version":"1","hardDelete":"soft delete"}
+    ```
+
+Delete a subject permanently (including metadata):
+
+=== "Command"
+
+
+    ```bash
+    zoe schemas delete input-events-topic-value --hard
+    ```
+
+=== "Output"
+
+    ```text
+    {"type":"actual","response":[2],"subject":"input-events-topic-value","version":"version","hardDelete":"hard delete"} 
+    ```
+
 ## Producing data
 
 Now that we have the Cat Facts Avro schema registered, let's produce some cat facts from the `data.json` file in avro:

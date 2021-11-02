@@ -4,7 +4,7 @@ Zoe has good support for Avro and the schema registry. It makes it easy to consu
 
 ## Consuming Avro data
 
-In order to consume avro data from Kafka, it is enough to set the necessary deserializers properties in the `props` section of the cluster config :
+In order to consume Avro data from Kafka, it is enough to set the necessary deserializers properties in the `props` section of the cluster config :
 
 ```yaml
 clusters:
@@ -17,7 +17,7 @@ clusters:
       schema.registry.url: http://my-registry.example.com
 ```
 
-Then, it's possible to consume avro data using the following command :
+Then, it's possible to consume Avro data using the following command :
 
 ```bash
 zoe -v -c my-cluster topics consume input -n 10
@@ -32,11 +32,11 @@ With the above command :
 
 To produce Avro data from a json input using the `produce` command, it is necessary to set :
 
-- The `registry` property that points to the schema registry instance. Zoe uses this property to fetch the avro schema needed to transform the json data into avro.
+- The `registry` property that points to the schema registry instance. Zoe uses this property to fetch the Avro schema needed to transform the json data into Avro.
 - The required serializer properties of the producer in the `props` section of the cluster config.
 - In addition, you need to set the `subject` name of the topic in the topic's configuration.
 
-A good enough configuration for producing avro data may look like the following :
+A good enough configuration for producing Avro data may look like the following :
 
 ```yaml
 clusters:
@@ -66,19 +66,20 @@ zoe -v --cluster my-cluster \
 
 The command above would do the following :
 
-- It fetches the avro schema registered under the subject name `long-topic-name-com.adevinta.schemas.v1.Example` in the schema registry instance pointed at by the `registry` property in the configuration.
-- It uses the schema to transform the json data in `data.json` into avro `GenericRecord` instances.
+- It fetches the Avro schema registered under the subject name `long-topic-name-com.adevinta.schemas.v1.Example` in the schema registry instance pointed at by the `registry` property in the configuration.
+- It uses the schema to transform the json data in `data.json` into Avro `GenericRecord` instances.
 - Writes the generic records into `long-name-topic` (aliased by `my-topic`).
 
 ## Interacting with the registry
 
 You can also interact with the schema registry using the `zoe schemas` command. Here is a non exhaustive list  of what you can do :
 
-- List avro schemas registered into the registry
-- Describe a specific Avro schema
-- Deploy an avro schema into the registry from an `.avsc` or `.avdl` file.
+- List avro schemas registered into the registry.
+- Describe a specific Avro schema.
+- Deploy an Avro schema into the registry from an `.avsc` or `.avdl` file.
+- Delete a specific Avro schema or subject from the registry.
 
 ## Where to go from here
 
-- There is a hands on tutorial on using zoe with avro at : [guides/avro](https://github.com/adevinta/zoe/tree/master/docs/guides/avro). 
+- There is a hands on tutorial on using zoe with Avro at : [guides/avro](https://github.com/adevinta/zoe/tree/master/docs/guides/avro). 
 - Learn more about interacting with the registry with : `zoe schemas --help`
