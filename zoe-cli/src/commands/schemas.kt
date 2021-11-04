@@ -71,6 +71,21 @@ class DescribeSchema : CliktCommand(name = "describe"), KoinComponent {
     }
 }
 
+class DeleteSchema : CliktCommand(name = "delete"), KoinComponent {
+    private val subject: String by argument("subject", help = "Subject name to describe")
+    private val schemaVersion: Int? by option("--schema-version", help = "Version of the schema to be deleted").int()
+    private val hardDelete by option("--hard", help = "A hard delete removes all metadata, including schema IDs. Defaulting to soft").flag(default = false)
+    private val dryRun by option("--dry-run", help = "Do not actually create the schema").flag(default = false)
+
+    private val ctx by inject<CliContext>()
+    private val service by inject<ZoeService>()
+
+    override fun run() = runBlocking {
+        val response = service.deleteSchema(ctx.cluster, subject, schemaVersion, hardDelete, dryRun)
+        ctx.term.output.format(response.toJsonNode()) { echo(it) }
+    }
+}
+
 class DeploySchema : CliktCommand(
     name = "deploy",
     help = """Deploy a schema to the registry""",
@@ -164,5 +179,6 @@ class DeploySchema : CliktCommand(
 fun schemasCommand() = SchemasCommand().subcommands(
     ListSchemas(),
     DescribeSchema(),
-    DeploySchema()
+    DeploySchema(),
+    DeleteSchema()
 )

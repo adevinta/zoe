@@ -68,9 +68,12 @@ suspend fun ZoeRunner.setOffsets(config: SetOffsetRequest): SetOffsetResponse {
     return launch(setOffsets.name(), config.toJsonString()).parseJson()
 }
 
-
 suspend fun ZoeRunner.deploySchema(config: DeploySchemaConfig): DeploySchemaResponse {
     return launch(deploySchema.name(), config.toJsonString()).parseJson()
+}
+
+suspend fun ZoeRunner.deleteSchema(config: DeleteSchemaConfig): DeleteSchemaResponse {
+    return launch(deleteSchema.name(), config.toJsonString()).parseJson()
 }
 
 suspend fun ZoeRunner.version(config: VersionCheckRequest): VersionCheckResponse {

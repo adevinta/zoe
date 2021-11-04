@@ -8,8 +8,6 @@
 
 package com.adevinta.oss.zoe.core.functions
 
-import com.adevinta.oss.zoe.core.functions.DeploySchemaResponse.ActualRunResponse
-import com.adevinta.oss.zoe.core.functions.DeploySchemaResponse.DryRunResponse
 import com.adevinta.oss.zoe.core.utils.*
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
@@ -217,14 +215,54 @@ val deploySchema = zoeFunction<DeploySchemaConfig, DeploySchemaResponse>(name = 
 
     when {
         config.dryRun ->
-            DryRunResponse(
+            DeploySchemaResponse.DryRunResponse(
                 subject = subject,
                 schema = schema.rawSchema().toString(false),
                 registry = config.registry
             )
         else -> {
             val id = registry.register(subject, schema)
-            ActualRunResponse(id = id, subject = subject)
+            DeploySchemaResponse.ActualRunResponse(id = id, subject = subject)
+        }
+    }
+}
+
+/**
+ * Deletes an Avro schema or subject (all versions) from the registry
+ */
+val deleteSchema = zoeFunction<DeleteSchemaConfig, DeleteSchemaResponse>(name = "delete-schema") { config ->
+    val registry = CachedSchemaRegistryClient(config.registry, 10, config.props)
+    val subject = config.subject
+    val version = config.schemaVersion
+    val hardDelete = config.hardDelete
+
+    when {
+        config.dryRun ->
+            DeleteSchemaResponse.DryRunResponse(
+                subject = subject,
+                version = version?.toString() ?: "version",
+                hardDelete = hardDelete
+            )
+        else -> {
+            val requestProperties = hashMapOf(
+                if (hardDelete) "permanent" to "true"
+                else "permanent" to "false"
+            )
+
+            val response = if (version != null) {
+                listOf<Int>(
+                    registry.deleteSchemaVersion(requestProperties, subject, version.toString())
+                )
+            } else {
+                registry.deleteSubject(requestProperties, subject)
+            }
+
+            DeleteSchemaResponse.ActualRunResponse(
+                deletedVersions = response,
+                subject = subject,
+                version = version?.toString() ?: "version",
+                hardDelete = hardDelete
+            )
         }
     }
 }
@@ -362,13 +400,39 @@ data class DeploySchemaConfig(
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
-    JsonSubTypes.Type(value = ActualRunResponse::class, name = "actual"),
-    JsonSubTypes.Type(value = DryRunResponse::class, name = "dry")
+    JsonSubTypes.Type(value = DeploySchemaResponse.ActualRunResponse::class, name = "actual"),
+    JsonSubTypes.Type(value = DeploySchemaResponse.DryRunResponse::class, name = "dry")
 )
 sealed class DeploySchemaResponse {
     data class ActualRunResponse(val id: Int, val subject: String) : DeploySchemaResponse()
     data class DryRunResponse(val subject: String, val schema: String, val registry: String) :
         DeploySchemaResponse()
+}
+
+data class DeleteSchemaConfig(
+    val registry: String,
+    val props: Map<String, String?>,
+    val subject: String,
+    val schemaVersion: Int?,
+    val hardDelete: Boolean,
+    val dryRun: Boolean
+)
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes(
+    JsonSubTypes.Type(value = DeleteSchemaResponse.ActualRunResponse::class, name = "actual"),
+    JsonSubTypes.Type(value = DeleteSchemaResponse.DryRunResponse::class, name = "dry")
+)
+sealed class DeleteSchemaResponse {
+    data class ActualRunResponse(
+        val deletedVersions: List<Int>,
+        val subject: String,
+        val version: String,
+        val hardDelete: Boolean) : DeleteSchemaResponse()
+    data class DryRunResponse(
+        val subject: String,
+        val version: String,
+        val hardDelete: Boolean) : DeleteSchemaResponse()
 }
 
 data class DescribeSchemaConfig(

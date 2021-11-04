@@ -10,14 +10,16 @@ import io.kotest.matchers.maps.shouldNotBeEmpty
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import java.util.*
 
 class MainTest : ExpectSpec({
 
     context("Testing CLI with Avro and a local runner") {
 
+        val topic = "topic-${UUID.randomUUID()}"
+
         context("a new topic is created") {
-            val topic = "topic-${UUID.randomUUID()}"
 
             zoe("topics", "create", topic) { it.stdout shouldBe """{"done": true}""".toJsonNode() }
 
@@ -70,7 +72,68 @@ class MainTest : ExpectSpec({
                     }
                 }
             }
+        }
 
+        context("deleting some avro schemas/subject") {
+
+            context("adding a second version of the schema") {
+                zoe(
+                    "schemas", "deploy",
+                    "--avdl",
+                    "--from-file", testConfDir.resolve("schema-v2.avdl").absolutePath,
+                    "--name", "CatFact",
+                    "--strategy", "topic",
+                    "--topic", topic,
+                    "--suffix", "value"
+                ) { it.stdout?.has("id") shouldBe true }
+            }
+
+            context("deleting the first version of the avro schema") {
+                zoe(
+                    "schemas", "delete",
+                    "$topic-value",
+                    "--schema-version", "1"
+                ) {
+                    it.stdout?.has("type") shouldBe true
+                    it.stdout?.has("deletedVersions") shouldBe true
+                    it.stdout?.has("subject") shouldBe true
+                    it.stdout?.has("hardDelete") shouldBe true
+                }
+            }
+
+            context("describing avro schema(s)") {
+                zoe(
+                    "schemas", "describe",
+                    "$topic-value"
+                ) {
+                    it.stdout?.has("versions") shouldBe true
+                    it.stdout?.has("latest") shouldBe true
+                }
+            }
+
+            context("deleting an avro subject permanently") {
+                zoe(
+                    "schemas", "delete",
+                    "$topic-value",
+                    "--hard"
+                ) {
+                    it.stdout?.has("type") shouldBe true
+                    it.stdout?.has("deletedVersions") shouldBe true
+                    it.stdout?.has("subject") shouldBe true
+                    it.stdout?.has("hardDelete") shouldBe true
+                }
+            }
+
+            context("describing deleted avro schema") {
+                zoe(
+                    "schemas", "describe",
+                    "$topic-value",
+                    shouldFail = true
+                ) {
+                    it.error?.cause?.message shouldContain "Subject '$topic-value' not found"
+                    it.error?.cause?.message shouldContain "error code: 40401"
+                }
+            }
         }
     }
 })

@@ -83,6 +83,7 @@ object FunctionsRegistry {
         add(queryOffsets)
         add(listGroups)
         add(deploySchema)
+        add(deleteSchema)
         add(offsets)
         add(poll)
         add(produce)
