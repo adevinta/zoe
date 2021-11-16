@@ -6,3 +6,4 @@ There are several ways to install zoe depending on your needs and the operation 
 - [Homebrew](homebrew.md): Zoe can also be installed using Homebrew on MacOs and Linux environments. Installed packages do not contain the JDK though, so the host machine is required to have a JDK 11 or higher.
 - [Manual tarball install](tarball.md): If none of the above options are available for you, Zoe provides tarballs ready to be used in all platforms (including Windows). The host machine is required to have a JDK 11 or higher.
 - [Docker](docker.md): Zoe can also be used with docker. We provide ready to use images automatically built for each release.
+- [Windows with Chocolatey](chocolatey.md): Zoe can also be installed as a [Chocolatey package](https://community.chocolatey.org/packages/zoe). Ready to use package are built for each release.
