@@ -28,6 +28,13 @@ With the above command :
 - Zoe consumes data from the input topic and deserializes it using the `key.deserializer` and `value.deserializer`.
 - It transforms the data into json (to be able to apply eventual filters)
 
+If the registry has a dedicated API key, you may configure it using:
+
+```yaml
+      basic.auth.credentials.source: USER_INFO
+      basic.auth.user.info: <REGISTRY_API_KEY>:<REGISTRY_API_SECRET>
+```
+
 ## Producing Avro data
 
 To produce Avro data from a json input using the `produce` command, it is necessary to set :
