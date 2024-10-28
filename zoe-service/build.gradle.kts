@@ -16,6 +16,7 @@ dependencies {
     implementation("software.amazon.awssdk:lambda")
     implementation("software.amazon.awssdk:s3")
     implementation("software.amazon.awssdk:secretsmanager")
+    implementation("software.amazon.msk:aws-msk-iam-auth:2.2.0")
 
     implementation("org.slf4j:slf4j-log4j12:1.7.30")
     implementation("log4j:log4j:1.2.17")
