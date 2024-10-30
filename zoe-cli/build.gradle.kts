@@ -196,7 +196,7 @@ dependencies {
     implementation("org.eclipse.jgit:org.eclipse.jgit:5.7.0.202003110725-r")
 
     implementation("org.apache.commons:commons-text:1.9")
-    implementation("org.koin:koin-core:2.0.1")
+    implementation("io.insert-koin:koin-core:2.0.1")
     implementation("com.jakewharton.picnic:picnic:0.3.1")
     implementation("com.github.ajalt:clikt:2.8.0")
     implementation("com.github.ajalt:mordant:1.2.1")
