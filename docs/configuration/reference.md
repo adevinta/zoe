@@ -66,6 +66,10 @@ runners:
       memory: "512M"
       # Timeout of the commands
       timeoutMs: 300000
+      # Annotations to attach to the pods 
+      annotations:
+        key1: value1
+        key2: value2
 
     # The lambda runner configuration
     lambda:

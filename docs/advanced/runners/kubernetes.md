@@ -23,4 +23,8 @@ runners:
       memory: "512M"
       # Timeout for the client operations.
       timeoutMs: 300000
+      # Annotations to attach to the pods. Optional: By default, empty
+      annotations:
+        key1: value1
+        key2: value2
 ```

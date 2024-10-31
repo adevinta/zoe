@@ -67,7 +67,8 @@ class KubernetesRunner(
         val zoeImage: String,
         val cpu: String,
         val memory: String,
-        val timeoutMs: Long?
+        val timeoutMs: Long?,
+        val annotations: Map<String, String>
     )
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -159,6 +160,7 @@ class KubernetesRunner(
 
         val pod = generatePodObject(
             image = configuration.zoeImage,
+            annotations = configuration.annotations,
             args = listOf(
                 mapOf("function" to function, "payload" to payload.toJsonNode()).toJsonString(),
                 responseFile
@@ -203,11 +205,12 @@ class KubernetesRunner(
         }
     }
 
-    private fun generatePodObject(image: String, args: List<String>): Pod {
+    private fun generatePodObject(image: String, annotations: Map<String, String>, args: List<String>): Pod {
         val pod = loadFileFromResources("pod.template.json")?.parseJson<Pod>() ?: userError("pod template not found !")
         return pod.apply {
             metadata.name = "zoe-${UUID.randomUUID()}"
             metadata.labels = labels
+            metadata.annotations = annotations
 
             spec.containers.find { it.name == "zoe" }?.apply {
                 resources.requests = mapOf(

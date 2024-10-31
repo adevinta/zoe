@@ -28,6 +28,7 @@ jib {
 
 dependencies {
     implementation("com.amazonaws:aws-lambda-java-core:1.2.1")
+    implementation("software.amazon.msk:aws-msk-iam-auth:2.2.0")
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
