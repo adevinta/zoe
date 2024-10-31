@@ -235,7 +235,8 @@ fun mainModule(context: CliContext) = module {
                         cpu = kubeConfig.cpu,
                         memory = kubeConfig.memory,
                         deletePodsAfterCompletion = kubeConfig.deletePodAfterCompletion,
-                        timeoutMs = kubeConfig.timeoutMs
+                        timeoutMs = kubeConfig.timeoutMs,
+                        annotations = kubeConfig.annotations,
                     ),
                     executor = ioPool,
                     namespace = kubeConfig.namespace,

@@ -119,7 +119,8 @@ data class KubernetesRunnerConfig(
     val cpu: String = "1",
     val memory: String = "512M",
     val timeoutMs: Long = 300000,
-    val image: DockerImageConfig = DockerImageConfig()
+    val image: DockerImageConfig = DockerImageConfig(),
+    val annotations: Map<String, String> = emptyMap(),
 )
 
 data class DockerImageConfig(
