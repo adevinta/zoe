@@ -91,5 +91,5 @@ private fun inferArchiveType(url: String): DownloadJreTask.ArchiveType = when {
 }
 
 data class Runtimes(val runtimes: List<Runtime>)
-data class Runtime(val version: String, val platform: Platform, val distributions: Map<String, String>)
+data class Runtime(val version: String, val platform: Platform, val arch: String, val distributions: Map<String, String>)
 enum class Platform { MacOs, Linux, Windows }

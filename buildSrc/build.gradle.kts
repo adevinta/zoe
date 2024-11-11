@@ -1,10 +1,11 @@
 plugins {
     java
-    kotlin("jvm") version "1.5.30"
+    kotlin("jvm") version "2.0.21"
 }
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
 }
 
 dependencies {

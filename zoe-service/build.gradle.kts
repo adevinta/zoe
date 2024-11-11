@@ -33,7 +33,7 @@ dependencies {
 tasks {
     compileKotlin {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "21"
             freeCompilerArgs = listOf(
                 "-Xopt-in=kotlinx.coroutines.FlowPreview",
                 "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
@@ -42,22 +42,18 @@ tasks {
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "21"
     }
 }
 
 sourceSets {
     main {
         resources.srcDir("resources")
-        withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
-            kotlin.srcDir("src")
-        }
+        kotlin.srcDir("src")
     }
 
     test {
         resources.srcDir("testResources")
-        withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
-            kotlin.srcDir("test")
-        }
+        kotlin.srcDir("test")
     }
 }

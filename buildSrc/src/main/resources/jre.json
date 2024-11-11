@@ -3,6 +3,7 @@
     {
       "version": "11",
       "platform": "MacOs",
+      "arch": "x64",
       "distributions": {
         "AdoptOpenJDK": "https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.7%2B10_openj9-0.20.0/OpenJDK11U-jre_x64_mac_openj9_11.0.7_10_openj9-0.20.0.tar.gz"
       }
@@ -10,8 +11,41 @@
     {
       "version": "11",
       "platform": "Linux",
+      "arch": "x64",
       "distributions": {
         "AdoptOpenJDK": "https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.7%2B10_openj9-0.20.0/OpenJDK11U-jre_x64_linux_openj9_11.0.7_10_openj9-0.20.0.tar.gz"
+      }
+    },
+    {
+      "version": "21",
+      "platform": "MacOs",
+      "arch": "x64",
+      "distributions": {
+        "Adoptium": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_x64_mac_hotspot_21.0.5_11.tar.gz"
+      }
+    },
+    {
+      "version": "21",
+      "platform": "Linux",
+      "arch": "x64",
+      "distributions": {
+        "Adoptium": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_x64_linux_hotspot_21.0.5_11.tar.gz"
+      }
+    },
+    {
+      "version": "21",
+      "platform": "MacOs",
+      "arch": "aarch64",
+      "distributions": {
+        "Adoptium": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_aarch64_mac_hotspot_21.0.5_11.tar.gz"
+      }
+    },
+    {
+      "version": "21",
+      "platform": "Linux",
+      "arch": "aarch64",
+      "distributions": {
+        "Adoptium": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_aarch64_linux_hotspot_21.0.5_11.tar.gz"
       }
     }
   ]

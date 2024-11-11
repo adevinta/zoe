@@ -26,9 +26,10 @@ open class DistributionWithRuntimeExtension @Inject constructor(objects: ObjectF
 }
 
 class RuntimeConfig(
-    var version: String = "11",
+    var version: String = "21",
     var platform: Platform = Platform.Linux,
-    var distribution: String = "AdoptOpenJDK"
+    var arch: String = "x64",
+    var distribution: String = "Adoptium"
 )
 
 class DistributionConfig(

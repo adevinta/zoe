@@ -62,26 +62,22 @@ tasks.test {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "21"
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "21"
     }
 }
 
 sourceSets {
     main {
         resources.srcDir("resources")
-        withConvention(KotlinSourceSet::class) {
-            kotlin.srcDir("src")
-        }
+        kotlin.srcDir("src")
     }
 
     test {
         resources.srcDir("testResources")
-        withConvention(KotlinSourceSet::class) {
-            kotlin.srcDir("test")
-        }
+        kotlin.srcDir("test")
     }
 }
