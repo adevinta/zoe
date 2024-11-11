@@ -202,7 +202,7 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5-jvm:4.2.0")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.2.0")
     testImplementation("io.kotest:kotest-property-jvm:4.2.0")
-    testImplementation(platform("org.testcontainers:testcontainers-bom:1.15.2")) //import bom
+    testImplementation(platform("org.testcontainers:testcontainers-bom:1.20.3")) //import bom
     testImplementation("org.testcontainers:testcontainers")
     testImplementation("org.testcontainers:kafka")
 }
