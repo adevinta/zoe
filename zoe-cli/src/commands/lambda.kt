@@ -346,7 +346,7 @@ internal suspend fun LambdaAsyncClient.createOrUpdateLambda(
             }
             .memorySize(memory ?: (inherited?.configuration?.memorySize()) ?: userError("memory not provided !"))
             .timeout(timeout ?: (inherited?.configuration?.timeout()) ?: userError("timeout not provided !"))
-            .runtime(Runtime.JAVA8)
+            .runtime(Runtime.JAVA21)
             .handler(entrypoint)
             .publish(true)
             .role(inherited?.configuration?.role() ?: roleArn ?: userError("role arn must be provided !"))

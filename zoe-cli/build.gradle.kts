@@ -177,7 +177,7 @@ dependencies {
     implementation(project(":zoe-service"))
     implementation(project(":zoe-core"))
 
-    implementation(platform("software.amazon.awssdk:bom:2.15.9"))
+    implementation(platform("software.amazon.awssdk:bom:2.29.9"))
     implementation("software.amazon.awssdk:lambda")
     implementation("software.amazon.awssdk:iam")
     implementation("software.amazon.awssdk:cloudformation")

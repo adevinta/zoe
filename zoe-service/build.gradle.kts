@@ -12,7 +12,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.6")
 
-    implementation(platform("software.amazon.awssdk:bom:2.15.9"))
+    implementation(platform("software.amazon.awssdk:bom:2.29.9"))
     implementation("software.amazon.awssdk:lambda")
     implementation("software.amazon.awssdk:s3")
     implementation("software.amazon.awssdk:secretsmanager")
