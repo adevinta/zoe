@@ -1,6 +1,6 @@
 # Manual tarball install (requires a JDK on the host machine)
 
-Java 11 or higher is required in order to install the runtime-less tarball packages. They only ship with the Zoe CLI jar. 
+Java 21 or higher is required in order to install the runtime-less tarball packages. They only ship with the Zoe CLI jar. 
 
 If you don't have java installed already, you can use [sdkman](https://sdkman.io/) for an easy install and version management of the JDK. If you don't want to install java you can try one of the platform packages provided in the previous section.
 
