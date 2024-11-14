@@ -19,6 +19,7 @@ import com.adevinta.oss.zoe.core.Handler
 import com.adevinta.oss.zoe.core.utils.buildJson
 import com.adevinta.oss.zoe.core.utils.logger
 import com.adevinta.oss.zoe.core.utils.toJsonNode
+import com.adevinta.oss.zoe.core.utils.toJsonString
 import com.adevinta.oss.zoe.service.runners.LambdaZoeRunner
 import com.adevinta.oss.zoe.service.utils.lambdaClient
 import com.adevinta.oss.zoe.service.utils.userError
@@ -78,7 +79,7 @@ class DescribeLambda : CliktCommand(name = "describe", help = "Describe the curr
         val response =
             lambda
                 .getFunctionOrNull(name)
-                ?.toJsonNode()
+                ?.asJson()
                 ?: userError("lambda function not found: $name")
 
         ctx.term.output.format(response) { echo(it) }
@@ -251,6 +252,13 @@ fun SdkPojo.asJson(): JsonNode = buildJson {
         val value = field.getValueOrDefault(this@asJson)
         set<JsonNode>(field.memberName(), if (value is SdkPojo) value.asJson() else TextNode("$value"))
     }
+}
+
+fun LambdaDescription.asJson(): JsonNode = buildJson {
+    set<JsonNode>("current", configuration.asJson())
+    set<JsonNode>("code", code.asJson())
+    set<JsonNode>("concurrency", concurrency?.toJsonNode())
+    set<JsonNode>("tags", tags.map { it.toJsonString() }.toJsonNode())
 }
 
 fun StackCreationResult.asJson() = buildJson {
