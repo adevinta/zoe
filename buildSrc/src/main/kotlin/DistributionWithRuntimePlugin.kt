@@ -51,7 +51,7 @@ open class DistributionWithRuntimePlugin : Plugin<Project> {
                 val runtimeConfig = extension.runtimeConfig.get()
                 runtimes
                     .runtimes
-                    .find { it.platform == runtimeConfig.platform && it.version == runtimeConfig.version }
+                    .find { it.platform == runtimeConfig.platform && it.version == runtimeConfig.version && it.arch == runtimeConfig.arch }
                     ?.distributions
                     ?.get(runtimeConfig.distribution)
                     ?: throw IllegalArgumentException("distribution not found: $runtimeConfig")

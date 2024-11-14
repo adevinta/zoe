@@ -6,14 +6,14 @@ TODO
 
 ### Requirements
 To build and deploy :
-- java 11 or later (install with the awesome [sdkman](https://sdkman.io/)) 
+- java 21 or later (install with the awesome [sdkman](https://sdkman.io/)) 
 
 ### Build zoe cli
 
 ```bash
-# switch to java 11 or later
+# switch to java 21 or later
 # if you are using sdkman
-sdk use java 11
+sdk use java 21
 
 # build zoe CLI
 ./gradlew clean zoe-cli:installDist

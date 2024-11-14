@@ -12,7 +12,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.6")
 
-    implementation(platform("software.amazon.awssdk:bom:2.15.9"))
+    implementation(platform("software.amazon.awssdk:bom:2.29.9"))
     implementation("software.amazon.awssdk:lambda")
     implementation("software.amazon.awssdk:s3")
     implementation("software.amazon.awssdk:secretsmanager")
@@ -23,8 +23,8 @@ dependencies {
     implementation("io.fabric8:kubernetes-client:4.10.1")
 
     testImplementation(group = "junit", name = "junit", version = "4.12")
-    testImplementation("org.testcontainers:testcontainers:1.14.1")
-    testImplementation("org.testcontainers:kafka:1.14.1")
+    testImplementation("org.testcontainers:testcontainers:1.20.3")
+    testImplementation("org.testcontainers:kafka:1.20.3")
 
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.10")
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.10")
@@ -33,7 +33,7 @@ dependencies {
 tasks {
     compileKotlin {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "21"
             freeCompilerArgs = listOf(
                 "-Xopt-in=kotlinx.coroutines.FlowPreview",
                 "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
@@ -42,22 +42,18 @@ tasks {
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "21"
     }
 }
 
 sourceSets {
     main {
         resources.srcDir("resources")
-        withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
-            kotlin.srcDir("src")
-        }
+        kotlin.srcDir("src")
     }
 
     test {
         resources.srcDir("testResources")
-        withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
-            kotlin.srcDir("test")
-        }
+        kotlin.srcDir("test")
     }
 }

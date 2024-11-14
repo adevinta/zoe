@@ -15,7 +15,6 @@ import com.adevinta.oss.gradle.plugins.Platform
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.time.LocalDateTime
 
 plugins {
@@ -27,13 +26,12 @@ plugins {
 apply<DistributionWithRuntimePlugin>()
 
 application {
-    mainClassName = "com.adevinta.oss.zoe.cli.MainKt"
+    mainClass.set("com.adevinta.oss.zoe.cli.MainKt")
     applicationDefaultJvmArgs = listOf("-client")
     applicationName = "zoe"
 }
 
 configure<DistributionWithRuntimeExtension> {
-
     distribution {
         base = "shadow"
     }
@@ -43,8 +41,9 @@ configure<DistributionWithRuntimeExtension> {
     }
 
     runtime {
-        version = "11"
-        distribution = "AdoptOpenJDK"
+        version = "21"
+        distribution = "Adoptium"
+        arch = "x64"
         platform = findProperty("runtime.os")?.let(Any::toString)?.let(Platform::valueOf) ?: Platform.Linux
     }
 }
@@ -96,7 +95,7 @@ mapOf("zip" to Zip::class, "tar" to Tar::class).forEach { (archiveType, archiveC
 jib {
 
     from {
-        image = "openjdk:11-jre-slim"
+        image = "eclipse-temurin:21-jre"
     }
 
     to {
@@ -140,7 +139,7 @@ tasks {
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "21"
         kotlinOptions.freeCompilerArgs = listOf(
             "-Xopt-in=kotlinx.coroutines.FlowPreview",
             "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
@@ -148,7 +147,7 @@ tasks {
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "21"
     }
 
     test {
@@ -165,16 +164,12 @@ tasks {
 sourceSets {
     main {
         resources.srcDir("resources")
-        withConvention(KotlinSourceSet::class) {
-            kotlin.srcDir("src")
-        }
+        kotlin.srcDir("src")
     }
 
     test {
         resources.srcDir("testResources")
-        withConvention(KotlinSourceSet::class) {
-            kotlin.srcDir("test")
-        }
+        kotlin.srcDir("test")
     }
 }
 
@@ -182,7 +177,7 @@ dependencies {
     implementation(project(":zoe-service"))
     implementation(project(":zoe-core"))
 
-    implementation(platform("software.amazon.awssdk:bom:2.15.9"))
+    implementation(platform("software.amazon.awssdk:bom:2.29.9"))
     implementation("software.amazon.awssdk:lambda")
     implementation("software.amazon.awssdk:iam")
     implementation("software.amazon.awssdk:cloudformation")
@@ -207,7 +202,7 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5-jvm:4.2.0")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.2.0")
     testImplementation("io.kotest:kotest-property-jvm:4.2.0")
-    testImplementation(platform("org.testcontainers:testcontainers-bom:1.15.2")) //import bom
+    testImplementation(platform("org.testcontainers:testcontainers-bom:1.20.3")) //import bom
     testImplementation("org.testcontainers:testcontainers")
     testImplementation("org.testcontainers:kafka")
 }
