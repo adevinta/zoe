@@ -26,7 +26,7 @@ plugins {
     java
     kotlin("jvm") version "2.0.21" apply false
     id("com.github.johnrengelman.shadow") version "8.1.1" apply false
-    id("com.google.cloud.tools.jib") version "2.2.0" apply false
+    id("com.google.cloud.tools.jib") version "3.4.4" apply false
     id("com.github.ben-manes.versions") version "0.28.0"
     id("com.palantir.git-version") version "0.12.3"
 
