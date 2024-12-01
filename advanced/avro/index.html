@@ -1429,6 +1429,10 @@
 <li>Zoe consumes data from the input topic and deserializes it using the <code>key.deserializer</code> and <code>value.deserializer</code>.</li>
 <li>It transforms the data into json (to be able to apply eventual filters)</li>
 </ul>
+<p>If the registry has a dedicated API key, you may configure it using:</p>
+<div class="highlight"><pre><span></span><code><span class="w">      </span><span class="nt">basic.auth.credentials.source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">USER_INFO</span>
+<span class="w">      </span><span class="nt">basic.auth.user.info</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;REGISTRY_API_KEY&gt;:&lt;REGISTRY_API_SECRET&gt;</span>
+</code></pre></div>
 <h2 id="producing-avro-data">Producing Avro data</h2>
 <p>To produce Avro data from a json input using the <code>produce</code> command, it is necessary to set :</p>
 <ul>
