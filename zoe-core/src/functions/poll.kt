@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.EncoderFactory
@@ -213,7 +214,7 @@ private class ProgressListener(val consumer: Consumer<*, *>) {
 
 object Jsonifiers {
     // TODO : enable injection of custom jsonifiers
-    private val jsonifiers = sequenceOf(GenericRecordToAvroJson(), RawToJson()).map { it.name() to it }.toMap()
+    private val jsonifiers = sequenceOf(GenericRecordToAvroJson(), RawToJson(), RawToTextNode()).map { it.name() to it }.toMap()
 
     fun get(name: String): Jsonifier =
         jsonifiers[name] ?: throw IllegalArgumentException("jsonifier not found : $name")
@@ -245,8 +246,13 @@ class GenericRecordToAvroJson : Jsonifier {
 }
 
 class RawToJson : Jsonifier {
-    override fun name(): String = "raw"
+    override fun name(): String = "json"
     override fun format(input: Any): JsonNode = json.readTree(input.toString())
+}
+
+class RawToTextNode : Jsonifier {
+    override fun name(): String = "raw"
+    override fun format(input: Any): JsonNode = TextNode(input.toString())
 }
 
 data class PartitionProgress(
