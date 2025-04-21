@@ -46,7 +46,7 @@ dependencies {
 
     testImplementation(group = "junit", name = "junit", version = "4.12")
 
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.10")
+    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.19")
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.10")
 
     // spek requires kotlin-reflect, can be omitted if already in the classpath
