@@ -26,8 +26,8 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.20.3")
     testImplementation("org.testcontainers:kafka:1.20.3")
 
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.10")
-    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.10")
+    testImplementation("org.spekframework.spek2:spek-dsl-jvm:2.0.19")
+    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:2.0.19")
 }
 
 tasks {
