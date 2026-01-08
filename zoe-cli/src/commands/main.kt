@@ -237,6 +237,7 @@ fun mainModule(context: CliContext) = module {
                         deletePodsAfterCompletion = kubeConfig.deletePodAfterCompletion,
                         timeoutMs = kubeConfig.timeoutMs,
                         annotations = kubeConfig.annotations,
+                        serviceAccountName = kubeConfig.serviceAccountName
                     ),
                     executor = ioPool,
                     namespace = kubeConfig.namespace,

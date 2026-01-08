@@ -121,6 +121,7 @@ data class KubernetesRunnerConfig(
     val timeoutMs: Long = 300000,
     val image: DockerImageConfig = DockerImageConfig(),
     val annotations: Map<String, String> = emptyMap(),
+    val serviceAccountName: String? = null
 )
 
 data class DockerImageConfig(

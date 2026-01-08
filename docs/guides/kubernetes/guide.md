@@ -119,7 +119,27 @@ Ensure zoe is aware about our new configuration:
     └─────────┴─────────────┴──────────┴────────┴────────┘
     ```
 
-Notice our use of `-e k8s` in the above command. Zoe supports having multiple configuration files inside its config directory representing different environments. To point to a specific environment, we use the `-e <env name>` (`<env name>` is the name of the configuration file without the extension). When no environment is specified, zoe uses the environment called `default`. 
+Notice our use of `-e k8s` in the above command. Zoe supports having multiple configuration files inside its config directory representing different environments. To point to a specific environment, we use the `-e <env name>` (`<env name>` is the name of the configuration file without the extension). When no environment is specified, zoe uses the environment called `default`.
+
+### AWS IRSA (Optional)
+
+If you're running on AWS EKS and need to access AWS services like MSK (Managed Streaming for Kafka), you can configure Zoe to use [IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html). This allows Zoe pods to authenticate to AWS without storing credentials.
+
+To enable IRSA:
+
+1. Create a Kubernetes Service Account with the appropriate IAM role annotation
+2. Add `serviceAccountName` to your Zoe configuration:
+
+```yaml
+runners:
+  default: "kubernetes"
+  config:
+    kubernetes:
+      namespace: env-staging
+      serviceAccountName: zoe-service-account  # Your service account name
+```
+
+For more details, see the [Kubernetes runner documentation](https://adevinta.github.io/zoe/advanced/runners/kubernetes/#aws-irsa-support).
 
 Zoe is now ready to be used against our cluster!
 

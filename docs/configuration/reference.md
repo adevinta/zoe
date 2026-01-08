@@ -66,10 +66,12 @@ runners:
       memory: "512M"
       # Timeout of the commands
       timeoutMs: 300000
-      # Annotations to attach to the pods 
+      # Annotations to attach to the pods
       annotations:
         key1: value1
         key2: value2
+      # Service Account name (optional). Useful for AWS IRSA or other pod identity mechanisms
+      serviceAccountName: zoe-service-account
 
     # The lambda runner configuration
     lambda:

@@ -68,7 +68,8 @@ class KubernetesRunner(
         val cpu: String,
         val memory: String,
         val timeoutMs: Long?,
-        val annotations: Map<String, String>
+        val annotations: Map<String, String>,
+        val serviceAccountName: String?
     )
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -211,6 +212,11 @@ class KubernetesRunner(
             metadata.name = "zoe-${UUID.randomUUID()}"
             metadata.labels = labels
             metadata.annotations = annotations
+
+            // Set service account name if provided
+            configuration.serviceAccountName?.let { 
+                spec.serviceAccountName = it 
+            }
 
             spec.containers.find { it.name == "zoe" }?.apply {
                 resources.requests = mapOf(
